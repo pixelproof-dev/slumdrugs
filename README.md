@@ -48,7 +48,7 @@ Java 25 build and 67,600 regression assertions passed against Paper API 26.3.bui
 
 ## Design
 
-[SlumDrugs as a standalone mod](docs/MOD-GDD.md) is a draft design document for a NeoForge/Forge version: what ports from this plugin, what gets rewritten, and the larger systems a mod makes possible (gang rivalry and turf, boss encounters, a hired crew, a MineColonies interface). Design only; nothing there is implemented.
+[SlumDrugs as a standalone mod](docs/MOD-GDD.md) is a draft design document for a NeoForge/Forge version: what ports from this plugin, what gets rewritten, and the larger systems a mod makes possible (rival crews and turf, boss encounters, a hired crew, a MineColonies interface), all kept inside Minecraft's own era. Design only; nothing there is implemented.
 
 ## Build
 

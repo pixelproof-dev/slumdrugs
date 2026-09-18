@@ -3,9 +3,10 @@
 **Game Design Document · draft v0.1 · 2026-09-18**
 
 A design for taking SlumDrugs from a Paper plugin (v1.2.2) to a full mod: real blocks,
-items, entities and screens, plus the systems a plugin cannot reach — gang warfare over
-city turf, named boss encounters, a hired crew, and a MineColonies interface that wires
-the district into a living colony economy.
+items, entities and screens, plus the systems a plugin cannot reach — rival crews fighting
+over turf, named boss encounters, a hired crew of your own, and a MineColonies interface that
+wires the quarter into a living colony economy. All of it stays inside Minecraft's own era:
+emeralds, lanterns, bells, the Watch — no modern city wearing a Minecraft skin.
 
 This document is design intent, not a commitment. Numbers are starting points for tuning,
 not balance decisions. Nothing here is implemented yet.
@@ -29,9 +30,23 @@ up either owning the district or getting out clean before it owns you.
    subsystem is config-togglable, and the mod never silently rewrites player builds.
 5. **An ending exists.** Retirement is a real win condition, not a soft-lock into grinding.
 
-### Fantasy in one line
+### Era
 
-*Small-time grower → local supplier → crew boss → the reason the district has a curfew.*
+**Everything sits inside Minecraft's own timeline: villager-medieval, not modern.** Emeralds
+and barter, lanterns and bells, the Watch and the magistrate, wax seals and writs, hounds and
+crossbows. No engines, no electricity, no firearms, no telephones, no bureaucracy the vanilla
+world does not have.
+
+Where a modern crime-fiction idea is worth keeping, it wears a period costume instead of being
+cut: insurance becomes a **guild surety**, a licence becomes a **charter**, forged identity
+papers become a **writ of pardon**, a police radio becomes a **bell tower**, a forensics lab
+becomes a **magistrate's ledger of seized wax seals**. Redstone is the only technology and it
+stays sparing — a bell wire, a trapped door, a lamp on a timer.
+
+The test for any asset, name or mechanic: *would it look at home next to a vanilla village?*
+If not, it does not ship. Appendix D maps every term.
+
+### Fantasy in one line
 
 ---
 
@@ -105,21 +120,21 @@ it, absorb one or two reactive events (inspection, rival push, craving), bank th
 
 | Tier | Name | Unlocks | Gate |
 | --- | --- | --- | --- |
-| 0 | Hand to mouth | Pots, hand-drying, street sales, wallet | Start |
-| 1 | Backroom | Growbox, drying rack, first regulars, journal | First 20 units sold |
-| 2 | Workshop | Processing bench, packaging, storage crate, first crew hire, first turf cell | Reputation 15 · $500 banked |
-| 3 | Lab | Extraction, strain crossing, wholesale contracts, faction standing, **Boss 1** | Tier-2 turf cell held 3 days |
-| 4 | Syndicate | Second district, front businesses, laundering, colony contracts, war footing, **Boss 2–3** | Faction war won |
-| 5 | Kingpin | City control, fixer network, **Boss 4**, retirement | 60% district influence |
+| 0 | Hand to mouth | Pots, hand-drying, street sales, purse | Start |
+| 1 | Backroom | Forcing frame, drying rack, first regulars, journal | First 20 units sold |
+| 2 | Workshop | Pressing bench, sealing table, storage crate, first crew hire, first turf cell | Standing 15 · 60 emeralds banked |
+| 3 | Apothecary | Alembic, grafting, wholesale contracts, crew standing, **Boss 1** | Tier-2 turf cell held 3 days |
+| 4 | Guild | Second quarter, chartered fronts, laundering, colony contracts, war footing, **Boss 2–3** | Crew war won |
+| 5 | Kingpin | Quarter control, broker network, **Boss 4**, retirement | 60% district influence |
 
 ### Endings
 
-- **Retire clean** — launder ≥ $X, heat 0, dependence 0, hand the district to a lieutenant.
-  Grants a world-level legacy perk to your next character.
-- **Fall** — arrested at max wanted with no bail, or overdose death with permadeath-lite
-  enabled: crew scatters, turf reverts, stash seized. World continues.
-- **Kingpin** — hold ≥ 80% influence for 7 in-game days after Boss 4. The district stops
-  generating hostile events and starts generating tribute.
+- **Retire clean** — stamped coin ≥ the retirement threshold, suspicion 0, dependence 0, hand
+  the quarter to a lieutenant. Grants a world-level legacy perk to your next character.
+- **Fall** — taken at full bounty with no one to stand bail, or overdose death with
+  permadeath-lite enabled: crew scatters, turf reverts, stash seized. World continues.
+- **Kingpin** — hold ≥ 80% influence for seven days after Boss 4. The quarter stops generating
+  hostile events and starts generating tribute.
 
 ---
 
@@ -139,9 +154,9 @@ each 0–100, stored on the seed item:
 | Potency | Dose and price multiplier |
 | Vigour | Growth speed, yield |
 | Hardiness | Tolerance of wrong light/temperature/humidity |
-| Subtlety | Reduces heat per sale and K9 detection radius |
+| Subtlety | Reduces suspicion per sale and how far a hound smells it |
 
-Crossing two seeds at a **Propagation Table** gives offspring near the parent mean with
+Crossing two seeds at a **Grafting Bench** gives offspring near the parent mean with
 variance scaled by inverse relatedness; repeated inbreeding narrows variance and adds a
 defect chance. Stabilising a strain (5 generations within tolerance) lets you name it —
 named strains carry a reputation of their own with customers and factions.
@@ -154,26 +169,28 @@ different kind of thing: **Nightvein** (cave vine, tier 3, high heat, high margi
 
 - **Plots** stay location-based and register as they do today, but read from real block
   state rather than a parallel map where possible.
-- **Environment** per plot: light level, temperature (biome + nearby heat sources),
-  humidity (water proximity, rain, closed growbox). Each substance has a comfort band;
-  distance from it scales growth time and final quality.
-- **Growbox** becomes a real multiblock-lite: base block + lamp + filter slot. Filters
-  (charcoal, iron mesh) suppress the smell radius that guards and K9s detect.
-- **Hydroponics** at tier 3: faster, higher ceiling, fails hard on power loss.
-- Fertiliser keeps its charge model (3 charges, +0.35 boost) and gains a quality-risk
-  variant that trades stability for potency.
+- **Environment** per plot: light level, warmth (biome, nearby fire and lava), and damp
+  (water proximity, rain, an enclosed frame). Each substance has a comfort band; distance
+  from it scales growth time and final quality.
+- **Forcing frame** (the plugin's growbox, renamed to fit) becomes a real multiblock-lite:
+  a frame, a lantern and a screen slot. Charcoal and woven screens damp the smell that
+  watchmen and hounds follow.
+- **Flood beds** at tier 3: a terraced, irrigated bed that grows faster and reaches higher
+  quality, and fails hard the moment the water channel is broken.
+- Fertiliser (compost and bonemeal, as now) keeps its charge model — 3 charges, +0.35 boost —
+  and gains a forced-growth variant that trades stability for potency.
 
 ### 5.3 Processing
 
-Existing chain — dry, process, package — extended with two stages:
+Existing chain — dry, press, seal — extended with two stages:
 
 | Station | In | Out | Tier |
 | --- | --- | --- | --- |
 | Drying rack | Raw | Dried | 1 |
-| Processing bench | Dried + reagents | Product | 2 |
-| Packaging station | Product | Sealed package (n units) | 2 |
-| **Extractor** | Product | Concentrate (½ volume, ×1.8 dose) | 3 |
-| **Cutting table** | Product + filler | More volume, lower quality, higher OD risk | 3 |
+| Pressing bench | Dried + reagents | Product | 2 |
+| Sealing table | Product | Wax-sealed parcel (n units) | 2 |
+| **Alembic** | Product | Essence (½ volume, ×1.8 dose) | 3 |
+| **Cutting board** | Product + filler | More volume, lower quality, higher OD risk | 3 |
 
 Cutting is the moral pressure valve: it is always the profitable choice and always the one
 that makes customers sick, loses loyalty and raises overdose incidents. Design intent is
@@ -181,10 +198,15 @@ that a player who cuts everything gets rich fast and loses their regulars in two
 
 ### 5.4 Quality
 
-Keep the current 0–100 quality with grower and batch labels on the item. Quality becomes a
-product of: strain potency × environment fit × process skill × station tier × (1 − cut ratio).
-Batch labels matter more in the mod: seized goods carry the label, and the law can trace a
-batch back to the plot it came from if the same label shows up twice in evidence.
+Keep the current 0–100 quality with the grower's name and a batch mark on the item, but make
+the mark physical: every parcel leaves the sealing table under a **wax seal**, and every
+grower's seal is distinct. Quality becomes a product of strain potency × environment fit ×
+craft skill × station tier × (1 − cut ratio).
+
+Seals matter more in the mod than labels did in the plugin: goods seized by the Watch keep
+their seal, and the magistrate's clerk files it. The same seal turning up twice in the ledger
+is how a case gets built against you — which makes an unsealed street sale cheap and quiet,
+and a sealed parcel valuable and traceable.
 
 ### 5.5 Condition
 
@@ -196,9 +218,10 @@ withdrawal, craving, overdose and recovery all keep the existing tuning as defau
 - A proper HUD: an intoxication meter, a craving pip, a withdrawal timer. No more guessing.
 - Client-side effects stay **opt-in** exactly as today: camera movement off, shaky aim off,
   nausea off by default. Darkness pulses on. This is a deliberate accessibility stance.
-- Recovery gains a path with structure: clinic treatment, remedy items, a rest bonus, and a
+- Recovery gains a path with structure: a stay at the infirmary, remedy draughts, a rest
+  bonus, and a
   multi-day "clean streak" that unlocks a permanent tolerance-ceiling reduction.
-- `no-vice` server mode reskins the whole condition layer into "tonic fatigue" with no
+- **Tonic mode** (`no-vice`) reskins the whole condition layer into "tonic fatigue" with no
   dependence or withdrawal, for servers that want the economy game without the theme.
 
 ### 5.6 Customers and demand
@@ -219,19 +242,22 @@ drain) and gains a per-cell price modifier so turf control has a direct economic
 
 ### 5.7 Economy
 
-- The built-in wallet becomes primary — Vault does not exist here. Compat with modded
-  currencies is a stretch goal behind a small `CurrencyBridge` interface.
-- **Dirty vs. clean money.** Sales produce dirty money. Dirty money can buy from fixers and
-  gangs; it cannot buy property, bail, colony contracts or the retirement ending.
-- **Laundering** through fronts: a laundromat, a market stall, a taxi rank, or (with
-  MineColonies) a colony business. Each front has a throughput cap per day and a cut, and
-  each one is a liability the law can audit.
-- **Property** — deeds to buildings and turf cells, bought clean, giving passive effects
-  (storage, safehouse respawn, front throughput, patrol suppression).
+- **Emeralds are the money**, as they are in vanilla. Small sums in emeralds, large sums in
+  emerald blocks (9). The plugin's abstract wallet becomes a real purse; the `$` figures in
+  Appendix B are restated as emeralds in Appendix C.
+- **Loose vs. stamped.** Street sales pay in **loose emeralds** — uncut, unmarked, no record.
+  The market's tally clerk will **stamp** them into coin the guilds and the magistrate accept.
+  Loose emeralds buy from brokers, fences and crews. Only stamped coin buys deeds, charters,
+  bail, colony contracts and the retirement ending.
+- **Laundering** is getting loose stone stamped, and it needs a front that plausibly takes
+  coin all day: a **dye house**, a **mill**, a **ferry**, a **tavern**, a **market stall**, or
+  (with MineColonies) a chartered colony business. Each has a daily throughput cap and takes a
+  cut, and each is a liability the magistrate's clerk can audit.
+- **Property** — deeds to buildings and turf cells, bought in stamped coin, giving passive
+  effects: storage, a safehouse respawn, front throughput, quieter streets.
 
-The two-currency split is what makes the spend side interesting: the money you earn is not
-the money that buys the endgame, and converting between them is itself a system with a cost,
-a cap and a risk.
+The split is what makes the spend side interesting: the money you earn is not the money that
+buys the endgame, and converting between them is itself a system with a cost, a cap and a risk.
 
 #### What money buys
 
@@ -240,164 +266,178 @@ Design rule: every sink must convert money into exactly one of four things — *
 a tax and gets cut. Second rule: each tier needs at least one sink priced at 3–5× that tier's
 session income, or wealth plateaus and the economy stops being a game.
 
-**Dirty money — the street buys.** Fast, no questions, no paper trail.
+**Loose emeralds — the street buys.** Fast, no questions, no record.
 
 | Sink | Buys | Converts to |
 | --- | --- | --- |
-| Fixer stock | Rare seeds, stabilised named strains, reagents, fillers, filters | Progression |
-| Station kits | Upgrade tiers: capacity, speed, quality floor, smell suppression | Time |
-| Crew signing bonuses | Hires, and loyalty gifts that keep them from skimming | Time + risk |
-| Muscle for hire | A one-off enforcer squad for a turf push or a defence | Risk |
-| Bribes | Patrol officer (cell heat suppressed N days), dispatcher (raid pre-warning), judge (sentence cut), colony official (policy shift) | Risk |
-| Information | Patrol schedules, the informant list, rival stash locations, an inspection tip-off | Risk |
-| Tribute | War de-escalation, ceasefires, safe passage through a rival quarter | Risk |
-| Smuggling access | Tidewater dock rights, sewer excavation, courier routes | Time |
-| Stash capacity | Lockboxes, hidden caches, a second safehouse | Progression |
-| Cleanup crew | Destroys evidence after a bust before it becomes a case file | Risk |
-| New papers | One-time wanted-level wipe and identity reset. Deliberately brutal pricing | Risk |
+| The broker's stock | Rare seeds, stabilised lines, reagents, fillers, screens | Progression |
+| Station kits | Upgrade tiers: capacity, speed, quality floor, smell damping | Time |
+| Crew hiring | Signing purses, and the gifts that keep a crew from skimming | Time + risk |
+| Hired bruisers | A one-off crew for a turf push or a night's defence | Risk |
+| Bribes | Sergeant of the Watch (quarter suspicion damped), the bell-ringer (early warning of a raid), the magistrate's clerk (a seal lost from the ledger), a colony official | Risk |
+| Word from the tavern | Watch rotas, the informant list, rival stash locations, a whisper that an inspection is coming | Risk |
+| Tribute | War de-escalation, ceasefire, safe passage through a rival quarter | Risk |
+| Passage | Boatmen's dock rights, undercroft digging, courier routes | Time |
+| Stash | Lockboxes, hidden caches under the floor, a second safehouse | Progression |
+| The gravedigger's discretion | Witnesses quieted and seized goods lost before they reach the ledger | Risk |
+| **Writ of pardon** (forged) | One-time bounty wipe and a new name. Deliberately brutal pricing | Risk |
 
-**Clean money — the legitimate buys.** Slow to get, and the only currency the endgame accepts.
+**Stamped coin — the legitimate buys.** Slow to get, and the only money the endgame accepts.
 
 | Sink | Buys | Converts to |
 | --- | --- | --- |
-| Deeds | Buildings, turf-cell titles, greenhouse land | Permanence |
-| Fronts | Buying and upgrading laundering throughput | Permanence |
-| Renovation | District condition, which visibly changes the quarter and lowers cell heat | Status |
-| Legal | Lawyer retainer, bail, appeals | Risk |
-| Medical | Clinic treatment, remedy stock, a multi-day rehab programme | Risk |
-| Insurance | Premiums that pay out a share of a seized stash after a raid | Risk |
-| Licences | Market stall permit, transport permit — fewer checkpoint stops | Risk |
+| Deeds | Buildings, turf-cell titles, glasshouse land | Permanence |
+| Fronts | Buying and upgrading a front's daily throughput | Permanence |
+| Repairs | Quarter condition — boarded windows opened, lanterns hung, streets that look lived in | Status |
+| The speaker | An advocate on retainer, bail, an appeal before the magistrate | Risk |
+| Infirmary | Treatment, remedy draughts, a long stay to break dependence | Risk |
+| **Guild surety** | A bond that pays back a share of a seized stash after a raid | Risk |
+| **Charters** | Market charter, a toll pass, a transport writ — fewer stops at the gate | Risk |
 | Colony | Hut funding, research sponsorship, supply contracts (MineColonies) | Permanence |
-| Training | A trainer NPC sells skill points in Botany, Chemistry, Commerce, Street | Permanence |
-| Community | Charity investment: resident loyalty, patrol suppression, fewer informants | Status |
+| Apprenticeship | A master sells skill in Husbandry, Apothecary, Trade or Underworld | Permanence |
+| Alms | Giving to the quarter: resident loyalty, thinner patrols, fewer informants | Status |
 
 #### Upkeep — the sinks that never stop
 
-Recurring costs are the only reliable answer to late-game wealth, and they double as
-narrative pressure. Daily or weekly: crew wages ($3–8/day by job), safehouse rent, front
-operator cuts, protection payments to whichever faction holds your cell, bribery retainers
-(a bribe lapses, it is not a purchase), insurance premiums, colony contract fees, and lamp
-and hydroponics running costs. Miss a payment and the thing it bought turns on you — an
-unpaid runner skims, a lapsed bribe becomes a tip-off, an unpaid protection fee starts a war.
+Recurring costs are the only reliable answer to late-game wealth, and they double as narrative
+pressure. Every dawn or every eighth day: crew wages, safehouse rent, a front operator's cut,
+protection to whichever crew holds your cell, bribe retainers (a bribe **lapses** — it is not
+a purchase), the guild surety's premium, colony contract fees, and lamp oil for the frames.
+Miss a payment and the thing it bought turns on you: an unpaid runner skims, a lapsed bribe
+becomes a tip-off, unpaid protection starts a war.
 
 #### Vanity and legacy
 
-Status sinks with no mechanical payoff are load-bearing in a game about getting rich: custom
-furniture and murals, naming a stabilised strain into the district registry, owning the
-tavern, renaming a turf cell, a signature package design that customers recognise.
+Status sinks with no mechanical payoff are load-bearing in a game about getting rich: carved
+furniture and painted murals, cutting your stabilised line into the market's tally board,
+owning the tavern, hanging your banner over a turf cell, a wax seal design the whole quarter
+recognises.
 
-The terminal sink is **retirement**. Clean money left over at the ending converts into a
-legacy endowment: permanent world-level perks for your next character (a starting strain, a
-kept contact, a standing bribe, a paid-off cell). That closes the loop — money that would
-otherwise be dead at the ending becomes the next run's opening move.
+The terminal sink is **retirement**. Stamped coin left over at the ending becomes an endowment:
+permanent world-level perks for your next character — a starting line of seed, a kept contact,
+a standing bribe, a cell already paid for. Money that would be dead at the ending becomes the
+next run's opening move.
 
-### 5.8 Heat and the law
+### 5.8 Suspicion and the Watch
 
-The existing heat system is the best-ported piece in the codebase, so it becomes the base
-layer, with escalation above it.
+No police, no forensics, no paperwork Minecraft would not recognise. There is **the Watch**, a
+**bailiff**, a **magistrate**, and a notice board. The plugin's heat system is the best-ported
+piece in the codebase, so it stays the base layer with escalation above it. "Heat" remains the
+name in code; in the fiction it is **suspicion**.
 
 | Layer | Range | Behaviour |
 | --- | --- | --- |
-| Personal heat | 0–100 | As today: inspections, informants, intercepted deliveries, rival offers, raids at 80 with a 120-second warning |
-| Cell heat | 0–100 per turf cell | Drives patrol density, checkpoints and curfews in that cell |
-| Wanted | 0–5 stars | Active pursuit state; decays with distance, disguise or a safehouse |
+| Suspicion (personal) | 0–100 | As today: inspections, informants, intercepted deliveries, rival offers, a raid at 80 announced two hours ahead by the bell |
+| Quarter suspicion | 0–100 per cell | Patrol density, gate stops, and whether the curfew bell rings at dusk |
+| Bounty | 0–5 | Active pursuit, posted on the notice board; falls with distance, a hooded cloak, or a night in a safehouse |
 
-Additions: **evidence** (a seized batch label, a searched crate, a witness statement) that
-persists and builds a case file; **warrants** that let officers enter your property legally;
-**arrest** as a real state (jail cell, timer, bail cost, a lawyer NPC, confiscation of what
-you carried); **K9 units** that detect unsealed goods within a radius reduced by packaging
-tier, filters and strain subtlety; and **bribery** of a named precinct officer, who is also
-a liability if internal affairs ever audits them.
+What is added above the ported layer:
+
+- **Evidence** is physical: a seized wax seal, a searched crate, a witness who talks. The
+  magistrate's clerk files each one, and a case is built when the same seal appears twice.
+- **Writs of search** let the bailiff enter property you own, legally, and dig.
+- **The gaol** makes arrest a real state rather than a death: the stocks for a petty stop
+  (short, humiliating, cheap), a cell with a timer for the rest, bail in stamped coin, an
+  advocate who can shorten it, and confiscation of everything you were carrying.
+- **Houndsmen** walk wolves that follow the smell of unsealed goods. Radius shrinks with wax
+  sealing, charcoal screens and a strain's Subtlety.
+- **Iron golems** answer the bell for a full raid. They are the reason you do not simply fight
+  the Watch at tier 2.
+- **Bribery** buys a sergeant, a bell-ringer or a clerk — each a person, each a liability if
+  the Warden's inspection ever reaches them.
 
 Design rule kept from the plugin: raids never destroy blocks and always warn first.
 
-### 5.9 Gangs and rivalry
+### 5.9 Crews and rivalry
 
-The headline new system. Four powers, each with a doctrine, a home quarter, a substance
-preference and a different way of hurting you.
+The headline new system. Four powers, each built from vanilla mobs so they look like they
+belong, each with a doctrine, a home quarter, a substance and a different way of hurting you.
 
-| Faction | Doctrine | Wants | Pressure style |
-| --- | --- | --- | --- |
-| **Ashfall Crew** | Muscle and extortion | Emberbloom, protection money | Enforcer squads, station sabotage |
-| **Tidewater Syndicate** | Smuggling and logistics | Volume, dock access | Price wars, supply cut-offs, customs tips to the law |
-| **The Glass Choir** | Information and alchemy | Glowcap, secrets | Blackmail, informants, spiked product |
-| **The Quarry Kings** | Mineral trade, tier 4+ | Sparkshard, tunnels | Siege of your safehouse, tunnel collapses |
+| Crew | Made of | Doctrine | Wants | Pressure style |
+| --- | --- | --- | --- | --- |
+| **Ashfall Crew** | Vindicators and villager bruisers | Axes and extortion | Emberbloom, protection money | Enforcer squads, station sabotage |
+| **Tidewater Boatmen** | Pillagers, crossbows, boats | Smuggling and volume | Dock rights, wholesale | Price wars, supply cut-offs, a word to the gate watch |
+| **The Glass Choir** | Witches, vexes, an illusioner | Secrets and draughts | Glowcap, leverage | Blackmail, informants, spiked product |
+| **The Quarry Kings** | Masked outcasts with picks and powder | Stone and tunnels | Sparkshard, the undercroft | Siege, collapsed tunnels, buried stashes |
 
-**Standing** with each runs −100…+100 and moves on everything you do: selling in their
-quarter, taking their contracts, hitting their runners, buying their product, backing a
-rival in a dispute. Standing is zero-sum between opposed pairs — the Choir hates every
-point you gain with Ashfall.
+**Standing** with each runs −100…+100 and moves on everything you do: selling in their quarter,
+taking their contracts, hitting their runners, buying their product, backing a rival in a
+dispute. Standing is zero-sum between opposed pairs — the Choir hates every point you gain
+with Ashfall.
 
-**Turf.** The district is a grid of cells (the plugin's `cell-size: 9`, `radius-cells: 3`
-becomes the default 7×7). Every cell holds an influence vector across the factions and you.
+**Turf.** The quarter is a grid of cells (the plugin's `cell-size: 9`, `radius-cells: 3`
+becomes the default 7×7). Every cell holds an influence vector across the crews and you.
 Influence moves ≈ +0.4 per sale made in the cell, +2 per rival runner removed, +5 per
-protection payment refused and survived, −1/day of absence, −3 per rival event you ignore.
-A cell flips at 51% and consolidates at 75%.
+protection demand refused and survived, −1 per day of absence, −3 per rival event ignored.
+A cell flips at 51% and consolidates at 75%. Control is visible: banners, lanterns, who is
+standing on the corner.
 
-**War.** Standing ≤ −60 with a faction opens a war, which escalates through five stages —
-tagging → runner brawls → station sabotage → assault waves → a siege of your safehouse —
-each with a way to de-escalate (tribute, a hostage returned, a ceded cell, a public favour).
-A war that runs its course ends in a boss confrontation.
+**War.** Standing ≤ −60 opens a war, escalating through five stages — **banners painted over →
+runner brawls → station sabotage → assault waves → siege of your safehouse** — each with a way
+to step back: tribute, a hostage returned, a ceded cell, a public favour at the tavern. A war
+that runs its course ends in a boss confrontation.
 
-**Diplomacy.** Tribute, timed supply contracts, joint operations against a third faction,
-ceasefires with a duration, and betrayal (huge one-time gain, permanent standing floor).
+**Diplomacy.** Tribute, timed supply contracts, joint raids against a third crew, ceasefires
+sworn in the tavern with a duration, and betrayal — a huge one-time gain and a permanent
+standing floor.
 
-**Player gangs (multiplayer).** Players can form a crew that shares turf, stash access and
-standing. Server config picks the stance: cooperative (one shared district), competitive
-(turf contested between player crews, PvP in contested cells only), or free-for-all.
+**Player crews (multiplayer).** Players can swear a crew that shares turf, stash and standing.
+Server config picks the stance: cooperative (one shared quarter), competitive (turf contested
+between player crews, PvP only in contested cells), or free-for-all.
 
 ### 5.10 Bosses
 
-Four staged encounters, each ending an arc and unlocking a tier. Each has a named entity, a
-purpose-built arena, three phases, a non-lethal resolution path, and loot that changes how
-you play rather than just what damage you do.
+Four staged encounters, each ending an arc and unlocking a tier. Each has a named entity built
+from vanilla parts, a purpose-built arena, three phases, a non-lethal resolution, and loot that
+changes how you play rather than what damage you do.
 
 | # | Boss | Arena | Signature mechanics | Non-lethal out | Drops |
 | --- | --- | --- | --- | --- | --- |
-| 1 | **Kell the Collector** (Ashfall) | Burning warehouse | Summons thugs, ground slam, grabs and throws, crates as cover that burn away | Pay triple tribute mid-fight | Ashfall brand deed, enforcer contract, fireproof crate |
-| 2 | **Harbourmaster Vyne** (Tidewater) | Docks and moving barges | Nets that root, crane hazards, water phase where the arena floods | Deliver her rival's manifest | Smuggling route map, bulk contract terminal, tide charts |
-| 3 | **The Choirmaster** (Glass Choir) | Fugue arena built from your own district | Clones that mirror your last actions, spiked fog that raises intoxication, hallucination adds that only you can see | Answer three riddles from your own journal | Strain stabiliser, truth serum, the Choir's ledger (reveals every informant) |
-| 4 | **Commissioner Rade** (Law) | Precinct rooftop under floodlights | Officer waves, flashbangs, K9 pairs, an arrest attempt instead of a kill move; you can lose by capture | Hand over the Choir's ledger | Case file purge, permanent bribery network, the retirement trigger |
+| 1 | **Kell the Collector** (Ashfall) | Burning warehouse | Axe slams, summons vindicators, grabs and throws, stacked crates as cover that burn away | Pay triple tribute mid-fight | Ashfall banner deed, an enforcer's oath, a fireproof crate |
+| 2 | **Harbourmaster Vyne** (Boatmen) | Docks and drifting barges | Nets that root, winch and cargo hooks swinging overhead, a phase where the tide floods the arena | Deliver her rival's manifest | Smuggling charts, a bulk contract board, dock rights |
+| 3 | **The Choirmaster** (Glass Choir) | A fugue arena built from your own quarter | Illusioner mirror-images that mimic your last actions, blinding fog that raises intoxication, hallucination adds only you can see | Answer three riddles out of your own journal | Line stabiliser, truth draught, the Choir's ledger (names every informant) |
+| 4 | **Lord Warden Rade** (the Watch) | The keep's bell-tower under lantern light | Rings the bell to call watch waves, lantern glare that blinds, hound pairs, an iron golem as the heavy, and a **capture** move that takes you to the gaol instead of killing you | Hand over the Choir's ledger | The ledger purged, a standing bribe network, the retirement trigger |
 
-Boss design rules: no bullet-sponge phases; every mechanic telegraphs; each fight is
-survivable at the tier it unlocks with the tier's own tools; death costs the stash you
-carried, never your turf.
+Boss design rules: no sponge phases; every mechanic telegraphs; each fight is survivable at the
+tier that unlocks it using that tier's own tools; death costs the stash you carried, never your
+turf.
 
-Optional hidden fifth: **The Quiet Partner**, the market itself — a lore encounter for
-players who read the whole journal. Design later, deliberately vague for now.
+Optional hidden fifth: **The Quiet Partner**, the market itself — a lore encounter for players
+who read the whole journal. Deliberately vague for now.
 
-### 5.11 Crew
+### 5.11 Your crew
 
-Hire NPCs from the fixer. Each has a job, a wage, a skill (0–100), a loyalty and a vice.
+Hire from the broker. Each has a job, a wage, a skill (0–100), a loyalty and a vice.
 
 | Job | Does | Fails by |
 | --- | --- | --- |
-| Grower | Tends plots on a schedule | Overwatering, forgetting the lamp |
-| Drier / Chemist | Runs stations while you are away | Ruining batches at low skill |
-| Runner | Delivers standing orders, sells at a fixed margin | Getting caught, skimming |
-| Lookout | Warns of patrols, lowers cell heat | Falling asleep at low loyalty |
-| Muscle | Defends stations and turf, escorts deliveries | Starting fights you did not want |
+| Tender | Works the plots and frames on a schedule | Overwatering, letting the lantern go out |
+| Apothecary | Runs racks, bench and alembic while you are away | Ruining batches at low skill |
+| Runner | Carries standing orders, sells at a fixed margin | Getting taken, skimming |
+| Lookout | Warns of patrols, damps quarter suspicion | Falling asleep at low loyalty |
+| Bruiser | Holds stations and turf, escorts deliveries | Starting fights you did not want |
 
-Crew cost is real (wages daily, in clean or dirty money), and crew are a liability: an
-underpaid runner skims, a pressured lookout flips informant, a captured member becomes
-evidence. High-loyalty crew can be promoted to lieutenant and hold a cell for you — that is
-the mechanism that makes the retirement ending possible.
+Crew cost is real — wages each dawn, in loose emeralds or stamped coin — and crew are a
+liability: an underpaid runner skims, a pressured lookout turns informant, a captured member
+becomes evidence. High-loyalty crew can be raised to lieutenant and hold a cell for you, which
+is the mechanism that makes the retirement ending possible.
 
-### 5.12 District, property and the city
+### 5.12 The quarter, property and the city
 
-Two ways to get a district, and this is a deliberate fix for the plugin's weakest point:
+Two ways to get a quarter, and this is a deliberate fix for the plugin's weakest point:
 
 1. **Natural generation (new default).** A rundown quarter generates as a structure in a
-   configured biome/distance band, so no existing player build or village is ever touched.
+   configured biome and distance band — lodgings, workshops, a tavern, an infirmary, a
+   warehouse and a market — so no existing player build or village is ever touched.
 2. **Annexation (opt-in).** The existing village takeover, kept intact: journalled,
    restorable, player-edit aware, refuses to run without a snapshot, skips unsafe houses,
    preserves native villagers. Off by default in the mod.
 
-The district itself keeps a **condition** score (starts at 25) that shifts with your
-investment and the gangs' hold, and now drives visible change: boarded windows open up,
-lighting improves, graffiti changes owner, NPC density and behaviour shift. Buildings
-become ownable property with upgrade slots. A **sewer network** under the quarter links
-safehouses for fast travel and heat-free transport, and doubles as tier-4 grow space.
+The quarter keeps a **condition** score (starts at 25) that shifts with your investment and
+the crews' hold, and now drives visible change: boarded windows opened, lanterns lit, painted
+banners changing owner, who walks the street and when. Buildings become ownable property with
+upgrade slots. An **undercroft** — old mine tunnels and cellars beneath the quarter — links
+safehouses for quiet movement and doubles as tier-4 growing space away from every window.
 
 ### 5.13 MineColonies interface
 
@@ -422,8 +462,8 @@ available.
 
 **Supply, both directions.** Buy bulk ingredients through the colony request system; sell
 legitimate goods (remedy, fertiliser, dried non-psychoactive crops) for standing. A colony
-you keep healthy becomes the best laundering front in the game: a *registered business*
-converts dirty to clean at a rate scaled by real colony production.
+you keep healthy becomes the best laundering front in the game: a **chartered business**
+stamps loose emeralds into coin at a rate scaled by real colony production.
 
 **Interface shape.** A thin `ColonyBridge` service interface in core with a no-op default;
 the compat module implements it against the MineColonies API (colony manager, colony,
@@ -448,35 +488,39 @@ NPCs. Nothing in the critical path requires the integration.
 
 ## 6. Content manifest (target for 1.0)
 
-- **Items** ~70: seeds, raw, dried, product, package, concentrate per substance (7 × 6),
-  remedy tiers, fertilisers, filters, reagents, fillers, deeds, contracts, journal,
-  stabiliser, evidence bags, boss uniques.
-- **Blocks** ~25: growbox (4 stages × lamp states), drying rack, processing bench,
-  packaging station, extractor, cutting table, propagation table, storage crate, drop box,
-  safehouse door, front-business counter, planters, district decoration set.
-- **Entities** ~14: customer, resident, guard, medic, fixer, trader, thug, officer, K9,
-  runner, lookout, muscle, hallucination, plus 4 bosses.
-- **Structures**: rundown quarter (jigsaw, ~20 pieces), docks, precinct, sewer network,
-  abandoned greenhouse, 4 boss arenas.
-- **Screens** ~12: each station, journal (5 tabs), contracts, crew, turf map, clinic, fixer.
+- **Items** ~70: seeds, raw, dried, product, sealed parcel, essence per substance (7 × 6),
+  remedy draughts, composts, screens, reagents, fillers, deeds, charters, contracts, journal,
+  line stabiliser, seized-goods sacks, wax seals, boss uniques.
+- **Blocks** ~25: forcing frame (4 stages × lantern states), drying rack, pressing bench,
+  sealing table, alembic, cutting board, grafting bench, storage crate, drop crate, safehouse
+  door, front counter, planters, notice board, quarter decoration set.
+- **Entities** ~14: customer, resident, watchman, healer, broker, trader, bruiser, houndsman
+  with wolves, runner, lookout, hired muscle, hallucination, plus 4 bosses. Iron golems answer
+  the bell; vindicators, pillagers, witches and an illusioner body the rival crews.
+- **Structures**: rundown quarter (jigsaw, ~20 pieces), docks, watch house and gaol, undercroft
+  tunnels, abandoned glasshouse, 4 boss arenas.
+- **Screens** ~12: each station, journal (5 tabs), contracts, crew, turf map, infirmary, broker.
 - **Audio** ~30 cues; **particles** ~8; **advancements** ~40; **i18n**: `en_us` + `de_de` at 1.0.
 
----
 
 ## 7. UI and UX
 
 - **HUD** (client config, all individually toggleable): intoxication meter, craving pip,
   heat bar shown only above 0, wanted stars, active contract line.
-- **Journal** — the mod's codex and quest log in one book-style screen: Substances (with
+- **Journal** — a written book, the mod's codex and quest log in one screen: Substances (with
   discovered strain data), Contacts (customers, loyalty, tells), Turf (influence map),
   Heat (case files, known evidence), Crew, Contracts, Factions.
-- **Turf map** — a screen-level district map, cells tinted by controlling faction, with
-  influence deltas since last visit.
-- **Station screens** — direct manipulation with live readouts: the growbox shows its
-  environment dials and what is out of band; the bench shows why a batch scored what it did.
+- **Turf map** — a filled map on a cartography table, cells marked with each crew's banner,
+  showing what moved since your last visit.
+- **Station screens** — direct manipulation with plain readouts: the forcing frame shows
+  warmth, damp and light and which one is out of band; the bench shows why a batch scored
+  what it did.
   Design rule: the player should never have to consult a wiki to learn why quality dropped.
-- **Notifications** — one channel, rate-limited, never a wall of chat. Urgent events
-  (raid warning, war escalation) use a toast plus a sound, not spam.
+- **Notifications** — one channel, rate-limited, never a wall of chat. Urgent events (the
+  raid bell, war escalation) use a toast plus a sound, not spam.
+- **Look and feel** — parchment, wood, stone and wrought iron, lit by lantern. No glass
+  panels, no glowing readouts, no sans-serif dashboards. Every screen should look like
+  something a villager could have built.
 
 ---
 
@@ -575,8 +619,8 @@ Single developer, focused weeks. Multiply by 2.5–3 for evenings-and-weekends p
 | --- | --- | --- |
 | **M0 Parity port** | Everything in 1.2.2, running as a mod: items, stations, farm, NPCs, heat, district, commands, migration importer | 4–8 wk |
 | **M1 Native content** | Real models and blocks, proper screens, HUD, journal, natural district generation, JEI/Jade | 3–5 wk |
-| **M2 Law and crew** | Evidence, warrants, arrest and bail, K9, wanted levels, crew hiring and jobs | 3–4 wk |
-| **M3 Gangs and turf** | Factions, standing, influence grid, war escalation, diplomacy, player crews | 4–6 wk |
+| **M2 The Watch and your crew** | Evidence, writs of search, the gaol and bail, houndsmen, bounty, crew hiring and jobs | 3–4 wk |
+| **M3 Crews and turf** | Rival crews, standing, influence grid, war escalation, diplomacy, player crews | 4–6 wk |
 | **M4 Bosses** | 4 encounters, arenas, AI, loot, unlocks (art and animation heavy) | 3–5 wk |
 | **M5 MineColonies** | `ColonyBridge`, market nodes, colonist customers, vice, requests, fronts | 2–4 wk |
 | **M6 Release** | Strains and extraction polish, balance pass, advancements, `de_de`, docs, live playtest | 3–4 wk |
@@ -586,8 +630,8 @@ Roughly 5–8 months full time, 12–18 months part time. Art is the hidden cost
 textures and models, plus four bosses. That is a second skill set and probably a second
 person, or a scope cut on visual ambition.
 
-**Cut lines if time runs short**, in order: hidden fifth boss → strain genetics → sewer
-network → Create/Farmer's Delight compat → player-vs-player crews → extraction tier.
+**Cut lines if time runs short**, in order: hidden fifth boss → strain breeding → the
+undercroft → Create/Farmer's Delight compat → player-vs-player crews → extraction tier.
 Never cut: journalled reversibility, config toggles, the `sim` boundary.
 
 ---
@@ -602,7 +646,7 @@ Never cut: journalled reversibility, config toggles, the `sim` boundary.
 | Art volume | Slips the whole schedule | Datagen for everything procedural; placeholder-to-final pipeline as the plugin already does |
 | Boss animation needs GeckoLib | Extra hard dependency | Prototype one boss with vanilla model parts first, decide with data |
 | Simulation desync in multiplayer | Bad bug class | Server authoritative for all state; client gets display-only snapshots |
-| Theme rejection by some servers | Reduced reach | `no-vice` mode and full toggles are first-class, not afterthoughts |
+| Theme rejection by some servers | Reduced reach | Tonic mode and full toggles are first-class, not afterthoughts |
 | Untested gameplay in the existing plugin | Unknown balance | M0 exit gate is a live playthrough, not a build |
 
 ---
@@ -611,7 +655,7 @@ Never cut: journalled reversibility, config toggles, the `sim` boundary.
 
 1. **Loader and MC version** — NeoForge for which target exactly? Everything else waits on it.
 2. **GeckoLib or vanilla models** for bosses and NPCs? Affects dependency policy and art pipeline.
-3. **One district or many?** The plugin supports one; the syndicate tier assumes several.
+3. **One quarter or many?** The plugin supports one; the guild tier assumes several.
 4. **PvP stance** — cooperative, competitive turf, or server-configurable (my recommendation)?
 5. **Is MineColonies compat core or optional?** Designed here as optional; confirm.
 6. **Keep village annexation at all**, now that natural generation exists? Recommendation:
@@ -638,27 +682,73 @@ real-money transactions · automatic world edits outside a journalled, restorabl
 - Factions, bosses and strains are invented proper nouns and never reference real people,
   organisations or places.
 
-## Appendix C — Price ladder
-
-Anchors, not balance decisions. The rule is that the tier's headline sink costs 3–5× that
-tier's per-session income, so there is always something out of reach.
-
-| Tier | Session income | Headline sink | Price | Upkeep/day |
-| --- | --- | --- | --- | --- |
-| 0 | $30–80 | Growbox kit | $250 | $0 |
-| 1 | $100–250 | Drying rack + first strain | $600 | $3 |
-| 2 | $300–700 | Processing bench, first hire, first cell | $2,500 | $15 |
-| 3 | $800–2,000 | Lab and extractor, safehouse | $8,000 | $60 |
-| 4 | $2,500–6,000 | Front business, second district | $30,000 | $250 |
-| 5 | $8,000–20,000 | City influence, precinct bribery network | $120,000 | $900 |
-| — | — | New papers (wanted wipe) | $25,000 dirty | — |
-| — | — | Retirement threshold (laundered lifetime) | $250,000 clean | — |
-
 ## Appendix B — Starting balance figures
 
 Carried from the current `config.yml` as defaults for the mod, to be re-tuned after the
-first live playtest: base prices 10 (Sunleaf) upward by substance · demand cap 64 units ·
-demand refill 2.0/min · rival drain 0.6/min · tolerance decay 0.15/min · dependence decay
-0.08/min after 20 min · rest bonus ×2.5 · craving after 15 min, every 4 min · overdose at 95
-· raid threshold 80 with 120 s warning · clinic treatment $60 · remedy $25 · starting wallet
-$50 · district 9-block cells, radius 3 · crew wages $3–8/in-game day by job (new).
+first live playtest. Money figures convert to emeralds per Appendix C — the plugin's `$10`
+base price becomes about 2 e per Standard unit.
+
+Demand cap 64 units · demand refill 2.0/min · rival drain 0.6/min · tolerance decay 0.15/min
+· dependence decay 0.08/min after 20 min · rest bonus ×2.5 · craving after 15 min, every
+4 min · overdose at 95 · raid threshold 80 with a two-hour bell warning · infirmary treatment
+12 e · remedy draught 5 e · starting purse 10 e · quarter 9-block cells, radius 3 · crew
+wages 1–3 e per dawn by job (new).
+
+## Appendix C — Price ladder, in emeralds
+
+Anchors, not balance decisions. Small sums in emeralds (e), large sums in emerald blocks
+(1 block = 9 e). The rule is that a tier's headline sink costs 3–5× that tier's session
+income, so something is always out of reach. One unit of Standard-quality product sells for
+about 2 e, which is where the plugin's `base-price: 10` lands once money is emeralds.
+
+| Tier | Session income | Headline sink | Price | Upkeep/day |
+| --- | --- | --- | --- | --- |
+| 0 | 3–8 e | Forcing frame kit | 24 e | — |
+| 1 | 10–25 e | Drying rack + first named line | 60 e | 3 e |
+| 2 | 30–70 e | Pressing bench, first hire, first cell | 250 e (28 blocks) | 12 e |
+| 3 | 80–200 e | Alembic and safehouse | 800 e (89 blocks) | 45 e |
+| 4 | 250–600 e | Chartered front, second quarter | 3,000 e (333 blocks) | 180 e |
+| 5 | 800–2,000 e | Quarter control, bribe network | 12,000 e (1,333 blocks) | 700 e |
+| — | — | Forged writ of pardon (bounty wipe) | 2,500 e loose | — |
+| — | — | Retirement threshold (lifetime stamped) | 25,000 e | — |
+
+## Appendix D — Terminology
+
+The reskin table. Left is the modern crime-fiction term this document started with; right is
+what ships. If a new idea has no right-hand column, it is not ready.
+
+| Modern | In-world |
+| --- | --- |
+| Dollars / wallet | Emeralds / purse; emerald blocks for large sums |
+| Dirty money | Loose emeralds — uncut, unmarked |
+| Clean money | Stamped coin, assayed by the market's tally clerk |
+| Money laundering | Getting loose stone stamped through a front |
+| Laundromat / taxi rank | Dye house, mill, ferry, tavern, market stall |
+| Police / precinct | The Watch / the watch house and gaol |
+| Officer, detective | Watchman, bailiff |
+| Police chief | The Lord Warden |
+| Judge, court | Magistrate, the hearing |
+| Lawyer | Speaker, an advocate on retainer |
+| Search warrant | Writ of search |
+| Case file, forensics | The magistrate's ledger of seized wax seals |
+| Batch label | Wax seal, a grower's mark |
+| K9 unit | Houndsman with wolves |
+| Police radio, dispatcher | The bell tower and its ringer |
+| SWAT / heavy response | Iron golems answering the bell |
+| Arrest, jail, bail | Taken, the gaol or the stocks, bail in stamped coin |
+| Wanted level | Bounty, posted on the notice board |
+| Identity papers, ID reset | A forged writ of pardon |
+| Insurance | Guild surety |
+| Business licence, permit | Charter, toll pass, transport writ |
+| Gang, syndicate, cartel | Crew, guild, the Boatmen, the Choir |
+| Drug lab, chemist | Apothecary's bench and alembic |
+| Extractor, concentrate | Alembic, essence |
+| Hydroponics | Flood beds, irrigated terraces |
+| Grow box, grow lamp | Forcing frame, lantern |
+| Propagation table, genetics | Grafting bench, a line and its lineage |
+| Clinic, rehab, medic | Infirmary, a long stay, the healer |
+| Fixer | Broker, fence |
+| Sewer network | The undercroft — old mine tunnels and cellars |
+| Apartments | Lodgings |
+| Burner phone, comms | A runner, a written book, the notice board |
+| Skill tree | Apprenticeship under a master: Husbandry, Apothecary, Trade, Underworld |
