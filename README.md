@@ -46,6 +46,10 @@ Takeovers journal changed blocks before modifying them and preserve native villa
 
 Java 25 build and 67,600 regression assertions passed against Paper API 26.3.build.18-alpha. No live Minecraft client/server gameplay test has been performed; use a copied world for first testing.
 
+## Design
+
+[SlumDrugs as a standalone mod](docs/MOD-GDD.md) is a draft design document for a NeoForge/Forge version: what ports from this plugin, what gets rewritten, and the larger systems a mod makes possible (gang rivalry and turf, boss encounters, a hired crew, a MineColonies interface). Design only; nothing there is implemented.
+
 ## Build
 
 Run `./gradlew build exportPack`, or `gradlew.bat build exportPack` on Windows.
