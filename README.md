@@ -25,6 +25,8 @@ resource-pack:
   prompt: "<gold>SlumDrugs</gold><gray> needs its textures and furniture pack.</gray>"
 ```
 
+The plugin JAR carries these notes: `README.md` and `docs/RESOURCE-PACK.md` sit inside it, so the resource-pack setup travels with the plugin file.
+
 Use `/drugs reload` after configuration changes and reconnect to receive the pack. No resource-pack settings in `server.properties` are needed; avoid sending the same pack twice. When publishing an edited ZIP, use a new versioned filename and update its URL and SHA-1 together.
 
 ## Commands

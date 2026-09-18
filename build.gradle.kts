@@ -48,6 +48,9 @@ tasks {
     }
     jar {
         archiveFileName.set("SlumDrugs-${project.version}.jar")
+        // Ships the setup notes, including the required join-time resource pack, inside the JAR.
+        from(layout.projectDirectory.file("README.md"))
+        from(layout.projectDirectory.file("docs/RESOURCE-PACK.md")) { into("docs") }
     }
     compileJava {
         options.encoding = "UTF-8"
