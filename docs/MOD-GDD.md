@@ -229,6 +229,68 @@ drain) and gains a per-cell price modifier so turf control has a direct economic
 - **Property** — deeds to buildings and turf cells, bought clean, giving passive effects
   (storage, safehouse respawn, front throughput, patrol suppression).
 
+The two-currency split is what makes the spend side interesting: the money you earn is not
+the money that buys the endgame, and converting between them is itself a system with a cost,
+a cap and a risk.
+
+#### What money buys
+
+Design rule: every sink must convert money into exactly one of four things — **time saved**,
+**risk reduced**, **permanent progression**, or **status**. A sink that does none of those is
+a tax and gets cut. Second rule: each tier needs at least one sink priced at 3–5× that tier's
+session income, or wealth plateaus and the economy stops being a game.
+
+**Dirty money — the street buys.** Fast, no questions, no paper trail.
+
+| Sink | Buys | Converts to |
+| --- | --- | --- |
+| Fixer stock | Rare seeds, stabilised named strains, reagents, fillers, filters | Progression |
+| Station kits | Upgrade tiers: capacity, speed, quality floor, smell suppression | Time |
+| Crew signing bonuses | Hires, and loyalty gifts that keep them from skimming | Time + risk |
+| Muscle for hire | A one-off enforcer squad for a turf push or a defence | Risk |
+| Bribes | Patrol officer (cell heat suppressed N days), dispatcher (raid pre-warning), judge (sentence cut), colony official (policy shift) | Risk |
+| Information | Patrol schedules, the informant list, rival stash locations, an inspection tip-off | Risk |
+| Tribute | War de-escalation, ceasefires, safe passage through a rival quarter | Risk |
+| Smuggling access | Tidewater dock rights, sewer excavation, courier routes | Time |
+| Stash capacity | Lockboxes, hidden caches, a second safehouse | Progression |
+| Cleanup crew | Destroys evidence after a bust before it becomes a case file | Risk |
+| New papers | One-time wanted-level wipe and identity reset. Deliberately brutal pricing | Risk |
+
+**Clean money — the legitimate buys.** Slow to get, and the only currency the endgame accepts.
+
+| Sink | Buys | Converts to |
+| --- | --- | --- |
+| Deeds | Buildings, turf-cell titles, greenhouse land | Permanence |
+| Fronts | Buying and upgrading laundering throughput | Permanence |
+| Renovation | District condition, which visibly changes the quarter and lowers cell heat | Status |
+| Legal | Lawyer retainer, bail, appeals | Risk |
+| Medical | Clinic treatment, remedy stock, a multi-day rehab programme | Risk |
+| Insurance | Premiums that pay out a share of a seized stash after a raid | Risk |
+| Licences | Market stall permit, transport permit — fewer checkpoint stops | Risk |
+| Colony | Hut funding, research sponsorship, supply contracts (MineColonies) | Permanence |
+| Training | A trainer NPC sells skill points in Botany, Chemistry, Commerce, Street | Permanence |
+| Community | Charity investment: resident loyalty, patrol suppression, fewer informants | Status |
+
+#### Upkeep — the sinks that never stop
+
+Recurring costs are the only reliable answer to late-game wealth, and they double as
+narrative pressure. Daily or weekly: crew wages ($3–8/day by job), safehouse rent, front
+operator cuts, protection payments to whichever faction holds your cell, bribery retainers
+(a bribe lapses, it is not a purchase), insurance premiums, colony contract fees, and lamp
+and hydroponics running costs. Miss a payment and the thing it bought turns on you — an
+unpaid runner skims, a lapsed bribe becomes a tip-off, an unpaid protection fee starts a war.
+
+#### Vanity and legacy
+
+Status sinks with no mechanical payoff are load-bearing in a game about getting rich: custom
+furniture and murals, naming a stabilised strain into the district registry, owning the
+tavern, renaming a turf cell, a signature package design that customers recognise.
+
+The terminal sink is **retirement**. Clean money left over at the ending converts into a
+legacy endowment: permanent world-level perks for your next character (a starting strain, a
+kept contact, a standing bribe, a paid-off cell). That closes the loop — money that would
+otherwise be dead at the ending becomes the next run's opening move.
+
 ### 5.8 Heat and the law
 
 The existing heat system is the best-ported piece in the codebase, so it becomes the base
@@ -575,6 +637,22 @@ real-money transactions · automatic world edits outside a journalled, restorabl
   `slumdrugs:processing_bench`, `slumdrugs:customer`.
 - Factions, bosses and strains are invented proper nouns and never reference real people,
   organisations or places.
+
+## Appendix C — Price ladder
+
+Anchors, not balance decisions. The rule is that the tier's headline sink costs 3–5× that
+tier's per-session income, so there is always something out of reach.
+
+| Tier | Session income | Headline sink | Price | Upkeep/day |
+| --- | --- | --- | --- | --- |
+| 0 | $30–80 | Growbox kit | $250 | $0 |
+| 1 | $100–250 | Drying rack + first strain | $600 | $3 |
+| 2 | $300–700 | Processing bench, first hire, first cell | $2,500 | $15 |
+| 3 | $800–2,000 | Lab and extractor, safehouse | $8,000 | $60 |
+| 4 | $2,500–6,000 | Front business, second district | $30,000 | $250 |
+| 5 | $8,000–20,000 | City influence, precinct bribery network | $120,000 | $900 |
+| — | — | New papers (wanted wipe) | $25,000 dirty | — |
+| — | — | Retirement threshold (laundered lifetime) | $250,000 clean | — |
 
 ## Appendix B — Starting balance figures
 
