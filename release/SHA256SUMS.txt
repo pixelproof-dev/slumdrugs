@@ -1,0 +1,3 @@
+dfcafde42bfaf3127088c92f75f0abeefd6f632ad9d6aa2cdbf937006fa98f15  SlumDrugs-1.2.2.jar
+a8983f6ff195c4fc3cfe52eb2bff937bb20096d93bb3011da6c299feef8e670e  SlumDrugs-ResourcePack-1.2.0.zip
+132e3a91f3ea3cf16a95cf8748c42aecf6672c01c6f162beffd78b3471c2a078  SlumDrugs-Source-1.2.2.zip

@@ -1,0 +1,152 @@
+# Fictional substances. Everything here is made from ordinary Minecraft ingredients.
+#
+# Per drug:
+#   name / color            display name and MiniMessage colour
+#   base-price              money per unit at Standard quality with healthy demand
+#   dose                    intoxication added per unit used (0-100 scale)
+#   duration                base effect duration in ticks (20 = 1 second)
+#   tolerance-gain          tolerance added per use; tolerance weakens the effects
+#   dependence-gain         dependence added per use; dependence enables craving/withdrawal
+#   withdrawal-delay-minutes  minutes after last use before withdrawal can start
+#   effects                 "effect:amplifier" applied on use
+#   withdrawal-effects      mild effects applied during withdrawal (kept gentle on purpose)
+#   hallucinations          personal sounds/particles/phantom mobs while intoxicated
+#   crop                    (optional) growing chain: seed -> raw harvest -> dried
+#   product                 what the Processing Bench makes; inputs use
+#                           "kind:drug:amount" for plugin items or "MATERIAL:amount" for vanilla items
+
+drugs:
+  sunleaf:
+    name: "Sunleaf"
+    color: "#7bd35a"
+    base-price: 10
+    dose: 20
+    duration: 1200
+    tolerance-gain: 3
+    dependence-gain: 1.5
+    withdrawal-delay-minutes: 30
+    effects: ["regeneration:0", "luck:0"]
+    withdrawal-effects: ["mining_fatigue:0"]
+    hallucinations: false
+    crop:
+      block: WHEAT
+      soil: FARMLAND
+      seed-material: WHEAT_SEEDS
+      seed-name: "Sunleaf Seeds"
+      raw-material: KELP
+      raw-name: "Sunleaf Bud"
+      dried-material: DRIED_KELP
+      dried-name: "Dried Sunleaf"
+      growth-minutes: 10
+      yield: 3
+      preferred-biomes: [plains, sunflower_plains, forest, meadow, savanna, flower_forest]
+      temperature: [0.5, 1.2]
+      light-min: 9
+      dry-seconds: 90
+    product:
+      material: STICK
+      name: "Sunleaf Roll"
+      inputs: ["dried:sunleaf:2", "PAPER:1"]
+      output: 2
+
+  frostroot:
+    name: "Frostdust"
+    color: "#9be7ff"
+    base-price: 28
+    dose: 30
+    duration: 900
+    tolerance-gain: 6
+    dependence-gain: 4
+    withdrawal-delay-minutes: 20
+    effects: ["speed:1", "haste:1", "strength:0"]
+    withdrawal-effects: ["slowness:0", "weakness:0"]
+    hallucinations: false
+    crop:
+      block: BEETROOTS
+      soil: FARMLAND
+      seed-material: BEETROOT_SEEDS
+      seed-name: "Frostroot Seeds"
+      raw-material: LIGHT_BLUE_DYE
+      raw-name: "Frostroot"
+      dried-material: PRISMARINE_CRYSTALS
+      dried-name: "Frostroot Shards"
+      growth-minutes: 14
+      yield: 2
+      preferred-biomes: [snowy_plains, snowy_taiga, taiga, ice_spikes, frozen_peaks, grove, snowy_slopes, old_growth_pine_taiga]
+      temperature: [-1.0, 0.35]
+      light-min: 8
+      dry-seconds: 120
+    product:
+      material: SUGAR
+      name: "Frostdust"
+      inputs: ["dried:frostroot:3", "SUGAR:1"]
+      output: 2
+
+  emberbloom:
+    name: "Emberbloom"
+    color: "#ff7a3d"
+    base-price: 45
+    dose: 40
+    duration: 1000
+    tolerance-gain: 7
+    dependence-gain: 6
+    withdrawal-delay-minutes: 15
+    effects: ["regeneration:1", "resistance:0", "slowness:0"]
+    withdrawal-effects: ["weakness:0", "mining_fatigue:0", "hunger:0"]
+    hallucinations: true
+    crop:
+      block: NETHER_WART
+      soil: SOUL_SAND
+      seed-material: NETHER_WART
+      seed-name: "Emberbloom Seeds"
+      raw-material: MAGMA_CREAM
+      raw-name: "Ember Resin"
+      dried-material: BLAZE_POWDER
+      dried-name: "Cured Ember Resin"
+      growth-minutes: 18
+      yield: 2
+      preferred-biomes: [nether_wastes, soul_sand_valley, crimson_forest, warped_forest, basalt_deltas, desert, badlands]
+      temperature: [1.4, 2.5]
+      light-min: 6
+      dry-seconds: 150
+    product:
+      material: GHAST_TEAR
+      name: "Emberbloom Tincture"
+      inputs: ["dried:emberbloom:2", "GLASS_BOTTLE:1"]
+      output: 1
+
+  glowcap:
+    name: "Glowcap"
+    color: "#d58cff"
+    base-price: 18
+    dose: 30
+    duration: 1400
+    tolerance-gain: 3
+    dependence-gain: 1
+    withdrawal-delay-minutes: 60
+    effects: ["night_vision:0", "jump_boost:1"]
+    withdrawal-effects: ["slowness:0"]
+    hallucinations: true
+    product:
+      material: GLOW_INK_SAC
+      name: "Glowcap"
+      inputs: ["BROWN_MUSHROOM:2", "GLOW_BERRIES:1"]
+      output: 2
+
+  sparkshard:
+    name: "Sparkshard"
+    color: "#fff26b"
+    base-price: 35
+    dose: 35
+    duration: 800
+    tolerance-gain: 8
+    dependence-gain: 7
+    withdrawal-delay-minutes: 12
+    effects: ["haste:2", "speed:0", "strength:1", "hunger:1"]
+    withdrawal-effects: ["weakness:0", "mining_fatigue:0", "slowness:0"]
+    hallucinations: true
+    product:
+      material: QUARTZ
+      name: "Sparkshard"
+      inputs: ["GUNPOWDER:1", "SUGAR:2", "REDSTONE:1", "BLAZE_POWDER:1"]
+      output: 3

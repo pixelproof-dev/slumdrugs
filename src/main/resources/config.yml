@@ -1,0 +1,99 @@
+# SlumDrugs configuration. Times are real minutes/seconds unless stated otherwise.
+
+economy:
+  use-vault: true          # hook Vault if it is installed, otherwise use the built-in wallet
+  starting-balance: 50
+
+condition:
+  tolerance-decay-per-minute: 0.15
+  dependence-decay-per-minute: 0.08       # base recovery speed, always active after the delay
+  dependence-decay-delay-minutes: 20      # no recovery while still using
+  rest-bonus-multiplier: 2.5              # recovery speed after a full night's sleep (lasts 10 min)
+  craving-delay-minutes: 15               # after last use, before cravings start
+  craving-interval-minutes: 4
+  craving-min-dependence: 20
+  withdrawal-min-dependence: 40
+  disturbed-sleep: true                   # chance to be woken during withdrawal
+  camera-movement: false                  # explicit opt-in required for any aim nudges
+  shaky-aim: false                        # also requires camera-movement: true
+  darkness-pulses: true                   # brief darkness at very high intoxication
+  nausea: false                           # forced camera wobble is off by default
+  overdose-threshold: 95
+
+clinic:
+  treatment-price: 60
+  treatment-dependence-reduction: 25
+  treatment-suppress-minutes: 15
+  remedy-price: 25
+
+farming:
+  tick-seconds: 5
+  fertilizer-boost: 0.35
+  fertilizer-max-charges: 3
+  greenhouse-scan-height: 8
+
+market:
+  demand-max: 64                          # units per drug the district absorbs before prices crash
+  demand-refill-per-minute: 2.0
+  rival-drain-per-minute: 0.6             # competing suppliers eat demand (less with gang reputation)
+  walk-in-customers: true
+  max-customers-per-district: 6
+
+heat:
+  decay-per-minute: 1.0
+  witnessed-sale-guard: 10
+  witnessed-sale-resident: 4
+  sale-base: 1
+  theft: 5
+  faction-job: 3
+
+events:
+  inspections: true
+  inspection-min-heat: 30
+  fine-base: 40
+  informants: true
+  rival-offers: true
+  intercepted-deliveries: true
+
+raids:
+  enabled: true
+  threshold: 80
+  warning-seconds: 120                    # players are always warned this long in advance
+  confiscate-inventory: true
+  uproot-nearby-plots: false              # never destroys blocks; only unregisters plots within 20 blocks
+  search-crates: false
+  officers: 4
+  officer-lifetime-seconds: 180
+
+district:
+  cell-size: 9
+  radius-cells: 3
+  customer-profiles: 8
+  guards: 3
+  thug-spawn-interval-seconds: 240
+  max-thugs: 4
+  condition-start: 25
+  outpost-distance: 120
+
+effects:
+  hallucination-mobs: [ZOMBIE, ENDERMAN, CAT, VEX, WITCH]
+  hallucination-interval-seconds: 12
+
+# Conversion only touches loaded villages. One active district is supported.
+village-takeover:
+  enabled: true
+  automatic: true
+  houses: 3
+  search-radius: 96
+  min-distance-between: 512
+  reuse-villagers: true
+  snapshot: true # Takeover refuses to run without a reversible snapshot.
+
+# Offer the textures automatically on join. Host the ZIP at a public direct-download URL.
+# This needs no resource-pack settings in server.properties; avoid configuring it twice.
+resource-pack:
+  enabled: true
+  url: "https://raw.githubusercontent.com/pixelproof-dev/slumdrugs/main/release/SlumDrugs-ResourcePack-1.2.0.zip"
+  sha1: "79984106053fc8b4cdaae4ad5ae546330078e6f7" # Release 1.2.0 ZIP; update for edited packs.
+  required: true # Decline or download/load failure disconnects the joining player.
+  prompt: "<gold>SlumDrugs</gold><gray> needs its textures and furniture pack.</gray>"
