@@ -5,6 +5,7 @@ import dev.lucas.slumdrugs.sim.drug.Quality;
 import dev.lucas.slumdrugs.sim.drug.Refining;
 import dev.lucas.slumdrugs.sim.drug.UnitTransfer;
 import dev.lucas.slumdrugs.sim.economy.MarketState;
+import dev.lucas.slumdrugs.sim.player.Condition;
 import dev.lucas.slumdrugs.sim.player.Recovery;
 import dev.lucas.slumdrugs.sim.station.GrowboxState;
 import dev.lucas.slumdrugs.sim.world.RoomFlood;
@@ -33,6 +34,7 @@ public final class SimChecks {
         roomFlood();
         growbox();
         recovery();
+        condition();
         unitTransfer();
         quality();
         cultivation();
@@ -102,6 +104,105 @@ public final class SimChecks {
         split = Recovery.dependence(split, 30 * minute, 60 * minute, 0, 20 * minute, 25 * minute, .08, 2.5);
         close(split, 75.6, "save/load recovery agrees with continuous recovery");
         close(Recovery.dependence(5, 0, 10000 * minute, 0, 0, 0, .08, 2.5), 0, "recovery lower bound");
+    }
+
+    // ---------------------------------------------------------------- condition
+
+    private static void condition() {
+        long minute = 60000L;
+        var settings = Condition.Settings.defaults();
+
+        // A dose lands in full on a clean user and is blunted, never blocked, on a hardened one.
+        var fresh = new Condition(0, 0, 0);
+        var hardened = new Condition(0, 100, 0);
+        double freshDose = fresh.effectiveDose(20, 50);
+        double hardenedDose = hardened.effectiveDose(20, 50);
+        check(hardenedDose < freshDose, "tolerance blunts a dose");
+        check(hardenedDose >= freshDose * 0.5, "tolerance never blocks a dose entirely");
+        check(fresh.effectiveDose(20, 100) > fresh.effectiveDose(20, 0), "better goods hit harder");
+        close(fresh.effectiveDose(0, 100), 0, "no dose, no effect");
+
+        // Using raises all three, and nothing leaves the scale.
+        var user = new Condition(0, 0, 0);
+        double gained = user.use(20, 50, 3, 1.5, 10 * minute);
+        check(gained > 0, "using gets you high");
+        check(user.tolerance == 3 && user.dependence == 1.5, "using builds tolerance and dependence");
+        check(user.lastUse == 10 * minute, "using is remembered");
+        for (int i = 0; i < 200; i++) user.use(20, 100, 3, 1.5, 10 * minute);
+        check(user.intoxication <= 100 && user.tolerance <= 100 && user.dependence <= 100,
+                "nothing exceeds the scale however hard it is pushed");
+
+        // Overdose is a warning the player can act on, not a surprise.
+        var high = new Condition(90, 0, 0);
+        check(high.wouldOverdose(20, 50), "a dose on top of a high player would overdose");
+        check(!new Condition(0, 0, 0).wouldOverdose(20, 50), "a first dose is safe");
+
+        // Coming down: intoxication goes first, the rest much later.
+        var coming = new Condition(60, 50, 50);
+        coming.lastUse = 0;
+        coming.advance(0, 10 * minute, settings);
+        check(coming.intoxication < 30, "intoxication wears off in minutes");
+        check(coming.tolerance > 45, "tolerance takes far longer");
+        check(coming.dependence == 50, "dependence does not fall while the delay runs");
+
+        var clean = new Condition(0, 50, 50);
+        clean.lastUse = 0;
+        clean.advance(0, 120 * minute, settings);
+        check(clean.dependence < 50, "dependence falls once someone has stopped");
+        check(clean.dependence >= 0, "dependence never goes negative");
+
+        // Recovery is always reachable: no state is a dead end.
+        var worst = new Condition(100, 100, 100);
+        worst.lastUse = 0;
+        worst.advance(0, 100000 * minute, settings);
+        check(worst.intoxication == 0 && worst.tolerance == 0 && worst.dependence == 0,
+                "every condition recovers completely given time");
+
+        // A night's sleep speeds it up.
+        var rested = new Condition(0, 0, 50);
+        var tired = new Condition(0, 0, 50);
+        rested.slept(25 * minute);
+        rested.advance(0, 60 * minute, settings);
+        tired.advance(0, 60 * minute, settings);
+        check(rested.dependence < tired.dependence, "sleep speeds recovery");
+
+        // Craving and withdrawal need dependence, sobriety and time -- all three.
+        var light = new Condition(0, 0, 10);
+        check(!light.craving(60 * minute, settings), "a light user never craves");
+        var dependent = new Condition(0, 0, 50);
+        dependent.lastUse = 0;
+        check(!dependent.craving(5 * minute, settings), "craving waits for the delay");
+        check(dependent.craving(20 * minute, settings), "craving arrives after the delay");
+        var stillHigh = new Condition(50, 0, 50);
+        stillHigh.lastUse = 0;
+        check(!stillHigh.craving(60 * minute, settings), "someone still high is not craving");
+
+        check(!new Condition(0, 0, 30).withdrawing(60 * minute, settings),
+                "withdrawal needs more dependence than craving does");
+        var heavy = new Condition(0, 0, 50);
+        heavy.lastUse = 0;
+        check(!heavy.withdrawing(20 * minute, settings), "withdrawal waits longer than craving");
+        check(heavy.withdrawing(40 * minute, settings), "withdrawal arrives after its own delay");
+
+        // Severity is shallow and ordered.
+        long late = 100 * minute;
+        check(new Condition(0, 0, 45).withdrawalSeverity(late, settings) == 1, "mild withdrawal");
+        check(new Condition(0, 0, 70).withdrawalSeverity(late, settings) == 2, "moderate withdrawal");
+        check(new Condition(0, 0, 90).withdrawalSeverity(late, settings) == 3, "worst withdrawal");
+        check(new Condition(0, 0, 90).withdrawalSeverity(0, settings) == 0, "no withdrawal before the delay");
+        for (int d = 0; d <= 100; d++) {
+            var c = new Condition(0, 0, d);
+            int severity = c.withdrawalSeverity(late, settings);
+            check(severity >= 0 && severity <= 3, "severity stays in range");
+            if (d < Condition.WITHDRAWAL_MIN) check(severity == 0, "no withdrawal below the threshold");
+        }
+
+        boolean rejected = false;
+        try { new Condition.Settings(0, 1, 1, 0, 0, 0, 1); } catch (IllegalArgumentException e) { rejected = true; }
+        check(rejected, "intoxication must be able to wear off");
+        rejected = false;
+        try { new Condition.Settings(1, 1, 1, 0, 0, 0, 0.5); } catch (IllegalArgumentException e) { rejected = true; }
+        check(rejected, "rest must not slow recovery");
     }
 
     // ---------------------------------------------------------------- unit transfer

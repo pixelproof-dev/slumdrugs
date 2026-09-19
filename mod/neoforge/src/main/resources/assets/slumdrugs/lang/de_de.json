@@ -26,5 +26,11 @@
   "block.slumdrugs.pressing_bench": "Pressbank",
   "block.slumdrugs.sealing_press": "Siegelpresse",
   "block.slumdrugs.storage_crate": "Vorratskiste",
-  "block.slumdrugs.centrifuge": "Zentrifuge"
+  "block.slumdrugs.centrifuge": "Zentrifuge",
+  "message.slumdrugs.used": "%s — Rausch %s",
+  "message.slumdrugs.overdose": "Zu viel. Dir wird eng in der Brust.",
+  "message.slumdrugs.craving": "Du musst ständig daran denken.",
+  "message.slumdrugs.withdrawal_1": "Du zitterst.",
+  "message.slumdrugs.withdrawal_2": "Deine Hände kommen nicht zur Ruhe.",
+  "message.slumdrugs.withdrawal_3": "Du hältst es kaum aus."
 }

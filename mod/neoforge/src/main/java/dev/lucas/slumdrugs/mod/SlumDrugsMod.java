@@ -15,6 +15,7 @@ public final class SlumDrugsMod {
 
     public SlumDrugsMod(IEventBus modBus, ModContainer container) {
         ModComponents.TYPES.register(modBus);
+        ModAttachments.TYPES.register(modBus);
         ModBlocks.BLOCKS.register(modBus);
         ModItems.ITEMS.register(modBus);
         ModBlockEntities.TYPES.register(modBus);

@@ -75,3 +75,4 @@ compiler settled the rest. Three things that a recalled 1.21 pattern gets wrong:
 | `ResourceLocation` | renamed to `Identifier` |
 | `Screen#renderBg(GuiGraphics, ...)` | `extractBackground(GuiGraphicsExtractor, ...)`, and `blit` takes a `RenderPipelines` argument first |
 | `@EventBusSubscriber(bus = Bus.MOD)` | the buses are unified; there is no `bus` attribute |
+| `Player#displayClientMessage(msg, overlay)` | gone; the overlay flag lives on `ServerPlayer#sendSystemMessage` |

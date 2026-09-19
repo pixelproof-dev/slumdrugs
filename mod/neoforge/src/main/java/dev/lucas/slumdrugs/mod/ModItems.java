@@ -43,7 +43,9 @@ public final class ModItems {
             simple("dried_" + drug);
         }
         for (String drug : SUBSTANCES) {
-            simple("product_" + drug);
+            // Products are usable, so they get their own item class rather than a plain one.
+            REGISTERED.put("product_" + drug,
+                    ITEMS.registerItem("product_" + drug, props -> new ProductItem(props, drug)));
             simple("package_" + drug);
         }
         simple("fertilizer");

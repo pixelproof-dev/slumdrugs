@@ -26,5 +26,11 @@
   "block.slumdrugs.pressing_bench": "Pressing Bench",
   "block.slumdrugs.sealing_press": "Sealing Press",
   "block.slumdrugs.storage_crate": "Storage Crate",
-  "block.slumdrugs.centrifuge": "Centrifuge"
+  "block.slumdrugs.centrifuge": "Centrifuge",
+  "message.slumdrugs.used": "%s — intoxication %s",
+  "message.slumdrugs.overdose": "Too much. Your chest tightens.",
+  "message.slumdrugs.craving": "You keep thinking about it.",
+  "message.slumdrugs.withdrawal_1": "You feel shaky.",
+  "message.slumdrugs.withdrawal_2": "Your hands will not keep still.",
+  "message.slumdrugs.withdrawal_3": "You can barely stand it."
 }
