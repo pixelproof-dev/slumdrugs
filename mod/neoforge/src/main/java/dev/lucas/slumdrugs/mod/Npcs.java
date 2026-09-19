@@ -61,6 +61,7 @@ public final class Npcs {
         double resting = Npc.restingAggression(role, 0, 0);
         villager.setData(ModAttachments.NPC.get(), new NpcData(role, crew, resting));
 
+        NpcTrades.fill(villager, role);
         level.addFreshEntity(villager);
         return villager;
     }

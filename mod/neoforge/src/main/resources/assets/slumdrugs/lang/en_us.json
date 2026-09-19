@@ -32,5 +32,7 @@
   "message.slumdrugs.craving": "You keep thinking about it.",
   "message.slumdrugs.withdrawal_1": "You feel shaky.",
   "message.slumdrugs.withdrawal_2": "Your hands will not keep still.",
-  "message.slumdrugs.withdrawal_3": "You can barely stand it."
+  "message.slumdrugs.withdrawal_3": "You can barely stand it.",
+  "message.slumdrugs.demand": "%s wants paying.",
+  "message.slumdrugs.refuses": "%s will not deal with you."
 }

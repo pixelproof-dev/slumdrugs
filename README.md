@@ -1,6 +1,22 @@
 # SlumDrugs
 
-Minecraft Paper plugin with fictional substances, growing and processing, customers, dependency and recovery, custom textures, 3D furniture, and reversible village takeovers.
+Fictional substances, growing and processing, customers, dependency and recovery, and a quarter
+that changes around what you do.
+
+This repository holds two things:
+
+| | Status | Where |
+| --- | --- | --- |
+| **Paper plugin 1.2.2** | Released, playable | repository root, `src/` |
+| **NeoForge mod** | In development, builds, **never launched** | [`mod/`](mod/) |
+
+The plugin is the shipped product and is not affected by the mod work. The mod is a rewrite for
+Minecraft 26.3 with systems a plugin cannot reach — real blocks and items instead of a forced
+resource pack, rival crews, settlements that rot or industrialise around the player.
+
+- [Mod build and command reference](mod/README.md)
+- [Game design document](docs/MOD-GDD.md)
+- [World generation handoff](docs/HANDOFF-WORLDGEN.md)
 
 ## Downloads
 
@@ -46,11 +62,30 @@ Takeovers journal changed blocks before modifying them and preserve native villa
 
 Java 25 build and 67,600 regression assertions passed against Paper API 26.3.build.18-alpha. No live Minecraft client/server gameplay test has been performed; use a copied world for first testing.
 
-## Design
+## The mod
 
-[SlumDrugs as a standalone mod](docs/MOD-GDD.md) is a draft design document for a NeoForge/Forge version: what ports from this plugin, what gets rewritten, and the larger systems a mod makes possible (rival crews and turf, boss encounters, a hired crew, a MineColonies interface), all kept inside Minecraft's own era. Design only; nothing there is implemented.
+A separate Gradle build under [`mod/`](mod/), targeting NeoForge on Minecraft 26.3. It is split
+so that the rules are testable without a game:
 
-## Build
+- `mod/sim/` — the simulation. No Minecraft, no loader, no I/O. Cultivation, refining, player
+  condition, market demand and NPC aggression live here, covered by **85,866 assertions** that
+  run in about a second.
+- `mod/neoforge/` — the platform layer: registries, blocks, block entities, data components,
+  commands, NPCs.
+
+Working today: 22 items, 6 blocks including a forcing frame with five growth stages and a
+centrifuge shaped like a brewing stand, seed/soil/compost quality driving yield, the condition
+system, NPCs as villagers with an aggression model, and a full `/slum` command tree.
+
+```
+./gradlew -p mod build       # simulation checks and the mod jar
+```
+
+**It has never been launched.** It compiles and packages; no client or server has run it.
+
+[Design](docs/MOD-GDD.md) · [Mod README](mod/README.md) · [World generation handoff](docs/HANDOFF-WORLDGEN.md)
+
+## Build the plugin
 
 Run `./gradlew build exportPack`, or `gradlew.bat build exportPack` on Windows.
 

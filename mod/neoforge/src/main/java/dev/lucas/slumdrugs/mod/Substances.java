@@ -22,26 +22,27 @@ public final class Substances {
     public record Effect(Holder<MobEffect> effect, int amplifier) {}
 
     /**
+     * @param basePrice      shillings per unit at Standard quality, from the plugin's drugs.yml
      * @param dose           intoxication a full unit adds
      * @param durationTicks  how long the effects last at full strength
      * @param toleranceGain  added to tolerance per unit used
      * @param dependenceGain added to dependence per unit used
      */
-    public record Profile(double dose, int durationTicks, double toleranceGain, double dependenceGain,
-                          List<Effect> effects) {}
+    public record Profile(int basePrice, double dose, int durationTicks, double toleranceGain,
+                          double dependenceGain, List<Effect> effects) {}
 
     private static final Map<String, Profile> PROFILES = Map.of(
-            "sunleaf", new Profile(20, 1200, 3, 1.5, List.of(
+            "sunleaf", new Profile(10, 20, 1200, 3, 1.5, List.of(
                     new Effect(MobEffects.REGENERATION, 0), new Effect(MobEffects.LUCK, 0))),
-            "frostroot", new Profile(30, 900, 6, 4, List.of(
+            "frostroot", new Profile(28, 30, 900, 6, 4, List.of(
                     new Effect(MobEffects.SPEED, 1), new Effect(MobEffects.HASTE, 1),
                     new Effect(MobEffects.STRENGTH, 0))),
-            "emberbloom", new Profile(40, 1000, 7, 6, List.of(
+            "emberbloom", new Profile(45, 40, 1000, 7, 6, List.of(
                     new Effect(MobEffects.REGENERATION, 1), new Effect(MobEffects.RESISTANCE, 0),
                     new Effect(MobEffects.SLOWNESS, 0))),
-            "glowcap", new Profile(30, 1400, 3, 1, List.of(
+            "glowcap", new Profile(18, 30, 1400, 3, 1, List.of(
                     new Effect(MobEffects.NIGHT_VISION, 0), new Effect(MobEffects.JUMP_BOOST, 1))),
-            "sparkshard", new Profile(35, 800, 8, 7, List.of(
+            "sparkshard", new Profile(35, 35, 800, 8, 7, List.of(
                     new Effect(MobEffects.HASTE, 2), new Effect(MobEffects.SPEED, 0),
                     new Effect(MobEffects.STRENGTH, 1), new Effect(MobEffects.HUNGER, 1))));
 

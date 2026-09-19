@@ -32,5 +32,7 @@
   "message.slumdrugs.craving": "Du musst ständig daran denken.",
   "message.slumdrugs.withdrawal_1": "Du zitterst.",
   "message.slumdrugs.withdrawal_2": "Deine Hände kommen nicht zur Ruhe.",
-  "message.slumdrugs.withdrawal_3": "Du hältst es kaum aus."
+  "message.slumdrugs.withdrawal_3": "Du hältst es kaum aus.",
+  "message.slumdrugs.demand": "%s will Geld sehen.",
+  "message.slumdrugs.refuses": "%s handelt nicht mit dir."
 }
