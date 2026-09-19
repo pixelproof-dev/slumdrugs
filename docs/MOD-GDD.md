@@ -913,28 +913,55 @@ Deliberate positions, inherited from the plugin and extended:
 
 ## 11. Production plan
 
-Single developer, focused weeks. Multiply by 2.5–3 for evenings-and-weekends pace.
+Two columns, because the first draft's numbers assumed one person typing everything and that
+is not how this is being built. **Solo** is a developer writing it by hand. **Assisted** is the
+same developer with Claude and ChatGPT writing most of the code. Focused weeks in both cases;
+multiply by 2.5–3 for an evenings-and-weekends pace.
 
-| Milestone | Scope | Effort |
-| --- | --- | --- |
-| **M0 Parity port** | Everything in 1.2.2, running as a mod: items, stations, farm, NPCs, heat, district, commands, migration importer | 4–8 wk |
-| **M1 Native content** | Real models and blocks, proper screens, HUD, journal (carrying the whole recipe chain, since no JEI), natural quarter generation, coinage and the shops | 4–6 wk |
-| **M2 The Watch and your crew** | Evidence, writs of search, the gaol and bail, houndsmen, bounty, crew hiring and jobs | 3–4 wk |
-| **M3 Crews and turf** | Rival crews with the aggression model, standing, influence grid, war escalation, diplomacy, player crews | 4–6 wk |
-| **M3b Settlements and routes** | Vice and Industry per settlement, the five archetypes, the industry add-on set, price spread, routes, inspections, jobs and getaways | 3–5 wk |
-| **M4 Bosses** | 4 encounters, arenas, AI, loot, unlocks (art and animation heavy) | 3–5 wk |
-| **M5 Power and the bridge** | FE capability in and out, dynamo, battery, arc lamps, pump; `ColonyBridge` interface and the native demand nodes it answers | 2–3 wk |
-| **M5b The Hollow** | Hollowcap, the tether, overlay rendering, echoes, Hollow materials, Boss 3 moved inside it | 2–3 wk |
-| **M6 Release** | Strains and extraction polish, balance pass, advancements, `de_de`, docs, live playtest | 3–4 wk |
-| | **Total** | **30–48 wk** |
+| Milestone | Scope | Solo | Assisted |
+| --- | --- | --- | --- |
+| **M0 Parity port** | Everything in 1.2.2 running as a mod: items, stations, farm, NPCs, suspicion, quarter, commands, migration importer | 4–8 wk | **1–2 wk** |
+| **M1 Native content** | Models and blocks, screens, HUD, journal (carrying the whole recipe chain, since no JEI), natural quarter generation, coinage and the shops | 4–6 wk | **2–3 wk** |
+| **M2 The Watch and your crew** | Evidence, writs of search, the gaol and bail, houndsmen, bounty, crew hiring and jobs | 3–4 wk | **1–1.5 wk** |
+| **M3 Crews and turf** | Rival crews with the aggression model, standing, influence grid, war escalation, diplomacy, player crews | 4–6 wk | **1.5–2.5 wk** |
+| **M3b Settlements and routes** | Vice and Industry per settlement, five archetypes, the industry add-on set, price spread, routes, inspections, jobs and getaways | 3–5 wk | **1.5–2.5 wk** |
+| **M4 Bosses** | 4 encounters, arenas, AI, loot, unlocks | 3–5 wk | **2–3.5 wk** |
+| **M5 Power and the bridge** | FE capability in and out, dynamo, battery, arc lamps, pump; `ColonyBridge` and the native demand nodes | 2–3 wk | **1 wk** |
+| **M5b The Hollow** | Hollowcap, the tether, overlay rendering, echoes, Hollow materials, Boss 3 moved inside it | 2–3 wk | **1–2 wk** |
+| **M6 Release** | Balance pass, advancements, `de_de`, docs, **live playtest** | 3–4 wk | **3–4 wk** |
+| | **Total** | **30–48 wk** | **14–22 wk** |
 
-Roughly 7–11 months full time, 16–24 months part time. Art is the hidden cost: ~120–200
-textures and models, plus four bosses. That is a second skill set and probably a second
-person, or a scope cut on visual ambition.
+### What compresses and what does not
+
+Writing code compresses hard — roughly 60–75% off. Registry boilerplate, datagen, JSON content,
+the port of 7,070 LOC of plugin logic, screens, packets: that is exactly the work a model does
+well, and M0 in particular collapses from two months to about a fortnight.
+
+Four things refuse to compress, and together they are most of the remaining number:
+
+1. **Art.** 120–200 textures, block models, four bosses. Generated textures do not come out
+   Minecraft-coherent, and Blockbench models still want a person. This stays the hidden cost and
+   is the strongest argument for cutting visual ambition rather than systems.
+2. **Playtesting and balance.** Nothing makes "play it for twenty hours and feel whether tier 3
+   drags" faster. It is wall-clock, it needs a human, and it is the one thing this project has
+   never done — the plugin shipped 1.2.2 with no live gameplay test at all.
+3. **The build–run–observe loop.** Desync, chunk-load edges, dimension quirks, save migration.
+   A model shortens each fix; it does not remove the serial launch-and-look cycle.
+4. **26.3 itself.** The version is days old. There is little or no NeoForge 26.x API material in
+   any current model's training data, so assistance is *weaker* here than it would be on 1.21.1 —
+   expect more time reading actual NeoForge sources and more wrong first attempts than on a
+   mature version. This is a real cost of the 26.3 decision, on top of shipping alone (§2).
+
+**The risk that comes with going fast.** Assisted, this project produces perhaps 20,000 lines of
+code that no one has ever run, on top of 7,070 that were never live-tested. That makes the
+`sim` boundary and the regression harness (§8, §9) more important, not less: they are the only
+things that scale with generated code. Budget the M6 playtest in full even when everything
+before it came in early — especially then.
 
 **Cut lines if time runs short**, in order: hidden fifth boss → the Hollow's v2 dimension →
-strain breeding → the undercroft → Create/Farmer's Delight compat → player-vs-player crews → extraction tier.
-Never cut: journalled reversibility, config toggles, the `sim` boundary.
+strain breeding → the undercroft → Create/Farmer's Delight compat → player-vs-player crews →
+extraction tier. Never cut: journalled reversibility, config toggles, the `sim` boundary, the
+live playtest.
 
 ---
 
