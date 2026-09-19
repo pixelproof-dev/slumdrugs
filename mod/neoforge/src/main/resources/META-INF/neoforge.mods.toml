@@ -1,0 +1,27 @@
+modLoader = "javafml"
+loaderVersion = "[1,)"
+license = "All rights reserved"
+
+[[mods]]
+modId = "slumdrugs"
+version = "${version}"
+displayName = "SlumDrugs"
+description = '''
+Fictional substances, growing and processing, customers, dependency and recovery,
+rival crews, and settlements that rot or industrialise around what you do.
+'''
+authors = "lucas"
+
+[[dependencies.slumdrugs]]
+modId = "neoforge"
+type = "required"
+versionRange = "[26.3,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.slumdrugs]]
+modId = "minecraft"
+type = "required"
+versionRange = "[26.3,)"
+ordering = "NONE"
+side = "BOTH"
