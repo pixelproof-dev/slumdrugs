@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "stage=0": {
+      "model": "slumdrugs:block/forcing_frame_stage0"
+    },
+    "stage=1": {
+      "model": "slumdrugs:block/forcing_frame_stage1"
+    },
+    "stage=2": {
+      "model": "slumdrugs:block/forcing_frame_stage2"
+    },
+    "stage=3": {
+      "model": "slumdrugs:block/forcing_frame_stage3"
+    },
+    "stage=4": {
+      "model": "slumdrugs:block/forcing_frame_stage4"
+    }
+  }
+}

@@ -14,7 +14,9 @@ public final class SlumDrugsMod {
     public static final String ID = "slumdrugs";
 
     public SlumDrugsMod(IEventBus modBus, ModContainer container) {
+        ModBlocks.BLOCKS.register(modBus);
         ModItems.ITEMS.register(modBus);
+        ModBlockEntities.TYPES.register(modBus);
         ModCreativeTabs.TABS.register(modBus);
     }
 }

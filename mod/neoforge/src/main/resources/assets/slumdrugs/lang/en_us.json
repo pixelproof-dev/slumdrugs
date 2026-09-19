@@ -20,5 +20,10 @@
   "item.slumdrugs.package_sparkshard": "Sealed Sparkshard",
   "item.slumdrugs.fertilizer": "Compost Charge",
   "item.slumdrugs.remedy": "Remedy Draught",
-  "itemGroup.slumdrugs": "SlumDrugs"
+  "itemGroup.slumdrugs": "SlumDrugs",
+  "block.slumdrugs.forcing_frame": "Forcing Frame",
+  "block.slumdrugs.drying_loft": "Drying Loft",
+  "block.slumdrugs.pressing_bench": "Pressing Bench",
+  "block.slumdrugs.sealing_press": "Sealing Press",
+  "block.slumdrugs.storage_crate": "Storage Crate"
 }

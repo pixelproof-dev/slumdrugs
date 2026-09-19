@@ -52,3 +52,23 @@ than deferring it.
 The first slice registers the 21 items that already had artwork in the plugin — seeds, raw,
 dried, product and sealed parcels for each substance, plus compost and remedy — as real
 registry entries with models, a creative tab, and `en_us` plus `de_de` translations.
+
+Then five station blocks: forcing frame, drying loft, pressing bench, sealing press and
+storage crate. Their models are composed from vanilla textures, so they look like something
+without needing new art. The forcing frame is the one with behaviour: plant a seed, watch
+five visible stages, harvest by hand. Its block entity holds `GrowboxState` from `sim` and
+does nothing itself — world clock in, block state out, NBT both ways. That is the whole
+architecture in one class, and it means the growth rules stay covered by the assertions.
+
+### Writing against 26.3
+
+Minecraft 26.3 postdates any model's training data, so every API here was read out of the
+decompiled sources under `neoforge/build/moddev/artifacts/` before it was used, and the
+compiler settled the rest. Three things that a recalled 1.21 pattern gets wrong:
+
+| Recalled | Actually 26.3 |
+| --- | --- |
+| `saveAdditional(CompoundTag)` | `saveAdditional(ValueOutput)` / `loadAdditional(ValueInput)` |
+| Blocks need a `MapCodec` and `simpleCodec` | The codec requirement is gone; there is no `simpleCodec` |
+| `level.isClientSide` | private field — call `isClientSide()` |
+| `registerBlock(name, ctor, properties)` | takes a `Supplier<Properties>`, not a `Properties` |
