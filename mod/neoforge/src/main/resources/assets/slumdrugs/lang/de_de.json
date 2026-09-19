@@ -25,5 +25,6 @@
   "block.slumdrugs.drying_loft": "Trockenboden",
   "block.slumdrugs.pressing_bench": "Pressbank",
   "block.slumdrugs.sealing_press": "Siegelpresse",
-  "block.slumdrugs.storage_crate": "Vorratskiste"
+  "block.slumdrugs.storage_crate": "Vorratskiste",
+  "block.slumdrugs.centrifuge": "Zentrifuge"
 }

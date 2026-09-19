@@ -27,6 +27,13 @@ public final class ModBlocks {
     public static final DeferredBlock<Block> SEALING_PRESS = BLOCKS.registerSimpleBlock("sealing_press", ModBlocks::wooden);
     public static final DeferredBlock<Block> STORAGE_CRATE = BLOCKS.registerSimpleBlock("storage_crate", ModBlocks::wooden);
 
+    /** Brass and iron rather than wood: this one is machinery. */
+    public static final DeferredBlock<CentrifugeBlock> CENTRIFUGE =
+            BLOCKS.registerBlock("centrifuge", CentrifugeBlock::new, () -> BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.METAL)
+                    .strength(3.5f)
+                    .sound(SoundType.COPPER));
+
     static {
         // Block items live in the item registry and in the creative tab, in this order.
         ModItems.blockItem("forcing_frame", FORCING_FRAME);
@@ -34,6 +41,7 @@ public final class ModBlocks {
         ModItems.blockItem("pressing_bench", PRESSING_BENCH);
         ModItems.blockItem("sealing_press", SEALING_PRESS);
         ModItems.blockItem("storage_crate", STORAGE_CRATE);
+        ModItems.blockItem("centrifuge", CENTRIFUGE);
     }
 
     private ModBlocks() {}

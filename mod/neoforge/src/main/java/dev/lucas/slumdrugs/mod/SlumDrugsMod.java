@@ -18,6 +18,7 @@ public final class SlumDrugsMod {
         ModBlocks.BLOCKS.register(modBus);
         ModItems.ITEMS.register(modBus);
         ModBlockEntities.TYPES.register(modBus);
+        ModMenus.TYPES.register(modBus);
         ModCreativeTabs.TABS.register(modBus);
     }
 }

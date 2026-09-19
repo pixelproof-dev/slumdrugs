@@ -25,5 +25,6 @@
   "block.slumdrugs.drying_loft": "Drying Loft",
   "block.slumdrugs.pressing_bench": "Pressing Bench",
   "block.slumdrugs.sealing_press": "Sealing Press",
-  "block.slumdrugs.storage_crate": "Storage Crate"
+  "block.slumdrugs.storage_crate": "Storage Crate",
+  "block.slumdrugs.centrifuge": "Centrifuge"
 }

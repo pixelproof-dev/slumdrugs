@@ -72,3 +72,6 @@ compiler settled the rest. Three things that a recalled 1.21 pattern gets wrong:
 | Blocks need a `MapCodec` and `simpleCodec` | The codec requirement is gone; there is no `simpleCodec` |
 | `level.isClientSide` | private field — call `isClientSide()` |
 | `registerBlock(name, ctor, properties)` | takes a `Supplier<Properties>`, not a `Properties` |
+| `ResourceLocation` | renamed to `Identifier` |
+| `Screen#renderBg(GuiGraphics, ...)` | `extractBackground(GuiGraphicsExtractor, ...)`, and `blit` takes a `RenderPipelines` argument first |
+| `@EventBusSubscriber(bus = Bus.MOD)` | the buses are unified; there is no `bus` attribute |

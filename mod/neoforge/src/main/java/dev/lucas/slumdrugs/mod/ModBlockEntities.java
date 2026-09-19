@@ -14,5 +14,9 @@ public final class ModBlockEntities {
             TYPES.register("forcing_frame", () -> new BlockEntityType<>(
                     ForcingFrameBlockEntity::new, ModBlocks.FORCING_FRAME.get()));
 
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<CentrifugeBlockEntity>> CENTRIFUGE =
+            TYPES.register("centrifuge", () -> new BlockEntityType<>(
+                    CentrifugeBlockEntity::new, ModBlocks.CENTRIFUGE.get()));
+
     private ModBlockEntities() {}
 }
