@@ -41,7 +41,7 @@ brains, no screens, no radio, no firearms. The Constabulary carries crossbows an
 the fastest message in the quarter is still a boy who runs.
 
 Gaslight giving way to the first electric light is a real, narrow window in history, and it is
-exactly the right one: it lets the mod have a power system (§5.15) that other tech mods can
+exactly the right one: it lets the mod have a power system (§5.16) that other tech mods can
 plug into, without ever looking like science fiction.
 
 Why this and not full medieval, decided 2026-09-19: Create — the mod this world would most
@@ -97,10 +97,10 @@ across plugin and mod is worth more than early access to other people's mods.
 The cost is real and has to be designed around rather than wished away:
 
 - **The mod ships alone.** No Create, no AE2, no MineColonies, no JEI, no Jade on 26.3 today.
-  Every integration in §5.14 is therefore *additive only*: nothing in the critical path may
+  Every integration in §5.15 is therefore *additive only*: nothing in the critical path may
   assume another mod exists, and the mod must be a complete game with zero optional deps
   installed. That was already a design rule; on 26.3 it becomes the design rule.
-- **The colony interface is designed now and built later** (§5.13). The `ColonyBridge`
+- **The colony interface is designed now and built later** (§5.14). The `ColonyBridge`
   interface, the native demand nodes and the chartered fronts all ship; the MineColonies
   implementation waits for MineColonies.
 - **No recipe viewer at launch.** Without JEI or EMI, the in-game journal has to carry the
@@ -174,6 +174,12 @@ it, absorb one or two reactive events (inspection, rival push, craving), bank th
 | 4 | Guild | Second quarter, chartered fronts, laundering, colony contracts, war footing, **Boss 2–3** | Crew war won |
 | 5 | Kingpin | Quarter control, broker network, **Boss 4**, retirement | 60% district influence |
 
+The tiers map onto the settlement ladder in §5.12: you start as the only illicit thing in a
+clean village, tier 2 wants a restless village to sell into, tier 3 needs a works town with a
+foreman worth removing, tier 4 opens a quarter with real crews, and tier 5 is the Port. The
+progression is geographic as much as economic — you climb by travelling, and by dragging quiet
+places up the Vice ladder behind you.
+
 ### Endings
 
 - **Retire clean** — stamped coin ≥ the retirement threshold, suspicion 0, dependence 0, hand
@@ -211,7 +217,7 @@ named strains carry a reputation of their own with customers and factions.
 Three new substances arrive at higher tiers as designed progression content, not as a
 different kind of thing: **Nightvein** (cave vine, tier 3, high suspicion, high margin),
 **Tidecap** (coastal fungus, tier 4, colony-facing, low potency but huge volume), and
-**Hollowcap** (tier 4, the substance that opens the Hollow — see §5.16). Hollowcap is invented
+**Hollowcap** (tier 4, the substance that opens the Hollow — see §5.17). Hollowcap is invented
 whole, like the rest: it has no real-world counterpart and no real-world effects, and what it
 does — slipping you sideways into a mirror of the quarter — is a game mechanic, not a
 depiction of anything.
@@ -234,7 +240,7 @@ depiction of anything.
 ### 5.3 Processing
 
 Existing chain — dry, press, seal — extended with two stages. Everything is hand- or
-water-driven; if Create ever reaches this version, §5.14 adds mechanical variants of the
+water-driven; if Create ever reaches this version, §5.15 adds mechanical variants of the
 press and the drying loft rather than replacing them:
 
 | Station | In | Out | Tier |
@@ -327,7 +333,7 @@ has nothing to do with the trade you are in:
 | General store | Food, rope, oil, candles, cloth, everyday consumables |
 | Ironmonger | Tools, nails, locks, chain, iron and brass stock |
 | Timber yard & brickworks | Building materials by the stack, at a price that makes a renovation a real decision |
-| Machine works | Dynamo parts, pump and press components, battery glass (§5.15) |
+| Machine works | Dynamo parts, pump and press components, battery glass (§5.16) |
 | Chandler | Lamp oil, arc-lamp carbons, fuel for the dynamo |
 | Furniture maker | Carved and painted furniture for your rooms — pure vanity, deliberately good |
 | Land agent | Deeds, leases, glasshouse plots, the paperwork of owning the place |
@@ -496,7 +502,19 @@ between player crews, PvP only in contested cells), or free-for-all.
 
 ### 5.10 Bosses
 
-Four staged encounters, each ending an arc and unlocking a tier. Each has a named entity built
+**Leaders scale with the settlement, and not every place has one.** A clean village has nobody
+to beat — at most a home grower who wants to be left alone. A restless village has a fence who
+can be leaned on, not fought. A **works town** has a **foreman**: a lieutenant-grade fight,
+procedurally named and equipped, one or two per world, repeatable across towns so the middle of
+the game has real encounters without hand-authoring twenty of them. Only a **quarter** has a
+crew boss, and only the **Port** has the Warden.
+
+That turns the boss list into a *map* rather than a chain: you can see, from the settlement
+archetype, what is waiting there and roughly how hard. And **taking a leader means inheriting
+the operation** — their turf, their contacts, their protection income and their enemies — not
+just clearing an encounter.
+
+The four authored fights, each ending an arc and unlocking a tier. Each has a named entity built
 from vanilla parts, a purpose-built arena, three phases, a non-lethal resolution, and loot that
 changes how you play rather than what damage you do.
 
@@ -504,7 +522,7 @@ changes how you play rather than what damage you do.
 | --- | --- | --- | --- | --- | --- |
 | 1 | **Kell the Collector** (Ashfall) | Burning warehouse | Axe slams, summons vindicators, grabs and throws, stacked crates as cover that burn away | Pay triple tribute mid-fight | Ashfall banner deed, an enforcer's oath, a fireproof crate |
 | 2 | **Harbourmaster Vyne** (Boatmen) | Docks and drifting barges | Nets that root, winch and cargo hooks swinging overhead, a phase where the tide floods the arena | Deliver her rival's manifest | Smuggling charts, a bulk contract board, dock rights |
-| 3 | **The Choirmaster** (Glass Choir) | The Hollow (§5.16), wearing your own quarter | Illusioner mirror-images that mimic your last actions, blinding fog that raises intoxication, hallucination adds only you can see | Answer three riddles out of your own journal | Line stabiliser, truth draught, the Choir's ledger (names every informant) |
+| 3 | **The Choirmaster** (Glass Choir) | The Hollow (§5.17), wearing your own quarter | Illusioner mirror-images that mimic your last actions, blinding fog that raises intoxication, hallucination adds only you can see | Answer three riddles out of your own journal | Line stabiliser, truth draught, the Choir's ledger (names every informant) |
 | 4 | **Lord Warden Rade** (the Watch) | The keep's bell-tower under lantern light | Rings the bell to call watch waves, lantern glare that blinds, hound pairs, an iron golem as the heavy, and a **capture** move that takes you to the gaol instead of killing you | Hand over the Choir's ledger | The ledger purged, a standing bribe network, the retirement trigger |
 
 Boss design rules: no sponge phases; every mechanic telegraphs; each fight is survivable at the
@@ -531,24 +549,122 @@ liability: an underpaid runner skims, a pressured lookout turns informant, a cap
 becomes evidence. High-loyalty crew can be raised to lieutenant and hold a cell for you, which
 is the mechanism that makes the retirement ending possible.
 
-### 5.12 The quarter, property and the city
+### 5.12 Settlements: the world map
 
-Two ways to get a quarter, and this is a deliberate fix for the plugin's weakest point:
+Not one district. The world holds many settlements, and each sits somewhere on two scales:
+**Vice** — how much illicit trade it carries — and **Industry** — how far into the gaslight age
+it has come. Both move, and you are the main reason they move.
 
-1. **Natural generation (new default).** A rundown quarter generates as a structure in a
-   configured biome and distance band — lodgings, workshops, a tavern, an infirmary, a
-   warehouse and a market — so no existing player build or village is ever touched.
-2. **Annexation (opt-in).** The existing village takeover, kept intact: journalled,
-   restorable, player-edit aware, refuses to run without a snapshot, skips unsafe houses,
-   preserves native villagers. Off by default in the mod.
+| Archetype | Vice | Who runs it | What is there |
+| --- | --- | --- | --- |
+| **Clean village** | 0–10 | nobody | An ordinary vanilla village. At most a single **home grower**: one NPC with one forcing frame in a cellar, who sells you seed and quietly buys a handful of units. No Watch, no turf, no trouble |
+| **Restless village** | 10–35 | a fence | A broker with city ties, three or four regulars, one constable walking a round, the first suspicion that matters |
+| **Works town** | 35–60 | a **foreman** | One crew, not four. A protection racket, a mill or foundry, the first real turf cells and the first watch house |
+| **Quarter** (city district) | 60–85 | a **crew boss** | The full game: four crews, the turf grid, the Constabulary, a magistrate, a gaol |
+| **The Port** | 85–100 | the **Warden** — and whatever sits above him | Endgame: several quarters, bonded warehouses, the assizes |
 
-The quarter keeps a **condition** score (starts at 25) that shifts with your investment and
-the crews' hold, and now drives visible change: boarded windows opened, lanterns lit, painted
-banners changing owner, who walks the street and when. Buildings become ownable property with
-upgrade slots. An **undercroft** — old mine tunnels and cellars beneath the quarter — links
-safehouses for quiet movement and doubles as tier-4 growing space away from every window.
+Distribution is seeded per world: many clean villages, a few restless, one or two works towns,
+one quarter, one port. Distance from the world origin biases it upward, so the frontier stays
+clean and the interior is rotten. Nothing is hand-placed; the archetype is derived from village
+size, wealth, structure richness and the seed.
 
-### 5.13 MineColonies interface — designed now, built when it lands
+**You push settlements up the ladder.** Bring seed to a clean village, recruit its home grower,
+sell there twice a week, and its Vice climbs: a fence appears, then regulars, then somebody from
+a city crew arrives to see who is taking their margin. That is the answer to "where is the
+content" — every village on the map is a potential campaign, and the map is not a fixed list of
+hand-authored places.
+
+**The Watch pushes them back down.** A settlement whose Vice outruns its Industry draws
+attention from outside: funded patrols, a new watch house, a magistrate on circuit. Vice falls
+under pressure, and an operation you stop defending decays on its own.
+
+#### Industry — how the villages become gaslight
+
+This is how the aesthetic reaches the world without vandalising it, and the rule from the plugin
+holds absolutely: **never rewrite a player's build, only add, and journal every block.**
+
+A settlement's **Industry** score rises when money goes into it — alms, renovations, a chartered
+front, a funded workshop — and each threshold unlocks one *additive* structure piece placed at a
+validated anchor and recorded for restoration:
+
+| Industry | What appears |
+| --- | --- |
+| 15 | Gas lamps along the paths, a lit village at night |
+| 30 | A chimney and bellows on the smithy; coal piles |
+| 45 | A water wheel on the mill, or a pump house at the well |
+| 60 | A brick works or foundry shed, brass fittings on doors and wells |
+| 75 | A dynamo shed and the first arc lamp over the square (§5.16) |
+| 90 | A canal cut or a rail spur linking the settlement to its neighbour |
+
+So the world industrialises **because of your money**, which is exactly the historical truth the
+setting is built on, and it means the gaslight look is earned rather than imposed on a village
+that never asked for it. Newly generated works towns and quarters carry the style from birth; old
+villages grow into it.
+
+The tension that keeps it from being a pure reward: **Industry funds the Watch.** A prosperous,
+well-lit settlement has constables who are paid, equipped and awake. Making a place better
+makes it harder to work in — and that is a decision, not an accident.
+
+Structure pieces ship as a datapack structure set, so a server that wants a medieval add-on set
+instead of an industrial one swaps the pack and changes nothing else.
+
+#### Property and the undercroft
+
+Buildings in any settlement become ownable with stamped coin, with upgrade slots for storage, a
+safehouse respawn, front throughput and quieter streets. Beneath the older settlements run **the
+drains** — brick tunnels and cellars that link safehouses, move goods without passing a gate, and
+double as growing space away from every window.
+
+Two ways a quarter comes into being, unchanged:
+
+1. **Natural generation (default).** A rundown quarter generates as a structure in a configured
+   biome and distance band, so no existing player build is ever touched.
+2. **Annexation (opt-in, off by default).** The plugin's village takeover, kept intact:
+   journalled, restorable, player-edit aware, refuses to run without a snapshot, skips unsafe
+   houses, preserves native villagers.
+
+### 5.13 Routes, jobs and getaways
+
+Once the world is a map of settlements, three loops fall out of it that are most of the moment
+to moment fun.
+
+**Routes and arbitrage.** Prices differ per settlement and per crew hold. A works town starved
+of Emberbloom pays double; the Port pays half for anything it already floods with. Nothing tells
+you the true number — the journal carries **rumours**, which are directionally right and
+sometimes wrong. Moving goods is physical: a pack donkey with chests, a canal boat, a minecart
+line, later a Create train if it ever ports. Every route has friction — gate tolls, an inspection
+at a settlement boundary where your packaging tier decides everything, bandits, a rival ambush on
+a road you use too often. Runners will walk a route for you, and will skim, and will get taken.
+
+**Jobs.** A one-night structure with prep, execution and a getaway: rob a bonded warehouse,
+intercept a shipment on the canal, burn a rival's drying loft, break a crew member out of the
+gaol, pass a bribe to a magistrate on circuit. Prep is where the systems meet — buy tools from
+the ironmonger, bribe the constable off the round, scout the layout in the Hollow the night
+before, and hire hands from the hiring hall who each have a mouth and a price.
+
+**The getaway.** Deliberately the best part. Once the whistle goes, the fight is not the point —
+the exit is. Constables converge on foot with lanterns and are *slow but relentless*; hounds
+track goods, not you, so dropping the sack is a real option; the drains, the canal and a
+pre-bought safehouse are all shortcuts you had to arrange beforehand. A clean getaway with a
+full sack is the best feeling the mod can produce, and everything else is arranged to make it
+possible and rare.
+
+**Two reputations, not one.** **Fear** and **Respect** track separately. Fear gets compliance —
+lower prices, faster tribute, crews that yield turf — and decays into informants and a Watch that
+wants you specifically. Respect gets loyalty — crew who stay bought, customers who wait, a
+settlement that hides you — and it is slower to build and harder to spend. Most playstyles pick
+one; the interesting builds run both.
+
+**Market days.** Each settlement has a periodic market or festival: demand spikes, strangers are
+normal, the Watch is thinner in the crowd and thicker at the gates. Everyone's schedule shifts.
+It is the single best day to sell and the worst day to move volume through a gate.
+
+**Rats.** Somebody is talking. The journal narrows it down from what got seized and when; the
+Hollow shows the mark outright if you are willing to pay for the slip. What you do with a rat —
+cut them off, feed them false information, or something worse — moves Fear and Respect in
+opposite directions.
+
+### 5.14 MineColonies interface — designed now, built when it lands
 
 The 26.3 decision falls due here: MineColonies has no 26.x build, so this integration cannot
 ship with the mod. What ships is the shape of it, and a native path good enough that nobody
@@ -587,7 +703,7 @@ walks vice back down — the legitimate path is slower and always available.
 legitimate goods for standing. A colony you keep healthy becomes the best laundering front in
 the game: a **chartered business** stamps loose coin at a rate scaled by real colony output.
 
-### 5.14 Other compatibility
+### 5.15 Other compatibility
 
 None of these exist on 26.3 yet, so all of them are additive and none may sit in the critical
 path. The column that matters is the last one: what the mod does while the other mod is absent.
@@ -596,14 +712,14 @@ path. The column that matters is the last one: what the mod does while the other
 | --- | --- | --- |
 | JEI / EMI | Station recipes, grafting, processing chains | The journal carries the full chain itself (§7) — mandatory, not a nicety |
 | Jade / WTHIT | Station status, plot readout, growth timer | Right-click readout on the block |
-| Any FE energy mod | **Power in and out through the standard energy capability** (§5.15) | The mod's own dynamo and storage cover the whole tier |
+| Any FE energy mod | **Power in and out through the standard energy capability** (§5.16) | The mod's own dynamo and storage cover the whole tier |
 | AE2 | Stash and crate contents exposed as a storage network; power in | Storage crates and the ledger |
 | Extreme Reactors / big power | Drop-in replacement for the dynamo at scale | The dynamo bank, which is deliberately annoying at scale |
 | Create | Mechanical press, drying loft and pump as an alternate tier-3 path | Hand and water-driven versions of all three |
 | FTB Teams / claims | Turf cells respect claims; contested-cell PvP rules | The mod's own crew membership |
 | Farmer's Delight | Shared crop idioms, cooking overlap for remedies | — |
 
-### 5.15 Power
+### 5.16 Power
 
 A small, honest power system whose main design job is to **be replaceable**.
 
@@ -627,7 +743,7 @@ A small, honest power system whose main design job is to **be replaceable**.
 - **Storage** is a battery bank in brass and glass, FE-exposed, so a Create or AE2 grid can
   charge it and draw from it later.
 
-### 5.16 The Hollow
+### 5.17 The Hollow
 
 The mod's one piece of outright strangeness, and its tier-4 turn. **Hollowcap** taken at a
 threshold dose does not give an effect — it moves you. You slip sideways into **the Hollow**: the
@@ -674,12 +790,15 @@ outright.
   sealing press, alembic, cutting bench, grafting bench, storage crate, drop crate, safehouse
   door, front counter, planters, notice board, **dynamo, battery bank, arc lamp, pump**,
   counting-house desk, shop counters, quarter decoration set.
-- **Entities** ~20: customer, resident, constable, healer, broker, ten merchant villagers
-  (§5.7), houndsman with wolves, **crew member per crew with the aggression model (§5.9)**,
-  runner, lookout, bruiser, hallucination, **echo** (the Hollow), plus 4 bosses. Iron golems
+- **Entities** ~22: customer, resident, constable, healer, broker, ten merchant villagers
+  (§5.7), **home grower** (the one NPC a clean village gets), houndsman with wolves, **crew
+  member per crew with the aggression model (§5.9)**, runner, lookout, bruiser, hallucination,
+  **echo** (the Hollow), plus the procedural **foreman** and 4 authored bosses. Iron golems
   answer the bell; illagers appear only as hired outsiders.
-- **Structures**: rundown quarter (jigsaw, ~20 pieces), docks, watch house and gaol, undercroft
-  tunnels, abandoned glasshouse, 4 boss arenas.
+- **Structures**: rundown quarter (jigsaw, ~20 pieces), works town, docks, watch house and gaol,
+  the drains, abandoned glasshouse, 4 boss arenas, and the **industry add-on set** (§5.12): gas
+  lamps, smithy chimney, water wheel, pump house, foundry shed, dynamo shed, canal cut and rail
+  spur, each placed additively at a validated anchor and journalled.
 - **Screens** ~12: each station, journal (5 tabs), contracts, crew, turf map, infirmary, broker.
 - **Audio** ~30 cues; **particles** ~8; **advancements** ~40; **i18n**: `en_us` + `de_de` at 1.0.
 
@@ -801,14 +920,15 @@ Single developer, focused weeks. Multiply by 2.5–3 for evenings-and-weekends p
 | **M0 Parity port** | Everything in 1.2.2, running as a mod: items, stations, farm, NPCs, heat, district, commands, migration importer | 4–8 wk |
 | **M1 Native content** | Real models and blocks, proper screens, HUD, journal (carrying the whole recipe chain, since no JEI), natural quarter generation, coinage and the shops | 4–6 wk |
 | **M2 The Watch and your crew** | Evidence, writs of search, the gaol and bail, houndsmen, bounty, crew hiring and jobs | 3–4 wk |
-| **M3 Crews and turf** | Rival crews, standing, influence grid, war escalation, diplomacy, player crews | 4–6 wk |
+| **M3 Crews and turf** | Rival crews with the aggression model, standing, influence grid, war escalation, diplomacy, player crews | 4–6 wk |
+| **M3b Settlements and routes** | Vice and Industry per settlement, the five archetypes, the industry add-on set, price spread, routes, inspections, jobs and getaways | 3–5 wk |
 | **M4 Bosses** | 4 encounters, arenas, AI, loot, unlocks (art and animation heavy) | 3–5 wk |
 | **M5 Power and the bridge** | FE capability in and out, dynamo, battery, arc lamps, pump; `ColonyBridge` interface and the native demand nodes it answers | 2–3 wk |
 | **M5b The Hollow** | Hollowcap, the tether, overlay rendering, echoes, Hollow materials, Boss 3 moved inside it | 2–3 wk |
 | **M6 Release** | Strains and extraction polish, balance pass, advancements, `de_de`, docs, live playtest | 3–4 wk |
-| | **Total** | **27–43 wk** |
+| | **Total** | **30–48 wk** |
 
-Roughly 6–10 months full time, 14–22 months part time. Art is the hidden cost: ~120–200
+Roughly 7–11 months full time, 16–24 months part time. Art is the hidden cost: ~120–200
 textures and models, plus four bosses. That is a second skill set and probably a second
 person, or a scope cut on visual ambition.
 
@@ -952,5 +1072,5 @@ what ships. If a new idea has no right-hand column, it is not ready.
 | Power grid, generator | Dynamo, battery bank, arc lamp — gaslight's successor, not a reactor |
 | Electronics, computers, screens | Do not exist. Current exists; intelligence in machines does not |
 | Gang of hostile mobs | Villagers of the quarter with an aggression model (§5.9) |
-| Salvia-style dissociative | **Hollowcap** and the Hollow (§5.16) — invented whole, no real-world counterpart |
+| Salvia-style dissociative | **Hollowcap** and the Hollow (§5.17) — invented whole, no real-world counterpart |
 | Shopping menu | Ten merchants with counters, stock and opening hours (§5.7) |
