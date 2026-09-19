@@ -780,6 +780,97 @@ work, and it ships first.
 subsystem; the substance is designed so nothing else depends on it, and tonic mode disables it
 outright.
 
+### 5.18 NPC dialogue
+
+Villagers that answer a typed question in character. Three tiers, and the mod ships the first
+two — the third is an opt-in server module, for a reason given at the end.
+
+**Tier 1 — procedural, no model.** Authored fragments assembled from state: who they are, their
+mood and aggression (§5.9), what they know, what happened in this settlement lately. Free,
+offline, instant, deterministic, moddable. This is the floor every NPC always has, and it is
+also the fallback whenever a higher tier is unavailable or times out.
+
+**Tier 2 — written by a model at build time, shipped as data.** Generate thousands of lines
+ahead of release, keyed by archetype × mood × topic × settlement tier, review them, bake them
+into datapack JSON. Zero runtime cost, zero latency, no key, no privacy question, and every line
+has been read by a human before it ships. **This is where most of the lore feeling actually
+comes from**, and it should carry ~90% of interactions.
+
+**Tier 3 — live model, opt-in.** The player types a question, the NPC answers it. Architecture:
+
+- **Server-side only.** The key lives in the server config, never in a client. The client sends
+  the typed question as a packet; the server calls the API; the reply comes back as a dialogue
+  packet.
+- **Never on the game thread.** Bounded executor, `CompletableFuture`, the NPC shows a "…" while
+  it thinks, hard timeout at ~6 s falling back to tier 1. A blocked tick is a dead server.
+- **Prompt layout built for caching**, and the order matters: a large shared **world bible**
+  (setting, tone, what an NPC may never say, glossary) first — identical for every NPC and every
+  player, so one cache entry serves the whole server — then the per-NPC **character card**, then
+  volatile state and the last few exchanges, then the question. Only the tail changes per call.
+- **Facts come from the mod, not the model.** The prompt carries a structured fact list (prices
+  this NPC knows, who they have seen, their standing with the player) and the instruction to
+  answer only from it and to say *"I wouldn't know"* otherwise. The model phrases; it does not
+  invent world state. That is what keeps lore consistent across a server.
+- **Memory**: a rolling summary per NPC per player in the NPC's data attachment, capped.
+- **Limits**: per-player cooldown, per-server hourly cap, hard monthly budget, an admin kill
+  switch, and every exchange logged for moderation.
+
+#### Cost, measured rather than guessed
+
+A turn is roughly 2,500 cached tokens (bible + card), 500 volatile, 120 out. Cache reads cost
+~0.1× input; the 5-minute TTL stays warm by itself on a populated server.
+
+| Model | $/MTok in / out | Per reply | 10 players × 4 h evening¹ | Note |
+| --- | --- | --- | --- | --- |
+| Claude Opus 5 | 5 / 25 | ~$0.0068 | ~$5.50 | Best writing; use `effort: "low"` for latency rather than disabling thinking |
+| Claude Sonnet 5 | 2 / 10 | ~$0.0027 | ~$2.20 | The middle option |
+| Claude Haiku 4.5 | 1 / 5 | ~$0.0016 | ~$1.30 | Fastest and cheapest — **but its minimum cacheable prefix is 4,096 tokens**, so the world bible must be genuinely large or caching silently does nothing |
+
+¹ at ~20 NPC questions per player-hour, which is generous.
+
+The Haiku caching minimum is the non-obvious trap: 512 tokens on Opus 5, 4,096 on Haiku 4.5. A
+2,500-token prefix caches on Opus and silently does not on Haiku — same code, no error, just
+`cache_creation_input_tokens: 0` and a bill that never drops. Either write a fat bible, or check
+`usage.cache_read_input_tokens` and notice.
+
+The model is the server owner's choice: the config takes a model id and the docs state the
+tradeoff.
+
+#### Safety, which for this mod is not optional
+
+Players will try to make an NPC say something ugly, and — given the subject matter — will try to
+get a dealer NPC to hand out real-world drug or chemistry information. The mod's whole stance
+(§10) is that everything is invented, so: the world bible forbids real substances, chemistry and
+procedures explicitly and tells the NPC to deflect *in character*; an output filter runs over
+every reply before a player sees it; player text is untrusted input and the NPC has **no tools**,
+so a successful injection can only make it talk nonsense, not act; everything is logged and
+visible to admins; and tier 3 is **off by default**, accepted consciously per server.
+
+#### Voice
+
+Bake it, do not stream it. TTS for a few dozen lines per named character — the broker, the home
+grower, the four bosses — generated at build time and shipped as `.ogg` in the jar. That is most
+of the effect for about a week of work and no runtime cost. Live TTS needs an audio path
+Minecraft does not hand you: a client-side component receiving audio over a packet, or a
+dependency on a voice-chat mod's API, plus 1–3 s of added latency. Not for v1.
+
+#### Effort
+
+| Piece | Assisted |
+| --- | --- |
+| Tier 1 procedural dialogue | 2–4 days |
+| Tier 2 baked, generated and reviewed | 2–4 days |
+| Tier 3 live, done properly (async, caching, memory, limits, filter, admin, fallback) | 1–2 weeks |
+| Baked voice for named characters | 3–5 days + TTS generation |
+| Live voice | +1–2 weeks and a hard dependency — deferred |
+
+#### The rule this breaks
+
+§14 says the mod never requires an external server or account. Tier 3 does. That is why it is a
+**separate optional module** with its own toggle rather than a core feature: the mod stays
+complete, offline and free on tiers 1 and 2 alone, and a server that never sets a key should not
+be able to tell that tier 3 exists.
+
 ## 6. Content manifest (target for 1.0)
 
 - **Items** ~85: seeds, raw, dried, product, sealed parcel, essence per substance (8 × 6),
@@ -1010,9 +1101,14 @@ Still open:
 
 ## 14. Explicitly out of scope
 
-Real-world substances or chemistry of any kind · voice acting · a dimension · a tech tree
-beyond the processing chain · vehicles · anything requiring an external server or account ·
-real-money transactions · automatic world edits outside a journalled, restorable operation.
+Real-world substances or chemistry of any kind · a tech tree beyond the processing chain ·
+vehicles · real-money transactions · automatic world edits outside a journalled, restorable
+operation.
+
+Two carve-outs, both narrow. **Voice**: no voice acting, but baked TTS lines for named
+characters are allowed (§5.18). **External services**: the core mod requires none and must stay
+complete without one — the live-dialogue module (§5.18, tier 3) is the single exception, is
+optional, off by default, and ships as its own jar.
 
 ---
 
