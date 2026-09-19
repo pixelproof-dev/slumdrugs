@@ -1,55 +1,15 @@
-plugins {
-    java
-}
+// Settings shared by every module of the mod build.
+subprojects {
+    apply(plugin = "java")
+    group = "dev.lucas.slumdrugs"
+    version = "0.1.0-SNAPSHOT"
 
-group = "dev.lucas"
-version = "1.2.2"
+    repositories { mavenCentral() }
 
-repositories {
-    mavenCentral()
-    maven("https://repo.papermc.io/repository/maven-public/")
-    maven("https://jitpack.io")
-}
-
-dependencies {
-    compileOnly("io.papermc.paper:paper-api:26.3.build.+")
-    compileOnly("com.github.MilkBowl:VaultAPI:1.7.1")
-    testImplementation("io.papermc.paper:paper-api:26.3.build.+")
-}
-
-val regression by tasks.registering(JavaExec::class) {
-    dependsOn(tasks.testClasses)
-    classpath = sourceSets.test.get().runtimeClasspath
-    mainClass.set("dev.lucas.slumdrugs.RegressionChecks")
-}
-tasks.check { dependsOn(regression) }
-// Checks use a dependency-free Java runner, rather than JUnit discovery.
-tasks.test { failOnNoDiscoveredTests.set(false) }
-tasks.withType<JavaCompile>().configureEach { options.encoding = "UTF-8" }
-
-tasks.register<JavaExec>("exportPack") {
-    dependsOn(tasks.testClasses)
-    classpath = sourceSets.test.get().runtimeClasspath
-    mainClass.set("dev.lucas.slumdrugs.PackExport")
-    args(layout.buildDirectory.dir("distribution").get().asFile.absolutePath)
-}
-
-java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(25))
-}
-
-tasks {
-    processResources {
-        val props = mapOf("version" to project.version)
-        inputs.properties(props)
-        filesMatching("plugin.yml") {
-            expand(props)
-        }
+    extensions.configure<JavaPluginExtension> {
+        toolchain.languageVersion.set(JavaLanguageVersion.of(25))
     }
-    jar {
-        archiveFileName.set("SlumDrugs-${project.version}.jar")
-    }
-    compileJava {
+    tasks.withType<JavaCompile>().configureEach {
         options.encoding = "UTF-8"
         options.release.set(25)
     }

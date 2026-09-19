@@ -1,13 +1,13 @@
 # SlumDrugs mod — handoff for world generation
 
-Context for a session that will work on world generation. Read `mod/README.md` for build
+Context for a session that will work on world generation. Read `docs/MOD-NOTES.md` for build
 details and `docs/MOD-GDD.md` §5.12 for the design this implements.
 
 ## What the mod is
 
 A NeoForge mod for Minecraft 26.3: a criminal economy in a gaslight-era quarter — grow
-invented substances, refine them, sell them, and deal with the Watch and rival crews. Ported
-from a shipped Paper plugin (repository root, still builds, untouched).
+invented substances, refine them, sell them, and deal with the Watch and rival crews. It began as a
+Paper plugin, which shipped through 1.2.2 and is now retired; the mod replaces it.
 
 Setting rule: **villager-medieval, one notch into the industrial age.** Brick, brass, glass,
 lanterns, canals, warehouses, the first dynamos. Steam and water power exist; electricity
@@ -19,12 +19,12 @@ structure: *would it look at home in a quarter lit by lanterns, next to a vanill
 | | |
 | --- | --- |
 | Loader | NeoForge `26.3.0.6-beta` (only 26.3 builds that exist), ModDevGradle 2.0.147 |
-| Build | Gradle 9.1.0, Java 25. `./gradlew -p mod build` |
-| Sources | Decompiled MC at `mod/neoforge/build/moddev/artifacts/minecraft-patched-26.3.0.6-beta-sources.jar` |
+| Build | Gradle 9.1.0, Java 25. `./gradlew build` |
+| Sources | Decompiled MC at `neoforge/build/moddev/artifacts/minecraft-patched-26.3.0.6-beta-sources.jar` |
 
 **Minecraft 26.3 shipped 2026-09-15 and postdates any model's training data.** Do not write
 API calls from memory — read the decompiled sources first, then let the compiler settle the
-rest. Eleven wrong assumptions were caught this way so far; the table in `mod/README.md`
+rest. Eleven wrong assumptions were caught this way so far; the table in `docs/MOD-NOTES.md`
 lists them (among others: `ResourceLocation` is now `Identifier`, blocks no longer need a
 `MapCodec`, NBT is `ValueInput`/`ValueOutput`, entity type constants moved to `EntityTypes`,
 permission levels became named permissions).
@@ -32,8 +32,8 @@ permission levels became named permissions).
 ## Architecture rule that constrains you
 
 ```
-mod/sim/       no Minecraft, no loader, no I/O — all rules live here (85,866 assertions)
-mod/neoforge/  the platform layer: registries, blocks, entities, commands, networking
+sim/       no Minecraft, no loader, no I/O — all rules live here (85,866 assertions)
+neoforge/  the platform layer: registries, blocks, entities, commands, networking
 ```
 
 Anything that is a *rule* — how a settlement's vice rises, which archetype a village
@@ -51,7 +51,7 @@ second without launching a game.
   still), player condition (use, tolerance, dependence, withdrawal), all in `sim`.
 - NPCs are **ordinary villagers carrying an attachment**, not a custom entity type — no
   model, no renderer, no client code. Roles and an aggression model are in `sim.npc.Npc`.
-- A full command tree under `/slum` (see `mod/README.md`), including dry runs of the rules.
+- A full command tree under `/slum` (see `docs/MOD-NOTES.md`), including dry runs of the rules.
 
 **Nothing has ever been launched.** It compiles and packages; no client or server has run it.
 
@@ -93,9 +93,10 @@ Four jobs, roughly in order of value:
 
 - **Never rewrite a player's build.** Add only, at anchors you validated.
 - **Journal every block you change**, with a restore path. The plugin's `TakeoverSnapshot`
-  (root `src/main/java/dev/lucas/slumdrugs/world/`) is the reference implementation: write-ahead
-  journal, atomic file replacement, refuses to run without a snapshot, refuses to restore over
-  a conflicting later edit.
+  is the reference implementation: write-ahead journal, atomic file replacement, refuses to run
+  without a snapshot, refuses to restore over a conflicting later edit. The plugin source was
+  removed when the mod took over the repository — read it at commit `1886950`, under
+  `src/main/java/dev/lucas/slumdrugs/world/`, and the design in `docs/legacy/VILLAGE-TAKEOVER.md`.
 - **Village annexation stays opt-in and off by default.** Natural generation is the default
   path; converting someone's village is a documented power tool, not a surprise.
 - **No dependency on another mod** in the critical path. Nothing else is on 26.3 yet.

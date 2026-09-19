@@ -1,14 +1,12 @@
-# SlumDrugs — mod
+# SlumDrugs — mod notes
 
-A separate Gradle build. The Paper plugin at the repository root is untouched and still
-builds on its own.
+Build details, the command reference, and what 26.3 changed.
 
 ## Layout
 
 ```
-mod/
-  sim/        the simulation: no Minecraft, no loader, no I/O
-  <loader>/   the platform layer — added once the loader is decided
+sim/        the simulation: no Minecraft, no loader, no I/O
+neoforge/   the platform layer
 ```
 
 `sim` holds the rules: quality curves, recovery, package splitting, growth, demand, the
@@ -22,17 +20,16 @@ the platform layer, not here.
 ## Build
 
 ```
-./gradlew -p mod check
+./gradlew check
 ```
 
-Runs `SimChecks`, a plain `main()` with no test framework, currently 66,710 assertions.
+Runs `SimChecks`, a plain `main()` with no test framework, currently 85,866 assertions.
 A failure prints the label of the rule that broke.
 
 ## Status
 
-`sim` is live. The platform layer is not written yet: Minecraft 26.3 shipped on 2026-09-15,
-Fabric has stable 26.3 support, NeoForge is at `26.3.0.x-beta`, and the loader decision is
-open — see `../docs/MOD-GDD.md` §2.
+Both modules are live and the build is green. Nothing has been launched: no client or server
+has ever run this.
 
 ## Platform layer (NeoForge)
 
@@ -45,8 +42,8 @@ officially NeoForge-only, which would have deleted §5.13 of the design permanen
 than deferring it.
 
 ```
-./gradlew -p mod build            # sim checks + the mod jar
-./gradlew -p mod :neoforge:runClient   # launches a dev client (not yet run in CI)
+./gradlew build            # sim checks + the mod jar
+./gradlew :neoforge:runClient   # launches a dev client (not yet run in CI)
 ```
 
 The first slice registers the 21 items that already had artwork in the plugin — seeds, raw,
