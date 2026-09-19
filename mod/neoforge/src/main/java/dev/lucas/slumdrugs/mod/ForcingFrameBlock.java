@@ -56,13 +56,22 @@ public final class ForcingFrameBlock extends BaseEntityBlock {
                                           Player player, net.minecraft.world.InteractionHand hand,
                                           BlockHitResult hit) {
         if (!(level.getBlockEntity(pos) instanceof ForcingFrameBlockEntity frame)) return InteractionResult.PASS;
+
+        // Compost goes onto a growing crop, and improves what it yields.
+        if (stack.is(ModItems.get("fertilizer").get())) {
+            if (level.isClientSide()) return InteractionResult.SUCCESS;
+            if (!frame.addFertiliser(ModComponents.qualityOf(stack))) return InteractionResult.PASS;
+            stack.consume(1, player);
+            return InteractionResult.SUCCESS;
+        }
+
         if (frame.state().drug != null) return InteractionResult.PASS;
 
         String drug = seedDrug(stack);
         if (drug == null) return InteractionResult.PASS;
         if (level.isClientSide()) return InteractionResult.SUCCESS;
 
-        frame.plant(level, drug, player.getName().getString());
+        frame.plant(level, drug, player.getName().getString(), ModComponents.qualityOf(stack));
         level.setBlock(pos, state.setValue(STAGE, frame.state().stage()), 2);
         stack.consume(1, player);
         return InteractionResult.SUCCESS;
@@ -75,9 +84,17 @@ public final class ForcingFrameBlock extends BaseEntityBlock {
         if (!frame.ripe()) return InteractionResult.PASS;
         if (level.isClientSide()) return InteractionResult.SUCCESS;
 
-        String drug = frame.harvest();
-        popResource(level, pos, new ItemStack(ModItems.get("raw_" + drug).get(),
-                ForcingFrameBlockEntity.YIELD));
+        String drug = frame.crop();
+        String grower = frame.state().grower;
+        var harvest = frame.harvest(level, pos);
+
+        popResource(level, pos, ModComponents.withQuality(
+                new ItemStack(ModItems.get("raw_" + drug).get(), harvest.units()),
+                harvest.quality(), grower));
+        popResource(level, pos, ModComponents.withQuality(
+                new ItemStack(ModItems.get("seed_" + drug).get(), harvest.seeds()),
+                harvest.seedQuality(), grower));
+
         level.setBlock(pos, state.setValue(STAGE, 0), 2);
         return InteractionResult.SUCCESS;
     }

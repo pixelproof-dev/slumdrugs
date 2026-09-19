@@ -1,0 +1,46 @@
+package dev.lucas.slumdrugs.mod;
+
+import com.mojang.serialization.Codec;
+import net.minecraft.core.component.DataComponentType;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.neoforged.neoforge.registries.DeferredHolder;
+import net.neoforged.neoforge.registries.DeferredRegister;
+
+/**
+ * Item data. The plugin stored this in a persistent-data container on a vanilla material;
+ * here it is a real component, which means it survives, syncs and shows up in tooltips.
+ */
+public final class ModComponents {
+
+    public static final DeferredRegister<DataComponentType<?>> TYPES =
+            DeferredRegister.create(Registries.DATA_COMPONENT_TYPE, SlumDrugsMod.ID);
+
+    /** 0-100. On a seed it is the line's worth; on goods it is what the batch turned out at. */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> QUALITY =
+            TYPES.register("quality", () -> DataComponentType.<Integer>builder()
+                    .persistent(Codec.intRange(0, 100))
+                    .networkSynchronized(ByteBufCodecs.VAR_INT)
+                    .build());
+
+    /** Who grew it. Batches are traceable, which is what makes a seized parcel evidence. */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<String>> GROWER =
+            TYPES.register("grower", () -> DataComponentType.<String>builder()
+                    .persistent(Codec.STRING)
+                    .networkSynchronized(ByteBufCodecs.STRING_UTF8)
+                    .build());
+
+    private ModComponents() {}
+
+    /** Quality carried by a stack, or the neutral default for plain vanilla-made items. */
+    public static int qualityOf(net.minecraft.world.item.ItemStack stack) {
+        return stack.getOrDefault(QUALITY.get(), 50);
+    }
+
+    public static net.minecraft.world.item.ItemStack withQuality(
+            net.minecraft.world.item.ItemStack stack, int quality, String grower) {
+        stack.set(QUALITY.get(), Math.max(0, Math.min(100, quality)));
+        if (grower != null) stack.set(GROWER.get(), grower);
+        return stack;
+    }
+}
