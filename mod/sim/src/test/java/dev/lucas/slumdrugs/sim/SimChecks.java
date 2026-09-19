@@ -5,6 +5,7 @@ import dev.lucas.slumdrugs.sim.drug.Quality;
 import dev.lucas.slumdrugs.sim.drug.Refining;
 import dev.lucas.slumdrugs.sim.drug.UnitTransfer;
 import dev.lucas.slumdrugs.sim.economy.MarketState;
+import dev.lucas.slumdrugs.sim.npc.Npc;
 import dev.lucas.slumdrugs.sim.player.Condition;
 import dev.lucas.slumdrugs.sim.player.Recovery;
 import dev.lucas.slumdrugs.sim.station.GrowboxState;
@@ -40,6 +41,7 @@ public final class SimChecks {
         cultivation();
         refining();
         market();
+        npcs();
         System.out.println("PASS: " + checks + " simulation assertions.");
     }
 
@@ -440,5 +442,68 @@ public final class SimChecks {
         boolean rejected = false;
         try { new MarketState.Settings(0, 1, 1); } catch (IllegalArgumentException expected) { rejected = true; }
         check(rejected, "invalid market settings rejected");
+    }
+
+    // ---------------------------------------------------------------- npcs
+
+    private static void npcs() {
+        // Roles that cannot turn on you never do, whatever their aggression says.
+        for (var role : Npc.Role.values())
+            if (!role.hostileCapable)
+                check(Npc.stance(role, 100) == Npc.Stance.CALM, "a peaceful role stays calm: " + role);
+
+        // The bands are ordered and each one is reachable.
+        check(Npc.stance(Npc.Role.BRUISER, 0) == Npc.Stance.CALM, "calm band");
+        check(Npc.stance(Npc.Role.BRUISER, 24) == Npc.Stance.CALM, "calm band upper edge");
+        check(Npc.stance(Npc.Role.BRUISER, 25) == Npc.Stance.WARY, "wary band");
+        check(Npc.stance(Npc.Role.BRUISER, 49) == Npc.Stance.WARY, "wary band upper edge");
+        check(Npc.stance(Npc.Role.BRUISER, 50) == Npc.Stance.DEMANDING, "demanding band");
+        check(Npc.stance(Npc.Role.BRUISER, 74) == Npc.Stance.DEMANDING, "demanding band upper edge");
+        check(Npc.stance(Npc.Role.BRUISER, 75) == Npc.Stance.HOSTILE, "hostile band");
+        check(Npc.stance(null, 100) == Npc.Stance.CALM, "no role, no aggression");
+
+        // Standing drives where a mood settles; turf depth sharpens it.
+        double friendly = Npc.restingAggression(Npc.Role.BRUISER, 100, 0);
+        double hated = Npc.restingAggression(Npc.Role.BRUISER, -100, 0);
+        check(friendly == 0, "a crew that likes you rests calm");
+        check(hated > friendly, "a crew that hates you rests angry");
+        check(Npc.restingAggression(Npc.Role.BRUISER, -100, 1)
+                > Npc.restingAggression(Npc.Role.BRUISER, -100, 0),
+                "their own turf makes it worse");
+        check(Npc.restingAggression(Npc.Role.HEALER, -100, 1) == 0, "a healer never rests angry");
+        for (int standing = -100; standing <= 100; standing += 5)
+            for (double depth = 0; depth <= 1.001; depth += 0.25) {
+                double resting = Npc.restingAggression(Npc.Role.BRUISER, standing, depth);
+                check(resting >= 0 && resting <= 100, "resting aggression stays in range");
+            }
+
+        // Settling is gradual in both directions and lands exactly on the target.
+        check(Npc.settle(100, 0, 1) == 98, "anger fades slowly");
+        check(Npc.settle(0, 100, 1) == 2, "anger builds slowly");
+        check(Npc.settle(100, 0, 1000) == 0, "given time it reaches the target exactly");
+        check(Npc.settle(0, 100, 1000) == 100, "and from below too");
+        check(Npc.settle(50, 50, 10) == 50, "a settled mood does not drift");
+        check(Npc.settle(50, 0, 0) == 50, "no time, no change");
+
+        // Provocation and appeasement, both bounded.
+        check(Npc.provoke(50, 30) == 80, "a provocation raises aggression");
+        check(Npc.provoke(90, 999) == 100, "aggression cannot exceed the scale");
+        check(Npc.appease(50, 30) == 20, "tribute lowers aggression");
+        check(Npc.appease(10, 999) == 0, "aggression cannot go below zero");
+        check(Npc.provoke(50, -10) == 50, "a negative provocation does nothing");
+        check(Npc.appease(50, -10) == 50, "a negative appeasement does nothing");
+
+        // A lieutenant pulls the crew partway, never all the way.
+        double pulled = Npc.spread(0, 100);
+        check(pulled > 0 && pulled < 100, "the crew takes its lead without becoming a copy");
+        check(Npc.spread(100, 0) < 100, "a calm boss calms the crew too");
+        check(Npc.spread(50, 50) == 50, "a matched crew does not move");
+        for (int member = 0; member <= 100; member += 10)
+            for (int boss = 0; boss <= 100; boss += 10) {
+                double result = Npc.spread(member, boss);
+                check(result >= 0 && result <= 100, "spread stays in range");
+                check(Math.abs(result - boss) <= Math.abs(member - boss) + 1e-9,
+                        "spread never moves the crew away from the boss");
+            }
     }
 }

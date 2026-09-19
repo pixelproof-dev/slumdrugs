@@ -33,5 +33,11 @@ public final class ModAttachments {
                     .copyOnDeath()
                     .build());
 
+    /** Not copied on death: a villager that dies is gone, and their replacement is a new person. */
+    public static final DeferredHolder<AttachmentType<?>, AttachmentType<NpcData>> NPC =
+            TYPES.register("npc", () -> AttachmentType.builder(() -> NpcData.NONE)
+                    .serialize(NpcData.CODEC)
+                    .build());
+
     private ModAttachments() {}
 }

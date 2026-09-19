@@ -76,3 +76,31 @@ compiler settled the rest. Three things that a recalled 1.21 pattern gets wrong:
 | `Screen#renderBg(GuiGraphics, ...)` | `extractBackground(GuiGraphicsExtractor, ...)`, and `blit` takes a `RenderPipelines` argument first |
 | `@EventBusSubscriber(bus = Bus.MOD)` | the buses are unified; there is no `bus` attribute |
 | `Player#displayClientMessage(msg, overlay)` | gone; the overlay flag lives on `ServerPlayer#sendSystemMessage` |
+| `EntityType.VILLAGER` | the constants moved to `EntityTypes`; villagers live in `entity.npc.villager` |
+| `source.hasPermission(2)` | named permissions: `Commands.hasPermission(new PermissionCheck.Require(Permissions.COMMANDS_GAMEMASTER))` |
+| `player.drop(stack, false)` | takes a `Prediction` (`PREDICTED` / `SERVER_ONLY`) |
+
+## Commands
+
+Everything the mod can do from a prompt. `/slumdrugs` is an alias of `/slum`. Anything that
+changes the world wants the gamemaster permission; `version` and reading your own condition
+do not.
+
+| Command | Does |
+| --- | --- |
+| `/slum version` | What is registered |
+| `/slum give <item> [count] [quality]` | Any mod item, with a quality component. Completes item names |
+| `/slum condition get [targets]` | Intoxication, tolerance, dependence, and whether they are craving or withdrawing |
+| `/slum condition set\|add <field> <value> [targets]` | Write a field directly |
+| `/slum condition clear [targets]` | Back to sober and clean |
+| `/slum npc spawn <role> [crew] [name]` | A villager of ours: customer, resident, trader, healer, broker, constable, bruiser, lieutenant |
+| `/slum npc list [radius]` | Who is nearby, their crew, aggression and stance |
+| `/slum npc aggression set\|provoke\|appease <value> [radius]` | Move their mood |
+| `/slum npc remove [radius]` | Remove ours only — never a village's own villagers |
+| `/slum frame info` | The nearest forcing frame: crop, growth, water, soil, compost, and what it would yield |
+| `/slum frame grow` | Ripen it now |
+| `/slum frame water <seconds>` | Set its water |
+| `/slum refine <method> <quality> <units>` | A dry run against the rules — no blocks needed |
+
+`/slum refine` and `/slum frame info` exist to check the simulation against the numbers on a
+running server without building anything, which matters while no client has been launched.
