@@ -54,12 +54,37 @@ If not, it does not ship. Appendix D maps every term.
 
 | Item | Decision | Confidence |
 | --- | --- | --- |
-| Loader | NeoForge (the user asked for "Forge"; on modern MC that is NeoForge in practice) | **Verify** which loader ships for the 26.3-era target before M0 |
-| MC target | Same generation the plugin targets (Paper API 26.3, pack_format 97) | Verify |
-| Java | 25, matching the current toolchain | High |
+| Loader | NeoForge. Forge proper is not the live loader on modern versions | High |
+| MC target | **Open — see the ecosystem check below.** 1.21.1 is where the mod ecosystem actually lives; 26.3 is where the plugin lives | **Decision needed** |
+| Java | 25 for a 26.x target; 21 for a 1.21.1 target | Follows the MC target |
 | Sides | Required on client *and* server. Single-player supported, multiplayer is the design target | High |
 | Optional deps | MineColonies (compat module), JEI/EMI (recipe display), Jade/WTHIT (block tooltips), FTB Teams / player-claim mods (turf boundaries) | Medium |
 | Hard deps | None beyond the loader. GeckoLib is an open question for boss animation (§13) | Medium |
+
+### Ecosystem check (researched 2026-09-19)
+
+| Mod | Newest Minecraft version supported | Note |
+| --- | --- | --- |
+| Minecraft itself | **26.3 "Wilderness Bound"**, released 2026-09-15 | Four days old at the time of writing |
+| NeoForge | Ships for 26.x, calver-aligned (`26.3.0.x`) | The loader is ready |
+| Create | **1.21.1** | No 26.x build |
+| Applied Energistics 2 | **1.21–1.21.1** | Careful: AE2's own *mod* version reads `26.1.2`, which is not a Minecraft version |
+| MineColonies | **1.21.1**, actively snapshotting (2026-09-16) | No 26.x build |
+
+The conclusion matters more than the table: **the big content mods have not moved to 26.x at
+all** — not 26.1, not 26.2, not 26.3 — and MineColonies was still shipping 1.21.1 snapshots
+three days ago. So a 26.3 build of this mod would have no Create, no AE2 and, decisively, **no
+MineColonies to interface with**. Section 5.13 is unbuildable on 26.3 today.
+
+That splits the target cleanly:
+
+- **1.21.1** — the mod lands in the pack people actually play. MineColonies compat is real,
+  Create interop is possible, Jade/JEI/EMI are all there. The cost is divergence from the
+  Paper plugin, which targets 26.3.
+- **26.3** — matches the plugin, stays current with the game, and is alone out there. Fine for
+  a standalone mod, fatal for the colony integration until MineColonies ports.
+- **Both** — 1.21.1 first for the ecosystem, a 26.x branch later. The `sim` module (§8) is
+  version-proof by design, so a second target costs the platform layer only, not the game.
 
 **Why a mod at all.** As a plugin, custom visuals depend on a forced resource pack, custom
 items are vanilla materials wearing a `CustomModelData` mask, stations are barrier blocks
