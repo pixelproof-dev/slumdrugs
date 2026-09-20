@@ -155,7 +155,9 @@ if __name__ == '__main__':
     import sys, zipfile
     root = pathlib.Path(__file__).resolve().parent.parent
     models = root / 'neoforge/src/main/resources/assets/slumdrugs/models/block'
-    jars = sorted((root / 'neoforge/build/moddev/artifacts').glob('minecraft-patched-*[0-9].jar'))
+    # the plain client jar, not the sources or merged ones beside it
+    jars = [j for j in sorted((root / 'neoforge/build/moddev/artifacts').glob('minecraft-patched-*.jar'))
+            if not any(k in j.name for k in ('sources', 'merged'))]
     if not jars:
         sys.exit("Run ./gradlew build first so the Minecraft jar is available for textures.")
 
