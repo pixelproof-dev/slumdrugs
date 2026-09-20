@@ -2,10 +2,10 @@
   "parent": "minecraft:block/block",
   "textures": {
     "particle": "minecraft:block/spruce_log",
-    "soil": "minecraft:block/coarse_dirt",
+    "soil": "minecraft:block/rooted_dirt",
     "post": "minecraft:block/spruce_log",
     "glass": "minecraft:block/glass",
-    "frame": "minecraft:block/spruce_planks",
+    "frame": "minecraft:block/stripped_spruce_log",
     "crop": "minecraft:block/wheat_stage2"
   },
   "elements": [
@@ -357,7 +357,7 @@
       ],
       "to": [
         14,
-        9,
+        10,
         1
       ],
       "faces": {
@@ -425,7 +425,7 @@
       ],
       "to": [
         14,
-        9,
+        10,
         16
       ],
       "faces": {
@@ -493,7 +493,7 @@
       ],
       "to": [
         1,
-        9,
+        10,
         14
       ],
       "faces": {
@@ -561,7 +561,7 @@
       ],
       "to": [
         16,
-        9,
+        10,
         14
       ],
       "faces": {
@@ -624,13 +624,91 @@
     {
       "from": [
         1,
-        9,
+        10,
         1
       ],
       "to": [
         15,
-        10,
+        11,
         15
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#glass"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#glass"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#glass"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#glass"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#glass"
+        },
+        "down": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#glass"
+        }
+      },
+      "rotation": {
+        "origin": [
+          8,
+          10,
+          8
+        ],
+        "axis": "x",
+        "angle": 22.5
+      },
+      "shade": false
+    },
+    {
+      "from": [
+        1,
+        10,
+        0
+      ],
+      "to": [
+        15,
+        11,
+        2
       ],
       "faces": {
         "north": {
@@ -691,7 +769,7 @@
       "rotation": {
         "origin": [
           8,
-          9,
+          10,
           8
         ],
         "axis": "x",
@@ -700,13 +778,90 @@
     },
     {
       "from": [
-        4,
+        1,
+        10,
+        14
+      ],
+      "to": [
+        15,
+        11,
+        16
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#frame"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#frame"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#frame"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#frame"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#frame"
+        },
+        "down": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#frame"
+        }
+      },
+      "rotation": {
+        "origin": [
+          8,
+          10,
+          8
+        ],
+        "axis": "x",
+        "angle": 22.5
+      }
+    },
+    {
+      "from": [
+        3,
         5,
         8
       ],
       "to": [
+        13,
         12,
-        11,
         8
       ],
       "rotation": {
@@ -742,13 +897,13 @@
     },
     {
       "from": [
-        4,
+        3,
         5,
         8
       ],
       "to": [
+        13,
         12,
-        11,
         8
       ],
       "rotation": {

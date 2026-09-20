@@ -3,8 +3,9 @@
   "textures": {
     "particle": "minecraft:block/spruce_planks",
     "wood": "minecraft:block/spruce_planks",
-    "iron": "minecraft:block/iron_block",
-    "brass": "minecraft:block/cut_copper",
+    "leg": "minecraft:block/spruce_log",
+    "iron": "minecraft:block/polished_deepslate",
+    "brass": "minecraft:block/copper_block",
     "pot": "minecraft:block/cauldron_side",
     "wax": "minecraft:block/red_concrete"
   },
@@ -96,7 +97,7 @@
             16,
             16
           ],
-          "texture": "#wood"
+          "texture": "#leg"
         },
         "south": {
           "uv": [
@@ -105,7 +106,7 @@
             16,
             16
           ],
-          "texture": "#wood"
+          "texture": "#leg"
         },
         "east": {
           "uv": [
@@ -114,7 +115,7 @@
             16,
             16
           ],
-          "texture": "#wood"
+          "texture": "#leg"
         },
         "west": {
           "uv": [
@@ -123,7 +124,7 @@
             16,
             16
           ],
-          "texture": "#wood"
+          "texture": "#leg"
         },
         "up": {
           "uv": [
@@ -132,7 +133,7 @@
             16,
             16
           ],
-          "texture": "#wood"
+          "texture": "#leg"
         },
         "down": {
           "uv": [
@@ -141,7 +142,7 @@
             16,
             16
           ],
-          "texture": "#wood"
+          "texture": "#leg"
         }
       }
     },
@@ -164,7 +165,7 @@
             16,
             16
           ],
-          "texture": "#wood"
+          "texture": "#leg"
         },
         "south": {
           "uv": [
@@ -173,7 +174,7 @@
             16,
             16
           ],
-          "texture": "#wood"
+          "texture": "#leg"
         },
         "east": {
           "uv": [
@@ -182,7 +183,7 @@
             16,
             16
           ],
-          "texture": "#wood"
+          "texture": "#leg"
         },
         "west": {
           "uv": [
@@ -191,7 +192,7 @@
             16,
             16
           ],
-          "texture": "#wood"
+          "texture": "#leg"
         },
         "up": {
           "uv": [
@@ -200,7 +201,7 @@
             16,
             16
           ],
-          "texture": "#wood"
+          "texture": "#leg"
         },
         "down": {
           "uv": [
@@ -209,7 +210,7 @@
             16,
             16
           ],
-          "texture": "#wood"
+          "texture": "#leg"
         }
       }
     },
@@ -232,7 +233,7 @@
             16,
             16
           ],
-          "texture": "#wood"
+          "texture": "#leg"
         },
         "south": {
           "uv": [
@@ -241,7 +242,7 @@
             16,
             16
           ],
-          "texture": "#wood"
+          "texture": "#leg"
         },
         "east": {
           "uv": [
@@ -250,7 +251,7 @@
             16,
             16
           ],
-          "texture": "#wood"
+          "texture": "#leg"
         },
         "west": {
           "uv": [
@@ -259,7 +260,7 @@
             16,
             16
           ],
-          "texture": "#wood"
+          "texture": "#leg"
         },
         "up": {
           "uv": [
@@ -268,7 +269,7 @@
             16,
             16
           ],
-          "texture": "#wood"
+          "texture": "#leg"
         },
         "down": {
           "uv": [
@@ -277,7 +278,7 @@
             16,
             16
           ],
-          "texture": "#wood"
+          "texture": "#leg"
         }
       }
     },
@@ -300,7 +301,7 @@
             16,
             16
           ],
-          "texture": "#wood"
+          "texture": "#leg"
         },
         "south": {
           "uv": [
@@ -309,7 +310,7 @@
             16,
             16
           ],
-          "texture": "#wood"
+          "texture": "#leg"
         },
         "east": {
           "uv": [
@@ -318,7 +319,7 @@
             16,
             16
           ],
-          "texture": "#wood"
+          "texture": "#leg"
         },
         "west": {
           "uv": [
@@ -327,7 +328,7 @@
             16,
             16
           ],
-          "texture": "#wood"
+          "texture": "#leg"
         },
         "up": {
           "uv": [
@@ -336,7 +337,7 @@
             16,
             16
           ],
-          "texture": "#wood"
+          "texture": "#leg"
         },
         "down": {
           "uv": [
@@ -345,19 +346,87 @@
             16,
             16
           ],
-          "texture": "#wood"
+          "texture": "#leg"
         }
       }
     },
     {
       "from": [
-        6,
+        9,
         11,
+        6
+      ],
+      "to": [
+        11,
+        15,
+        10
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#iron"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#iron"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#iron"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#iron"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#iron"
+        },
+        "down": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#iron"
+        }
+      }
+    },
+    {
+      "from": [
+        4,
+        14,
         7
       ],
       "to": [
-        14,
-        12,
+        11,
+        15,
         9
       ],
       "faces": {
@@ -418,8 +487,8 @@
       },
       "rotation": {
         "origin": [
-          8,
           11,
+          15,
           8
         ],
         "axis": "z",
@@ -428,14 +497,14 @@
     },
     {
       "from": [
-        7,
+        8,
         11,
-        4
+        6
       ],
       "to": [
-        11,
-        13,
-        8
+        12,
+        12,
+        10
       ],
       "faces": {
         "north": {
@@ -498,12 +567,12 @@
       "from": [
         2,
         11,
-        2
+        3
       ],
       "to": [
         6,
         14,
-        6
+        7
       ],
       "faces": {
         "north": {
@@ -565,13 +634,13 @@
     {
       "from": [
         3,
-        13,
-        3
+        14,
+        4
       ],
       "to": [
         5,
-        14,
-        5
+        15,
+        6
       ],
       "faces": {
         "north": {
