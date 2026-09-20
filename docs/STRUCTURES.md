@@ -28,7 +28,10 @@ How a building you made in-game becomes something the mod generates.
 
 | Piece | Size (X × Y × Z) | Ground offset | Notes |
 | --- | --- | --- | --- |
-| `trader_house` | 19 × ? × 17 | ? | 15 high above the foundation; cellar depth still to be measured |
+| `trader_house` | 19 × 23 × 17 | 9 | Timber frame over a stone footing, brick chimney, cellar |
+
+The piece's own height is read from the `.nbt` at placement time; only the ground offset has to
+be written down, because the file does not carry it.
 
 ## Cellars
 
@@ -37,7 +40,12 @@ no offset field. `project_start_to_heightmap` aligns the piece's **origin** to t
 surface — which, for a piece whose origin is the cellar floor, puts the whole cellar above
 ground and the house floating over it.
 
-Three ways out, in the order they are worth considering:
+**This is solved for single buildings.** `StructurePlacer` computes
+`origin = surface − groundOffset` and places the piece centred on a column, and
+`/slum structure place <piece> [rotation]` runs it. That is the fastest way to check a new
+piece: drop the `.nbt` in, reload, place it, walk in.
+
+The remaining three options matter once buildings have to generate on their own:
 
 1. **Place it from code.** A structure of our own computes `y = surface − groundOffset` and has
    exact control over digging and filling. The design needs a settlement placer anyway (§5.12),

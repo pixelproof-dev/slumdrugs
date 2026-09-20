@@ -54,7 +54,8 @@ public final class SlumCommands {
                 .then(condition())
                 .then(npc())
                 .then(frame())
-                .then(refine());
+                .then(refine())
+                .then(structure());
         event.getDispatcher().register(root);
         event.getDispatcher().register(Commands.literal("slumdrugs").redirect(event.getDispatcher().register(root)));
     }
@@ -368,6 +369,58 @@ public final class SlumCommands {
         frame.state().waterSeconds = seconds;
         reply(ctx, "Set water to " + seconds + "s at " + pos.toShortString());
         return 1;
+    }
+
+    // ------------------------------------------------------------------ structure
+
+    private static LiteralArgumentBuilder<CommandSourceStack> structure() {
+        return Commands.literal("structure").requires(Commands.hasPermission(OP))
+                .then(Commands.literal("place")
+                        .then(Commands.argument("piece", StringArgumentType.word())
+                                .suggests((ctx, builder) ->
+                                        SharedSuggestionProvider.suggest(List.of("trader_house"), builder))
+                                .executes(ctx -> placeStructure(ctx, net.minecraft.world.level.block.Rotation.NONE))
+                                .then(Commands.argument("rotation", StringArgumentType.word())
+                                        .suggests((ctx, builder) -> SharedSuggestionProvider.suggest(
+                                                java.util.Arrays.stream(net.minecraft.world.level.block.Rotation.values())
+                                                        .map(Enum::name).toList(), builder))
+                                        .executes(ctx -> placeStructure(ctx, rotation(ctx))))));
+    }
+
+    private static net.minecraft.world.level.block.Rotation rotation(CommandContext<CommandSourceStack> ctx) {
+        try {
+            return net.minecraft.world.level.block.Rotation.valueOf(
+                    StringArgumentType.getString(ctx, "rotation").toUpperCase(java.util.Locale.ROOT));
+        } catch (IllegalArgumentException unknown) {
+            return net.minecraft.world.level.block.Rotation.NONE;
+        }
+    }
+
+    private static int placeStructure(CommandContext<CommandSourceStack> ctx,
+                                      net.minecraft.world.level.block.Rotation rotation) {
+        String name = StringArgumentType.getString(ctx, "piece");
+        if (!name.equals("trader_house")) {
+            ctx.getSource().sendFailure(Component.literal("No such piece: " + name));
+            return 0;
+        }
+        var result = StructurePlacer.place(ctx.getSource().getLevel(),
+                BlockPos.containing(ctx.getSource().getPosition()),
+                StructurePlacer.TRADER_HOUSE, rotation);
+
+        if (result instanceof StructurePlacer.Result.Placed placed) {
+            reply(ctx, "Placed " + name + " at " + placed.origin().toShortString()
+                    + " (" + placed.size().getX() + "x" + placed.size().getY() + "x" + placed.size().getZ() + ")");
+            return 1;
+        }
+        if (result instanceof StructurePlacer.Result.Missing missing) {
+            ctx.getSource().sendFailure(Component.literal(
+                    "No structure file for " + missing.id() + " — drop the .nbt into "
+                            + "data/slumdrugs/structure/ and reload"));
+            return 0;
+        }
+        ctx.getSource().sendFailure(Component.literal(
+                ((StructurePlacer.Result.Refused) result).reason()));
+        return 0;
     }
 
     // ------------------------------------------------------------------ refine

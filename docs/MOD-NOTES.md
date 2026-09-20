@@ -98,6 +98,7 @@ do not.
 | `/slum frame grow` | Ripen it now |
 | `/slum frame water <seconds>` | Set its water |
 | `/slum refine <method> <quality> <units>` | A dry run against the rules — no blocks needed |
+| `/slum structure place <piece> [rotation]` | Places a saved building, sunk so its ground floor meets the terrain |
 
 `/slum refine` and `/slum frame info` exist to check the simulation against the numbers on a
 running server without building anything, which matters while no client has been launched.
