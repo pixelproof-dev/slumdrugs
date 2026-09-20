@@ -121,6 +121,26 @@ Plain, sturdy, no hinges. It should look like the cheapest thing in the room.
 
 ---
 
+## Seeing a model without Blockbench
+
+`tools/render_models.py` draws the model JSON with the real vanilla textures and writes a PNG to
+`build/model-previews/`. It needs nothing installed — no Blockbench, no running game, no image
+library — only that `./gradlew build` has run once so the Minecraft jar is on disk for the
+textures.
+
+```
+python3 tools/render_models.py                 # every block model
+python3 tools/render_models.py centrifuge      # just one
+```
+
+It is an orthographic, z-buffered renderer using Minecraft's own per-face shading, so it shows
+proportion and silhouette faithfully. It does **not** show ambient occlusion, block light, or
+how a model behaves in the hand, so it answers "are the proportions right" and not "does it look
+good in the world".
+
+Two alternatives if you want to edit rather than look: **blockbench.net/web** runs in a browser
+with nothing installed, and `File → Import → JSON Model` opens these files directly.
+
 ## Afterwards
 
 Each model needs its **item display** set, or it will look wrong in the hand and in the hotbar.
