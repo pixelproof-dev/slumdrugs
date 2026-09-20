@@ -297,8 +297,74 @@ to exactly 16x16 and clean up by hand: the grid, the palette and the outline are
 wrong on the first pass. At this size, drawing directly in Aseprite or Blockbench is often
 faster than repairing a generated image.
 
-## Blocks
+## Block textures
 
-None needed. All six blocks compose their models from vanilla textures — spruce planks, glass,
-coarse dirt, smooth stone, cut copper, barrel, copper grate — which is deliberate: they sit
-correctly beside a vanilla village without any art being drawn.
+**Correction.** This file previously said no block textures were needed, on the grounds that
+composing models from vanilla textures keeps them consistent with the game. Rendering the models
+showed that to be wrong. Vanilla textures are painted for whole blocks; stretched across the
+small cuboids of a piece of furniture they read as sliced-up blocks, and the stations looked it.
+
+Each station gets its own textures, painted for the surfaces they actually cover. Fourteen in
+all, several shared between blocks.
+
+### Shared
+
+**`press_iron`** — blackened ironwork, used by both presses
+> 16x16 pixel art texture for a Minecraft block, vanilla style, fully opaque, tiles seamlessly on all four edges. Blackened wrought iron with a slightly uneven hand-forged surface, two rounded rivet heads placed asymmetrically, and a faint lighter scuff where a tool has rubbed it bare. Four shades of near-black and cool grey, nothing saturated. Hard pixel edges, no anti-aliasing, no gradients. No text, no border.
+
+**`station_timber`** — the legs and frames of the wooden stations
+> 16x16 pixel art texture for a Minecraft block, vanilla style, fully opaque, tiles seamlessly on all four edges. Old workshop timber seen along the grain: straight dark grain lines of uneven spacing, one small knot off centre, one shallow split running partway down. Warm mid brown in four shades, drier and greyer than vanilla spruce. Hard pixel edges, no anti-aliasing, no gradients. No text, no border.
+
+### Centrifuge
+
+**`centrifuge_drum`**
+> 16x16 pixel art texture for a Minecraft block, vanilla style, fully opaque, tiles seamlessly left to right. The curved brass flank of a machine drum: a vertical seam of rivets down one side, a horizontal band across the middle, and a soft vertical highlight suggesting the curve of the metal. Warm brass in five shades from pale highlight to dark tarnish, with a little green verdigris in the lower corners. Hard pixel edges, no anti-aliasing, no gradients. No text, no border.
+
+**`centrifuge_top`**
+> 16x16 pixel art texture for a Minecraft block, vanilla style, fully opaque. The lid of a machine seen from above: a circular brass hatch inset in a square plate, four bolts at the corners, a small hinge at one edge and a short latch opposite it. Warm brass, darker in the recess of the circle. Hard pixel edges, no anti-aliasing, no gradients. No text, no border.
+
+**`centrifuge_base`**
+> 16x16 pixel art texture for a Minecraft block, vanilla style, fully opaque, tiles seamlessly left to right. Cast iron machine plinth: a heavy dark casting with two raised ribs running vertically, bolt heads along the lower edge, and grime collected in the recesses. Near-black and cool grey in four shades with one faint warm rust patch. Hard pixel edges, no anti-aliasing, no gradients. No text, no border.
+
+### Forcing frame
+
+**`frame_glazing`**
+> 16x16 pixel art texture for a Minecraft block, vanilla style, with transparency. A glazing panel: a painted wooden glazing bar crossing the middle both ways, dividing four panes of old glass. The panes are mostly transparent with a few pale diagonal streaks and one small cloudy corner. The bars are chipped pale grey-green paint over wood. Hard pixel edges, no anti-aliasing, no gradients. No text, no border.
+
+**`frame_soil`**
+> 16x16 pixel art texture for a Minecraft block, vanilla style, fully opaque, tiles seamlessly on all four edges. Rich worked seedbed soil seen from above: dark crumbly earth, finer and more even than vanilla dirt, with three or four pale grit specks and one small pale root fragment. Four shades of dark brown, no green. Hard pixel edges, no anti-aliasing, no gradients. No text, no border.
+
+**`frame_post`**
+> 16x16 pixel art texture for a Minecraft block, vanilla style, fully opaque, tiles seamlessly top to bottom. A weathered corner post of a garden frame: vertical grain, flaking pale grey-green paint over bare wood showing through in patches along one edge, one nail head. Four shades. Hard pixel edges, no anti-aliasing, no gradients. No text, no border.
+
+### Drying loft
+
+**`loft_frame`**
+> 16x16 pixel art texture for a Minecraft block, vanilla style, fully opaque, tiles seamlessly top to bottom. Rough sawn rack timber, coarser than finished furniture: visible saw marks running across the grain, one darker water stain, unpainted. Grey-brown in four shades. Hard pixel edges, no anti-aliasing, no gradients. No text, no border.
+
+**`loft_bundle`**
+> 16x16 pixel art texture for a Minecraft block, vanilla style, with transparency. Bunches of herbs hanging upside down and tied at the top: three bundles of different widths, stems gathered under a twine binding, leaves splaying towards the bottom edge with a ragged uneven silhouette rather than a straight cut. Drying olive green going brown at the tips, twine in tan. Transparent between and around the bundles. Hard pixel edges, no anti-aliasing, no gradients. No text, no border.
+
+### Pressing bench
+
+**`bench_top`**
+> 16x16 pixel art texture for a Minecraft block, vanilla style, fully opaque, tiles seamlessly on all four edges. A scarred workbench top seen from above: planks running one way with visible joints, a scatter of knife scores and dark stains, one circular ring left by a pot, one small burn mark. Warm mid brown in five shades. Hard pixel edges, no anti-aliasing, no gradients. No text, no border.
+
+**`press_plate`**
+> 16x16 pixel art texture for a Minecraft block, vanilla style, fully opaque. The face of a press plate: a flat stone slab with a shallow lip around the edge, its surface worn smooth in the middle and rougher at the rim, with a dark stain soaked into one corner. Pale grey in four shades. Hard pixel edges, no anti-aliasing, no gradients. No text, no border.
+
+### Sealing press
+
+**`sealing_top`**
+> 16x16 pixel art texture for a Minecraft block, vanilla style, fully opaque, tiles seamlessly on all four edges. A sealing bench top seen from above: planks with visible joints, several small hardened drips of dark red wax scattered across it, and one round scorched patch where a hot seal has rested. Warm brown in four shades, wax in deep burgundy. Hard pixel edges, no anti-aliasing, no gradients. No text, no border.
+
+**`wax_pot`**
+> 16x16 pixel art texture for a Minecraft block, vanilla style, fully opaque, tiles seamlessly left to right. The side of a small copper melting pot: hammered copper with a rolled rim at the top, soot blackening the lower third, and one bright highlight running down the curve. Copper in four shades plus soot black. Hard pixel edges, no anti-aliasing, no gradients. No text, no border.
+
+### Storage crate
+
+**`crate_side`**
+> 16x16 pixel art texture for a Minecraft block, vanilla style, fully opaque, tiles seamlessly left to right. The side of a shipping crate: horizontal boards with dark gaps between them, one vertical batten nailed across with four visible nail heads, and a faint dark stencil mark in one corner too worn to read. Pale dry pine in four shades. Hard pixel edges, no anti-aliasing, no gradients. No text, no border.
+
+**`crate_top`**
+> 16x16 pixel art texture for a Minecraft block, vanilla style, fully opaque, tiles seamlessly on all four edges. The lid of a shipping crate seen from above: three boards running one way with dark gaps between them, nail heads near the ends, one board slightly paler than the others as though replaced, and a scuffed corner. Pale dry pine in four shades. Hard pixel edges, no anti-aliasing, no gradients. No text, no border.
