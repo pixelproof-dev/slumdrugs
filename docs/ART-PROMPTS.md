@@ -1,104 +1,115 @@
 # Pixel art prompts — items
 
-All item textures are **16×16**, like vanilla. The current ones are 64×64, carried over from
-the plugin, and look wrong sitting next to vanilla items in a hotbar: four times the pixel
-density of everything around them.
+Twenty-one standalone prompts, one per item. Each is complete: paste it as is, no shared
+preamble needed. All textures are **16×16**, like vanilla.
 
-Substance colours are canon, from the plugin's `drugs.yml`:
+Substance colours are canon, taken from the plugin's `drugs.yml`:
+Sunleaf `#7bd35a` · Frostroot `#9be7ff` · Emberbloom `#ff7a3d` · Glowcap `#d58cff` ·
+Sparkshard `#fff26b`
 
-| Substance | Colour | Character |
-| --- | --- | --- |
-| Sunleaf | `#7bd35a` | Leafy herb, cheap, the starter |
-| Frostroot | `#9be7ff` | Pale ice blue. Root → crystal shards → powder ("Frostdust") |
-| Emberbloom | `#ff7a3d` | Amber resin with an inner glow, the expensive one |
-| Glowcap | `#d58cff` | Violet mushroom, faintly luminous |
-| Sparkshard | `#fff26b` | Pale electric yellow mineral, faceted |
+Two families must stay visually consistent. **Seeds** share one silhouette and differ only in
+seed shape and tint. **Sealed parcels** share one silhouette and differ only in the colour of
+the wax seal, so a player reads the kind of item instantly and the substance from the colour.
 
-## Style block
-
-Prepend this to every prompt:
-
-> 16×16 pixel art item icon, Minecraft Java Edition vanilla style, transparent background.
-> Hard pixel edges, no anti-aliasing, no gradients, no blur, no outline glow. Limited palette:
-> three or four shades of the material plus one darker shade for the outline. Light from the
-> upper left, shadow lower right. Centred, silhouette filling about 12 of the 16 pixels, clearly
-> readable at actual size. Slightly desaturated, earthy, nineteenth-century apothecary feel.
-> No text, no frame, no drop shadow.
-
-## Two families that must stay consistent
-
-**Seeds** share one silhouette — a small loose scatter of four or five seeds in a shallow heap,
-lower middle of the icon — and differ only in seed shape and tint. **Sealed parcels** share one
-silhouette — a small waxed-paper parcel tied with twine, a blob of wax where the twine crosses —
-and differ only in the colour of the wax. A player should read the family instantly and the
-substance from the colour.
+---
 
 ## Sunleaf
 
-- **seed_sunleaf** — a scatter of four flat teardrop seeds, pale straw with a faint green cast,
-  one seed slightly apart from the heap.
-- **raw_sunleaf** — a fresh cut sprig: three serrated leaves on a short stem, vivid green
-  `#7bd35a`, a lighter green along the upper edges, a darker green underside.
-- **dried_sunleaf** — the same sprig curled and brittle, desaturated olive fading to brown at
-  the tips, no highlight.
-- **product_sunleaf** — a short roll wrapped in off-white paper, twisted closed at one end, a
-  few green herb flecks showing at the open end. Diagonal, lower left to upper right.
-- **package_sunleaf** — the parcel silhouette, green wax seal.
+**`seed_sunleaf`** — Sunleaf Seeds
+> 16x16 pixel art item icon for Minecraft Java Edition, vanilla style, transparent background. A small loose scatter of four flat teardrop seeds in a shallow heap in the lower middle of the frame, one seed set slightly apart from the rest. Pale straw yellow with a faint green cast, highlights in #7bd35a. Three shades plus one darker shade for the outline. Hard pixel edges, no anti-aliasing, no gradients, no blur. Light from the upper left, shadow to the lower right. Silhouette fills about 12 of the 16 pixels and stays readable at actual size. Earthy, slightly desaturated nineteenth-century apothecary palette. No text, no frame, no drop shadow.
+
+**`raw_sunleaf`** — Sunleaf Bud
+> 16x16 pixel art item icon for Minecraft Java Edition, vanilla style, transparent background. A freshly cut sprig: three serrated leaves on a short stem, angled diagonally from lower left to upper right. Vivid green #7bd35a, a lighter green along the upper leaf edges, a darker green on the undersides. Three shades plus one darker shade for the outline. Hard pixel edges, no anti-aliasing, no gradients, no blur. Light from the upper left, shadow to the lower right. Silhouette fills about 12 of the 16 pixels and stays readable at actual size. Earthy, slightly desaturated nineteenth-century apothecary palette. No text, no frame, no drop shadow.
+
+**`dried_sunleaf`** — Dried Sunleaf
+> 16x16 pixel art item icon for Minecraft Java Edition, vanilla style, transparent background. The same three-leaf sprig as fresh Sunleaf but curled inward and brittle, leaf tips shrivelled. Desaturated olive green fading to dry brown at the tips, no bright highlight anywhere. Three shades plus one darker shade for the outline. Hard pixel edges, no anti-aliasing, no gradients, no blur. Light from the upper left, shadow to the lower right. Silhouette fills about 12 of the 16 pixels and stays readable at actual size. Earthy, slightly desaturated nineteenth-century apothecary palette. No text, no frame, no drop shadow.
+
+**`product_sunleaf`** — Sunleaf
+> 16x16 pixel art item icon for Minecraft Java Edition, vanilla style, transparent background. A short roll wrapped in off-white paper, lying diagonally from lower left to upper right, twisted shut at the lower end, with a few green herb flecks in #7bd35a showing at the open upper end. Three shades of paper plus one darker shade for the outline. Hard pixel edges, no anti-aliasing, no gradients, no blur. Light from the upper left, shadow to the lower right. Silhouette fills about 12 of the 16 pixels and stays readable at actual size. Earthy, slightly desaturated nineteenth-century apothecary palette. No text, no frame, no drop shadow.
+
+**`package_sunleaf`** — Sealed Sunleaf
+> 16x16 pixel art item icon for Minecraft Java Edition, vanilla style, transparent background. A small parcel wrapped in waxed paper, roughly square with folded corners, tied with thin twine crossing the front, and a round blob of green wax in #7bd35a where the twine crosses. Three shades of buff paper plus one darker shade for the outline. Hard pixel edges, no anti-aliasing, no gradients, no blur. Light from the upper left, shadow to the lower right. Silhouette fills about 12 of the 16 pixels and stays readable at actual size. Earthy, slightly desaturated nineteenth-century apothecary palette. No text, no frame, no drop shadow.
+
+---
 
 ## Frostroot
 
-- **seed_frostroot** — a scatter of small round dark seeds with a cold blue sheen on the lit side.
-- **raw_frostroot** — a pale forked root, ice blue `#9be7ff`, with three tiny frost crystals
-  growing along it, hanging slightly diagonal.
-- **dried_frostroot** — a loose cluster of thin angular crystal shards, translucent ice blue,
-  white specular pixels on two facets only.
-- **product_frostroot** — a small paper fold holding pale blue powder, the fold open at the top
-  so a little of the powder shows.
-- **package_frostroot** — the parcel silhouette, ice blue wax seal.
+**`seed_frostroot`** — Frostroot Seeds
+> 16x16 pixel art item icon for Minecraft Java Edition, vanilla style, transparent background. A small loose scatter of five round dark seeds in a shallow heap in the lower middle of the frame, each catching a cold pale blue sheen in #9be7ff on its lit side. Three shades plus one darker shade for the outline. Hard pixel edges, no anti-aliasing, no gradients, no blur. Light from the upper left, shadow to the lower right. Silhouette fills about 12 of the 16 pixels and stays readable at actual size. Earthy, slightly desaturated nineteenth-century apothecary palette. No text, no frame, no drop shadow.
+
+**`raw_frostroot`** — Frostroot Bud
+> 16x16 pixel art item icon for Minecraft Java Edition, vanilla style, transparent background. A pale forked root hanging slightly diagonally, with three tiny frost crystals growing along its length. Ice blue #9be7ff with a paler blue on the lit side and a cold grey-blue in shadow. Three shades plus one darker shade for the outline. Hard pixel edges, no anti-aliasing, no gradients, no blur. Light from the upper left, shadow to the lower right. Silhouette fills about 12 of the 16 pixels and stays readable at actual size. Earthy, slightly desaturated nineteenth-century apothecary palette. No text, no frame, no drop shadow.
+
+**`dried_frostroot`** — Dried Frostroot
+> 16x16 pixel art item icon for Minecraft Java Edition, vanilla style, transparent background. A loose cluster of four thin angular crystal shards of different lengths, leaning against each other. Translucent ice blue #9be7ff with two or three pure white specular pixels on two facets only, the rest in cooler blue shades. Three shades plus one darker shade for the outline. Hard pixel edges, no anti-aliasing, no gradients, no blur. Light from the upper left, shadow to the lower right. Silhouette fills about 12 of the 16 pixels and stays readable at actual size. Earthy, slightly desaturated nineteenth-century apothecary palette. No text, no frame, no drop shadow.
+
+**`product_frostroot`** — Frostroot
+> 16x16 pixel art item icon for Minecraft Java Edition, vanilla style, transparent background. A small square paper fold holding powder, opened at the top so a little pale blue powder in #9be7ff is visible spilling over the edge. Three shades of buff paper plus one darker shade for the outline. Hard pixel edges, no anti-aliasing, no gradients, no blur. Light from the upper left, shadow to the lower right. Silhouette fills about 12 of the 16 pixels and stays readable at actual size. Earthy, slightly desaturated nineteenth-century apothecary palette. No text, no frame, no drop shadow.
+
+**`package_frostroot`** — Sealed Frostroot
+> 16x16 pixel art item icon for Minecraft Java Edition, vanilla style, transparent background. A small parcel wrapped in waxed paper, roughly square with folded corners, tied with thin twine crossing the front, and a round blob of ice blue wax in #9be7ff where the twine crosses. Three shades of buff paper plus one darker shade for the outline. Hard pixel edges, no anti-aliasing, no gradients, no blur. Light from the upper left, shadow to the lower right. Silhouette fills about 12 of the 16 pixels and stays readable at actual size. Earthy, slightly desaturated nineteenth-century apothecary palette. No text, no frame, no drop shadow.
+
+---
 
 ## Emberbloom
 
-- **seed_emberbloom** — a scatter of dark red-brown knobbly seeds, one catching a warm highlight.
-- **raw_emberbloom** — a lump of amber resin, semi-translucent orange `#ff7a3d`, lighter at the
-  centre as though lit from inside, irregular rounded shape.
-- **dried_emberbloom** — the same lump hardened and matte, deep burnt orange with a few darker
-  cracks, no inner light.
-- **product_emberbloom** — a small corked bottle of orange tincture, dark glass, the liquid a
-  brighter orange band across the middle.
-- **package_emberbloom** — the parcel silhouette, orange wax seal.
+**`seed_emberbloom`** — Emberbloom Seeds
+> 16x16 pixel art item icon for Minecraft Java Edition, vanilla style, transparent background. A small loose scatter of four knobbly dark red-brown seeds in a shallow heap in the lower middle of the frame, one catching a warm orange highlight in #ff7a3d. Three shades plus one darker shade for the outline. Hard pixel edges, no anti-aliasing, no gradients, no blur. Light from the upper left, shadow to the lower right. Silhouette fills about 12 of the 16 pixels and stays readable at actual size. Earthy, slightly desaturated nineteenth-century apothecary palette. No text, no frame, no drop shadow.
+
+**`raw_emberbloom`** — Emberbloom Bud
+> 16x16 pixel art item icon for Minecraft Java Edition, vanilla style, transparent background. An irregular rounded lump of semi-translucent amber resin, warm orange #ff7a3d, noticeably lighter and warmer at its centre as though lit from within, darker amber at the edges. Three shades plus one darker shade for the outline. Hard pixel edges, no anti-aliasing, no gradients, no blur. Light from the upper left, shadow to the lower right. Silhouette fills about 12 of the 16 pixels and stays readable at actual size. Earthy, slightly desaturated nineteenth-century apothecary palette. No text, no frame, no drop shadow.
+
+**`dried_emberbloom`** — Dried Emberbloom
+> 16x16 pixel art item icon for Minecraft Java Edition, vanilla style, transparent background. The same rounded resin lump, now hardened and matte: deep burnt orange, no inner glow at all, with two or three darker cracks running across the surface and one dull chipped edge. Three shades plus one darker shade for the outline. Hard pixel edges, no anti-aliasing, no gradients, no blur. Light from the upper left, shadow to the lower right. Silhouette fills about 12 of the 16 pixels and stays readable at actual size. Earthy, slightly desaturated nineteenth-century apothecary palette. No text, no frame, no drop shadow.
+
+**`product_emberbloom`** — Emberbloom
+> 16x16 pixel art item icon for Minecraft Java Edition, vanilla style, transparent background. A small corked bottle standing upright, dark glass body with a short neck and a pale cork stopper, filled with orange tincture in #ff7a3d showing as a brighter band across the middle of the bottle. Three shades of glass plus one darker shade for the outline. Hard pixel edges, no anti-aliasing, no gradients, no blur. Light from the upper left, shadow to the lower right. Silhouette fills about 12 of the 16 pixels and stays readable at actual size. Earthy, slightly desaturated nineteenth-century apothecary palette. No text, no frame, no drop shadow.
+
+**`package_emberbloom`** — Sealed Emberbloom
+> 16x16 pixel art item icon for Minecraft Java Edition, vanilla style, transparent background. A small parcel wrapped in waxed paper, roughly square with folded corners, tied with thin twine crossing the front, and a round blob of orange wax in #ff7a3d where the twine crosses. Three shades of buff paper plus one darker shade for the outline. Hard pixel edges, no anti-aliasing, no gradients, no blur. Light from the upper left, shadow to the lower right. Silhouette fills about 12 of the 16 pixels and stays readable at actual size. Earthy, slightly desaturated nineteenth-century apothecary palette. No text, no frame, no drop shadow.
+
+---
 
 ## Glowcap
 
-- **product_glowcap** — a single mushroom cap, violet `#d58cff`, pale gills underneath, two or
-  three lighter pixels on the crown suggesting a faint glow. No stem, or a very short one.
-- **package_glowcap** — the parcel silhouette, violet wax seal.
+**`product_glowcap`** — Glowcap
+> 16x16 pixel art item icon for Minecraft Java Edition, vanilla style, transparent background. A single mushroom cap seen from slightly below, violet #d58cff, with pale cream gills visible underneath and a very short thick stem. Two or three lighter violet pixels scattered on the crown suggest a faint inner glow, without any glow effect or bloom. Three shades plus one darker shade for the outline. Hard pixel edges, no anti-aliasing, no gradients, no blur. Light from the upper left, shadow to the lower right. Silhouette fills about 12 of the 16 pixels and stays readable at actual size. Earthy, slightly desaturated nineteenth-century apothecary palette. No text, no frame, no drop shadow.
+
+**`package_glowcap`** — Sealed Glowcap
+> 16x16 pixel art item icon for Minecraft Java Edition, vanilla style, transparent background. A small parcel wrapped in waxed paper, roughly square with folded corners, tied with thin twine crossing the front, and a round blob of violet wax in #d58cff where the twine crosses. Three shades of buff paper plus one darker shade for the outline. Hard pixel edges, no anti-aliasing, no gradients, no blur. Light from the upper left, shadow to the lower right. Silhouette fills about 12 of the 16 pixels and stays readable at actual size. Earthy, slightly desaturated nineteenth-century apothecary palette. No text, no frame, no drop shadow.
+
+---
 
 ## Sparkshard
 
-- **product_sparkshard** — a jagged mineral shard standing upright, pale electric yellow
-  `#fff26b`, three flat facets in different shades, one bright pixel where the light catches an
-  edge.
-- **package_sparkshard** — the parcel silhouette, yellow wax seal.
+**`product_sparkshard`** — Sparkshard
+> 16x16 pixel art item icon for Minecraft Java Edition, vanilla style, transparent background. A jagged mineral shard standing upright and slightly tilted, pale electric yellow #fff26b, cut into three flat facets each in a different shade, with one single bright white pixel where the light catches the top edge. Three shades plus one darker shade for the outline. Hard pixel edges, no anti-aliasing, no gradients, no blur. Light from the upper left, shadow to the lower right. Silhouette fills about 12 of the 16 pixels and stays readable at actual size. Earthy, slightly desaturated nineteenth-century apothecary palette. No text, no frame, no drop shadow.
 
-## The two loose items
+**`package_sparkshard`** — Sealed Sparkshard
+> 16x16 pixel art item icon for Minecraft Java Edition, vanilla style, transparent background. A small parcel wrapped in waxed paper, roughly square with folded corners, tied with thin twine crossing the front, and a round blob of pale yellow wax in #fff26b where the twine crosses. Three shades of buff paper plus one darker shade for the outline. Hard pixel edges, no anti-aliasing, no gradients, no blur. Light from the upper left, shadow to the lower right. Silhouette fills about 12 of the 16 pixels and stays readable at actual size. Earthy, slightly desaturated nineteenth-century apothecary palette. No text, no frame, no drop shadow.
 
-- **fertilizer** (Compost Charge) — a small burlap pouch tied at the neck with twine, dark
-  crumbly compost spilling from the top, one or two straw pieces sticking out. Muted brown and
-  sackcloth tan.
-- **remedy** (Remedy Draught) — a small apothecary bottle, rounded body, short neck, cork
-  stopper, cloudy pale green liquid, a tiny blank paper label on the body. Reads as medicine,
-  not as a potion: no sparkle, no swirl.
+---
 
-## A caveat worth knowing before generating
+## Loose items
 
-Image models are poor at genuine 16×16. They usually produce a large image that *looks* pixelated
-rather than an actual 16-pixel grid, with soft edges and far more colours than the prompt asked
-for. Expect to downsample to exactly 16×16 and then clean up by hand — the grid, the palette and
-the outline are almost always wrong on the first pass. Drawing these directly in Aseprite or
-Blockbench is often faster than fixing a generated one.
+**`fertilizer`** — Compost Charge
+> 16x16 pixel art item icon for Minecraft Java Edition, vanilla style, transparent background. A small burlap pouch tied at the neck with twine, bulging at the base, with dark crumbly compost spilling over the top and one or two pale straw pieces sticking out. Sackcloth tan in three shades, dark earth brown for the compost, plus one darker shade for the outline. Hard pixel edges, no anti-aliasing, no gradients, no blur. Light from the upper left, shadow to the lower right. Silhouette fills about 12 of the 16 pixels and stays readable at actual size. Earthy, slightly desaturated nineteenth-century apothecary palette. No text, no frame, no drop shadow.
+
+**`remedy`** — Remedy Draught
+> 16x16 pixel art item icon for Minecraft Java Edition, vanilla style, transparent background. A small apothecary bottle standing upright: rounded body, short narrow neck, pale cork stopper, filled with cloudy pale green liquid, and a tiny blank paper label on the body. It should read as plain medicine rather than a magic potion: no sparkle, no swirl, no glow. Three shades of glass plus one darker shade for the outline. Hard pixel edges, no anti-aliasing, no gradients, no blur. Light from the upper left, shadow to the lower right. Silhouette fills about 12 of the 16 pixels and stays readable at actual size. Earthy, slightly desaturated nineteenth-century apothecary palette. No text, no frame, no drop shadow.
+
+---
+
+## Before you generate
+
+Image models are poor at genuine 16x16. They usually return a large image that merely looks
+pixelated, with soft edges and far more colours than the prompt asked for. Expect to downsample
+to exactly 16x16 and clean up by hand: the grid, the palette and the outline are almost always
+wrong on the first pass. At this size, drawing directly in Aseprite or Blockbench is often
+faster than repairing a generated image.
 
 ## Blocks
 
 None needed. All six blocks compose their models from vanilla textures — spruce planks, glass,
-coarse dirt, smooth stone, cut copper, barrel, copper grate — and that is deliberate: they sit
-correctly next to a vanilla village without any art being drawn.
+coarse dirt, smooth stone, cut copper, barrel, copper grate — which is deliberate: they sit
+correctly beside a vanilla village without any art being drawn.
