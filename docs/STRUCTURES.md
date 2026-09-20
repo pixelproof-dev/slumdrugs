@@ -7,20 +7,51 @@ How a building you made in-game becomes something the mod generates.
 1. Stand the build on flat ground with nothing of the landscape in it you do not want copied.
 2. `/give @s minecraft:structure_block`, place it at one corner, set it to **Save** mode.
 3. Give it a name in the form `slumdrugs:trader_house`.
-4. Set **relative position** and **size** so the box holds the build. The corner marker is the
-   piece's origin — everything the mod does with the piece is measured from there.
+4. Set **relative position** and **size** so the box holds the build **including the cellar**.
 5. Turn **Include entities** off unless the piece is meant to ship with them.
 6. Save. The file lands in `<world>/generated/slumdrugs/structures/trader_house.nbt`.
 7. Copy it to `neoforge/src/main/resources/data/slumdrugs/structure/trader_house.nbt`.
 
 ## Conventions
 
-- **Origin at the ground-floor corner**, not at the cellar floor. Depth below the origin is
-  what the placer uses to know how far to dig.
+- **The origin is always the lowest corner of the box.** A structure block saves upward from
+  its own position, so nothing can exist below the origin. For a building with a cellar the
+  origin is therefore the cellar floor, not the ground floor.
+- **Record the ground offset**: how many blocks up from the origin the ground floor sits
+  (cellar depth plus foundation). This is the number a placer needs, and it cannot be read back
+  out of the `.nbt`. Write it in the table below when a piece is added.
 - **Sizes in odd numbers** where a piece has a front, so it can be centred on a plot.
 - **Air is not neutral.** Structure saves record air, and placed air removes whatever was
   there. Keep the box tight around the build.
-- Cellars are welcome and wanted — the design links them to the drains later (§5.12).
+
+### Pieces
+
+| Piece | Size (X × Y × Z) | Ground offset | Notes |
+| --- | --- | --- | --- |
+| `trader_house` | 19 × ? × 17 | ? | 15 high above the foundation; cellar depth still to be measured |
+
+## Cellars
+
+A piece that goes below ground cannot simply be dropped at the surface, and the jigsaw JSON has
+no offset field. `project_start_to_heightmap` aligns the piece's **origin** to the terrain
+surface — which, for a piece whose origin is the cellar floor, puts the whole cellar above
+ground and the house floating over it.
+
+Three ways out, in the order they are worth considering:
+
+1. **Place it from code.** A structure of our own computes `y = surface − groundOffset` and has
+   exact control over digging and filling. The design needs a settlement placer anyway (§5.12),
+   and this is the only option that also lets the placement be journalled and reversible.
+2. **Split the piece.** Save the house with its origin at the ground floor, save the cellar
+   separately, and connect them with a jigsaw block facing down. Pure JSON, works with vanilla
+   jigsaw, at the cost of authoring two pieces and getting the connector alignment right.
+3. **Absolute start height.** `"start_height": {"absolute": N}` as the ancient city does. Only
+   sensible where the Y is known in advance, so not for a building on natural terrain.
+
+Whichever is used, set `terrain_adaptation` so the buried part is not left hanging in a cave:
+`beard_thin` and `beard_box` fill underneath and carve around, `bury` sinks the piece into the
+ground, `encapsulate` wraps it. The ancient city uses `beard_box`; a house with a cellar wants
+`beard_thin` or `beard_box`.
 
 ## Palette rules
 
