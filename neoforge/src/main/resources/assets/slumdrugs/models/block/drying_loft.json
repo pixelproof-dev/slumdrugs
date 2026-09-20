@@ -2,9 +2,9 @@
   "parent": "minecraft:block/block",
   "textures": {
     "particle": "minecraft:block/spruce_log",
-    "post": "minecraft:block/spruce_log",
-    "rail": "minecraft:block/stripped_spruce_log",
-    "hang": "minecraft:block/dried_kelp_side"
+    "post": "slumdrugs:block/station_timber",
+    "rail": "slumdrugs:block/station_timber",
+    "hang": "slumdrugs:block/loft_bundle"
   },
   "elements": [
     {

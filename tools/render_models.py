@@ -163,12 +163,15 @@ if __name__ == '__main__':
 
     tex = pathlib.Path('/tmp/slumdrugs-render-tex'); tex.mkdir(exist_ok=True)
     jar = zipfile.ZipFile(jars[0])
+    ours = root / 'neoforge/src/main/resources/assets/slumdrugs/textures'
     for p in models.glob('*.json'):
         for ref in json.loads(p.read_text()).get('textures', {}).values():
-            if not ref.startswith('minecraft:'): continue
-            name = ref.split(':')[1]
+            ns, _, name = ref.partition(':')
             dest = tex / (name.replace('/', '_') + '.png')
-            if not dest.exists(): dest.write_bytes(jar.read(f'assets/minecraft/textures/{name}.png'))
+            if ns == 'minecraft':
+                if not dest.exists(): dest.write_bytes(jar.read(f'assets/minecraft/textures/{name}.png'))
+            elif ns == 'slumdrugs':
+                dest.write_bytes((ours / f'{name}.png').read_bytes())
 
     out = root / 'build/model-previews'; out.mkdir(parents=True, exist_ok=True)
     wanted = sys.argv[1:] or sorted(p.stem for p in models.glob('*.json'))

@@ -3,10 +3,10 @@
   "textures": {
     "particle": "minecraft:block/stripped_oak_log",
     "top": "minecraft:block/stripped_oak_log",
-    "leg": "minecraft:block/spruce_log",
-    "iron": "minecraft:block/polished_deepslate",
+    "leg": "slumdrugs:block/station_timber",
+    "iron": "slumdrugs:block/press_iron",
     "plate": "minecraft:block/polished_deepslate",
-    "screw": "minecraft:block/deepslate_bricks"
+    "screw": "slumdrugs:block/press_iron"
   },
   "elements": [
     {

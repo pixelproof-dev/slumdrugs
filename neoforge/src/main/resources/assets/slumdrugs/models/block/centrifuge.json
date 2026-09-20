@@ -1,11 +1,11 @@
 {
   "parent": "minecraft:block/block",
   "textures": {
-    "particle": "minecraft:block/copper_block",
-    "iron": "minecraft:block/polished_deepslate",
-    "drum": "minecraft:block/copper_block",
-    "band": "minecraft:block/deepslate_bricks",
-    "lid": "minecraft:block/copper_grate",
+    "particle": "slumdrugs:block/centrifuge_drum",
+    "iron": "slumdrugs:block/centrifuge_base",
+    "drum": "slumdrugs:block/centrifuge_drum",
+    "band": "slumdrugs:block/press_iron",
+    "lid": "slumdrugs:block/centrifuge_lid",
     "hatch": "minecraft:block/blast_furnace_front"
   },
   "elements": [
@@ -160,36 +160,36 @@
         "north": {
           "uv": [
             0,
-            0,
+            4,
             16,
-            16
+            12
           ],
           "texture": "#drum"
         },
         "south": {
           "uv": [
             0,
-            0,
+            4,
             16,
-            16
+            12
           ],
           "texture": "#drum"
         },
         "east": {
           "uv": [
             0,
-            0,
+            4,
             16,
-            16
+            12
           ],
           "texture": "#drum"
         },
         "west": {
           "uv": [
             0,
-            0,
+            4,
             16,
-            16
+            12
           ],
           "texture": "#drum"
         },
@@ -228,36 +228,36 @@
         "north": {
           "uv": [
             0,
-            0,
+            4,
             16,
-            16
+            12
           ],
           "texture": "#drum"
         },
         "south": {
           "uv": [
             0,
-            0,
+            4,
             16,
-            16
+            12
           ],
           "texture": "#drum"
         },
         "east": {
           "uv": [
             0,
-            0,
+            4,
             16,
-            16
+            12
           ],
           "texture": "#drum"
         },
         "west": {
           "uv": [
             0,
-            0,
+            4,
             16,
-            16
+            12
           ],
           "texture": "#drum"
         },

@@ -3,8 +3,8 @@
   "textures": {
     "particle": "minecraft:block/spruce_planks",
     "wood": "minecraft:block/spruce_planks",
-    "leg": "minecraft:block/spruce_log",
-    "iron": "minecraft:block/polished_deepslate",
+    "leg": "slumdrugs:block/station_timber",
+    "iron": "slumdrugs:block/press_iron",
     "brass": "minecraft:block/copper_block",
     "pot": "minecraft:block/cauldron_side",
     "wax": "minecraft:block/red_concrete"
