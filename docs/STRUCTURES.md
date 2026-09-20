@@ -66,6 +66,13 @@ position with WorldEdit if you prefer, then export with a structure block. Check
 `//schem formats` — if your build lists a structure or nbt format, it can write the vanilla file
 directly.
 
+### Version drift
+
+A piece saved in an older Minecraft is upgraded by the game's data fixer when it loads, and
+that usually just works. It is still worth knowing which version a piece came from, because a
+block that was renamed or split since then is where a piece will quietly come out wrong. The
+`.nbt` carries its `DataVersion`; 26.3 is 5023, 1.20.6 is 3839.
+
 One WorldEdit trick worth using before saving: `//replace air structure_void` inside the
 selection. Saved air **deletes** what it lands on, so a tight box still punches a rectangular
 hole through a hillside around the roofline; `structure_void` leaves whatever is already there.
@@ -86,7 +93,7 @@ hole through a hillside around the roofline; `structure_void` leaves whatever is
 
 | Piece | Size (X × Y × Z) | Ground offset | Notes |
 | --- | --- | --- | --- |
-| `trader_house` | 17 × 23 × 17 | 9 | Timber frame, brick chimney, front garden, cellar |
+| `trader_house` | 17 × 23 × 17 | 9 | Timber frame, brick chimney, front garden, cellar. 60 blocks, all vanilla. Saved in 1.20.6 (DataVersion 3839), so the game data-fixes it on load |
 
 The piece's own height is read from the `.nbt` at placement time; only the ground offset has to
 be written down, because the file does not carry it.
