@@ -35,7 +35,29 @@ The save lands in `<world>/generated/slumdrugs/structures/trader_house.nbt` — 
 `neoforge/src/main/resources/data/slumdrugs/structure/trader_house.nbt` — **singular**
 `structure` in a datapack. Getting that wrong is silent: the file is simply never found.
 
-Then `/reload`, and `/slum structure place trader_house` to check it.
+### Getting it into a running game
+
+Which route depends on how the mod is running.
+
+**Dev client** (`./gradlew :neoforge:runClient`): the file is on the classpath, so put it in
+`neoforge/src/main/resources/data/slumdrugs/structure/` and restart the client.
+
+**A built jar in a normal instance**: rather than rebuilding for every edit, drop it in the
+world as a datapack, which reloads in seconds:
+
+```
+<world>/datapacks/slumdrugs-dev/pack.mcmeta
+<world>/datapacks/slumdrugs-dev/data/slumdrugs/structure/trader_house.nbt
+```
+
+`pack.mcmeta` for Minecraft 26.3 (data pack format 121):
+
+```json
+{ "pack": { "pack_format": 121, "description": "SlumDrugs structures" } }
+```
+
+Then `/reload`, and `/slum structure place trader_house` to check it. A piece that does not
+show up is almost always in `structures/` (the world-save spelling) instead of `structure/`.
 
 ### WorldEdit
 
@@ -64,7 +86,7 @@ hole through a hillside around the roofline; `structure_void` leaves whatever is
 
 | Piece | Size (X × Y × Z) | Ground offset | Notes |
 | --- | --- | --- | --- |
-| `trader_house` | 19 × 23 × 17 | 9 | Timber frame over a stone footing, brick chimney, cellar |
+| `trader_house` | 17 × 23 × 17 | 9 | Timber frame, brick chimney, front garden, cellar |
 
 The piece's own height is read from the `.nbt` at placement time; only the ground offset has to
 be written down, because the file does not carry it.
