@@ -4,13 +4,49 @@ How a building you made in-game becomes something the mod generates.
 
 ## Exporting
 
-1. Stand the build on flat ground with nothing of the landscape in it you do not want copied.
-2. `/give @s minecraft:structure_block`, place it at one corner, set it to **Save** mode.
-3. Give it a name in the form `slumdrugs:trader_house`.
-4. Set **relative position** and **size** so the box holds the build **including the cellar**.
-5. Turn **Include entities** off unless the piece is meant to ship with them.
-6. Save. The file lands in `<world>/generated/slumdrugs/structures/trader_house.nbt`.
-7. Copy it to `neoforge/src/main/resources/data/slumdrugs/structure/trader_house.nbt`.
+Creative mode and operator rights are needed for structure blocks.
+
+### The corner method
+
+Least error-prone, because the game works out the box for you.
+
+1. Find the **lowest corner** of the build — lowest Y (the cellar floor), lowest X, lowest Z —
+   and place a structure block **one block diagonally outside it in all three axes**. Set it to
+   **Corner** mode and name it `slumdrugs:trader_house`.
+2. Do the same at the **opposite corner**: highest X, Y and Z, again one block diagonally
+   outside. Corner mode, same name.
+3. Place a third structure block anywhere convenient, set it to **Save** mode, give it the same
+   name, and press **Detect structure size and position**. It finds the two corners and fills in
+   the box.
+4. Turn **Show bounding box** on and look at it. Nothing of the build outside, no slack inside.
+5. **Include entities** off, unless the piece should ship with them.
+6. Save.
+
+### By hand
+
+If you would rather type the numbers: place the Save-mode block one block diagonally outside
+the lowest corner, at the cellar floor's Y, set **relative position** to `1 0 1` and **size** to
+the build's dimensions.
+
+### Where the file goes
+
+The save lands in `<world>/generated/slumdrugs/structures/trader_house.nbt` — note **plural**
+`structures` in a world save. It belongs in the mod at
+`neoforge/src/main/resources/data/slumdrugs/structure/trader_house.nbt` — **singular**
+`structure` in a datapack. Getting that wrong is silent: the file is simply never found.
+
+Then `/reload`, and `/slum structure place trader_house` to check it.
+
+### WorldEdit
+
+Vanilla reads `.nbt` only; WorldEdit's `.schem` is a tool format the game cannot load. Build and
+position with WorldEdit if you prefer, then export with a structure block. Check
+`//schem formats` — if your build lists a structure or nbt format, it can write the vanilla file
+directly.
+
+One WorldEdit trick worth using before saving: `//replace air structure_void` inside the
+selection. Saved air **deletes** what it lands on, so a tight box still punches a rectangular
+hole through a hillside around the roofline; `structure_void` leaves whatever is already there.
 
 ## Conventions
 
