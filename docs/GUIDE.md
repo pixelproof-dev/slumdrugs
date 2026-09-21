@@ -144,6 +144,28 @@ thinks less of you; kill one and the whole crew inherits his anger. Tribute, coi
 a crew member's hand, buys standing back and calms the one who took it. The crews come in
 opposed pairs: rising with one drops you with its rival.
 
+## Corners
+
+From the Backroom on you can hold a corner: a chunk of the quarter that is yours. Stand on it
+with a stamped sovereign in hand and say `/slum turf claim`. On your own corner your regulars
+pay more and the street looks the other way a little. The Backroom lets you hold one, the
+Workshop three.
+
+A crew's corner can only be had if the crew likes you enough (standing 40), and taking it
+costs some of that liking. They remember: on a corner they gave up to you, they treat you
+colder than they do elsewhere. Another player's corner cannot be taken at all; there is no
+war here yet. `/slum turf here` tells you whose ground you stand on, `/slum turf list` what
+you hold, `/slum turf release` lets one go.
+
+## A hired hand
+
+Once you have a Workshop, a resident (the villagers with a name and no trade you can use)
+will work for you: click them with a stamped sovereign. From then on they take dry bundles
+down off any loft within six blocks of them and pull the screw on any loaded press, one
+action a second, and drop what comes out at the station. They want two shillings a day, and
+take it from the nearest storage crate themselves, smallest coin first, keeping the change.
+The day the crate has nothing in it, they quit.
+
 ## You
 
 Product is used like food. It does what it does for a while, and it adds to your tolerance

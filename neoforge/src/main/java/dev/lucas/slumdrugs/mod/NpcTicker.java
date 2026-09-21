@@ -61,9 +61,9 @@ public final class NpcTicker {
         Player nearest = level.getNearestPlayer(villager, NOTICE_RANGE);
 
         // Moods drift back toward where this crew's standing with whoever is nearest puts
-        // them. Turf depth waits on turf; nobody stands deep in anything yet.
-        double standing = nearest == null ? 0 : Crews.standing(nearest, data);
-        double resting = Npc.restingAggression(data.role(), standing, 0);
+        // them: less on a corner they lost to that player, and deeper on a corner of their own.
+        double standing = nearest == null ? 0 : Turfs.standingHere(level, nearest, data, villager.blockPosition());
+        double resting = Npc.restingAggression(data.role(), standing, Turfs.depth(level, data, villager.blockPosition()));
         double settled = Npc.settle(data.aggression(), resting, INTERVAL / 20.0 / 60.0);
 
         // A lieutenant's mood spreads to the crew around them, part of the way.
@@ -80,6 +80,9 @@ public final class NpcTicker {
             data = data.withAggression(settled);
             villager.setData(ModAttachments.NPC.get(), data);
         }
+
+        // A hired hand earns their wage, or stops being one.
+        if (data.role() == Npc.Role.HAND) data = Hands.tick(level, villager, data);
 
         // A word in passing, from anyone close enough, about what they see of you.
         if (nearest instanceof ServerPlayer listener) Barks.maybe(level, villager, data, listener);

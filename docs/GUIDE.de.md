@@ -154,6 +154,29 @@ Crew erbt seinen Zorn. Tribut, Münze in die Hand eines Crewmitglieds gedrückt,
 zurück und beruhigt den, der sie genommen hat. Die Crews kommen in Gegnerpaaren: Steigst du
 bei einer, fällst du bei ihrer Rivalin.
 
+## Ecken
+
+Ab dem Hinterzimmer kannst du eine Ecke halten: einen Chunk des Viertels, der deiner ist.
+Stell dich mit einem gestempelten Sovereign in der Hand darauf und sag `/slum turf claim`. Auf
+deiner eigenen Ecke zahlen deine Stammkunden mehr, und die Straße schaut ein wenig weg. Das
+Hinterzimmer erlaubt eine Ecke, die Werkstatt drei.
+
+Die Ecke einer Crew bekommst du nur, wenn die Crew dich genug mag (Ansehen 40), und sie zu
+nehmen kostet etwas von dieser Zuneigung. Sie erinnern sich: Auf einer Ecke, die sie dir
+überlassen haben, behandeln sie dich kühler als anderswo. Die Ecke eines anderen Spielers ist
+gar nicht zu haben; Krieg gibt es hier noch nicht. `/slum turf here` sagt dir, auf wessen
+Boden du stehst, `/slum turf list`, was du hältst, `/slum turf release` gibt eine Ecke auf.
+
+## Eine Aushilfe
+
+Hast du eine Werkstatt, arbeitet ein Bewohner (die Dorfbewohner mit Namen und ohne Beruf, den
+du nutzen kannst) für dich: Klick ihn mit einem gestempelten Sovereign an. Von da an nimmt er
+trockene Bündel von jedem Trockenboden in sechs Blöcken Umkreis ab und dreht die Spindel jeder
+beladenen Presse, eine Handlung pro Sekunde, und lässt fallen, was herauskommt, bei der
+Station. Er will zwei Schilling am Tag und nimmt sie sich selbst aus der nächsten
+Vorratskiste, kleinste Münze zuerst, und behält das Wechselgeld. An dem Tag, an dem die Kiste
+leer ist, kündigt er.
+
 ## Du
 
 Ware wird wie Essen benutzt. Sie tut eine Weile, was sie tut, und sie erhöht deine Toleranz

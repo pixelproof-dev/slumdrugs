@@ -13,6 +13,8 @@ import dev.lucas.slumdrugs.sim.economy.MarketState;
 import dev.lucas.slumdrugs.sim.npc.Loyalty;
 import dev.lucas.slumdrugs.sim.npc.Npc;
 import dev.lucas.slumdrugs.sim.npc.Standing;
+import dev.lucas.slumdrugs.sim.npc.Turf;
+import dev.lucas.slumdrugs.sim.npc.Hire;
 import dev.lucas.slumdrugs.sim.player.Condition;
 import dev.lucas.slumdrugs.sim.player.Progression;
 import dev.lucas.slumdrugs.sim.player.Recovery;
@@ -63,6 +65,8 @@ public final class SimChecks {
         standing();
         loyalty();
         npcs();
+        turf();
+        hire();
         System.out.println("PASS: " + checks + " simulation assertions.");
     }
 
@@ -1064,5 +1068,82 @@ public final class SimChecks {
                 check(Math.abs(result - boss) <= Math.abs(member - boss) + 1e-9,
                         "spread never moves the crew away from the boss");
             }
+    }
+
+    private static void turf() {
+        String me = Turf.PLAYER_PREFIX + "me", other = Turf.PLAYER_PREFIX + "other";
+        check(Turf.isPlayer(me) && !Turf.isCrew(me), "a prefixed holder is a player");
+        check(Turf.isCrew("ashfall") && !Turf.isPlayer("ashfall"), "a bare id is a crew");
+        check(!Turf.isCrew("") && !Turf.isPlayer("") && !Turf.isCrew(null), "nobody is neither");
+
+        // The ladder decides how many corners a player may hold.
+        check(Turf.maxHeld(Progression.Tier.HAND_TO_MOUTH) == 0, "hand to mouth holds nothing");
+        check(Turf.maxHeld(Progression.Tier.BACKROOM) == 1, "the backroom holds one corner");
+        check(Turf.maxHeld(Progression.Tier.WORKSHOP) == 3, "the workshop holds three");
+        check(Turf.maxHeld(Progression.Tier.KINGPIN) == 5 && Turf.maxHeld(null) == 0, "beyond, five; no tier, none");
+
+        // Verdicts, one per reason, in the order the rule checks them.
+        check(Turf.claim("", me, 0, 0, Progression.Tier.HAND_TO_MOUTH) == Turf.Verdict.TIER_TOO_LOW, "no corners before the backroom");
+        check(Turf.claim("", me, 0, 0, Progression.Tier.BACKROOM) == Turf.Verdict.OK, "a free corner is anyone's for the price");
+        check(Turf.claim(me, me, 0, 1, Progression.Tier.BACKROOM) == Turf.Verdict.YOURS_ALREADY, "you cannot take your own corner");
+        check(Turf.claim("", me, 0, 1, Progression.Tier.BACKROOM) == Turf.Verdict.TOO_MANY, "the backroom's one corner is the limit");
+        check(Turf.claim("", me, 0, 1, Progression.Tier.WORKSHOP) == Turf.Verdict.OK, "the workshop has room for more");
+        check(Turf.claim(other, me, 100, 0, Progression.Tier.WORKSHOP) == Turf.Verdict.ANOTHER_PLAYER, "another player's corner is not taken here");
+        check(Turf.claim("ashfall", me, Turf.CLAIM_STANDING - 1, 0, Progression.Tier.WORKSHOP) == Turf.Verdict.CREW_REFUSES, "a crew that does not like you enough refuses");
+        check(Turf.claim("ashfall", me, Turf.CLAIM_STANDING, 0, Progression.Tier.WORKSHOP) == Turf.Verdict.OK, "a crew that likes you enough lets a corner go");
+        check(Turf.claim(null, me, 0, 0, Progression.Tier.WORKSHOP) == Turf.Verdict.OK, "a null holder is nobody");
+        for (int standing = -100; standing <= 100; standing += 5)
+            check((Turf.claim("choir", me, standing, 0, Progression.Tier.WORKSHOP) == Turf.Verdict.OK) == (standing >= Turf.CLAIM_STANDING),
+                    "the claim line is exactly the claim standing");
+
+        // What a corner is worth, and what it costs the crew's goodwill on it.
+        check(Turf.priceFactor(true) > 1 && Turf.priceFactor(false) == 1, "your own corner pays more, others pay the usual");
+        check(Turf.suspicionFactor(true) < 1 && Turf.suspicionFactor(false) == 1, "your own corner looks away a little");
+        close(Turf.standingOn(50, true), 50 - Turf.RESENTMENT, "a crew resents you on a corner it lost to you");
+        close(Turf.standingOn(50, false), 50, "and not elsewhere");
+        close(Turf.standingOn(-95, true), Standing.MIN, "resentment stays on the scale");
+        check(Turf.CLAIM_COST > 0 && Turf.CLAIM_COST < Turf.CLAIM_STANDING, "taking a corner costs some liking, not all of it");
+        check(Turf.depth("ashfall", "ashfall") == 1, "a member on their own crew's corner is deep in it");
+        check(Turf.depth("choir", "ashfall") == 0 && Turf.depth("", "ashfall") == 0 && Turf.depth(me, "ashfall") == 0,
+                "and not on anyone else's, or nobody's");
+        check(Turf.depth("ashfall", "") == 0 && Turf.depth("", null) == 0, "no crew, no depth");
+    }
+
+    private static void hire() {
+        check(!Hire.canHire(Progression.Tier.HAND_TO_MOUTH) && !Hire.canHire(Progression.Tier.BACKROOM), "no hands before the workshop");
+        check(Hire.canHire(Progression.Tier.WORKSHOP) && Hire.canHire(Progression.Tier.KINGPIN) && !Hire.canHire(null), "a workshop can hire");
+        check(Hire.wageDue(-1, 0) && Hire.wageDue(3, 4) && !Hire.wageDue(4, 4), "a wage is due once per new day");
+        check(Hire.HIRE_PENCE == Coin.SOVEREIGN && Hire.WAGE_PENCE == 2 * Coin.SHILLING, "a sovereign to start, two shillings a day");
+
+        // Smallest coin first, and the change is kept.
+        long[] values = {Coin.SOVEREIGN, Coin.SHILLING, Coin.PENNY};
+        int[] taken = Hire.take(Hire.WAGE_PENCE, values, new int[]{1, 5, 30});
+        check(taken != null && taken[0] == 0 && taken[1] == 0 && taken[2] == 24, "pennies go first when there are enough");
+        taken = Hire.take(Hire.WAGE_PENCE, values, new int[]{1, 5, 10});
+        check(taken != null && taken[0] == 0 && taken[1] == 2 && taken[2] == 10, "then shillings, rounded up, on top of the pennies");
+        taken = Hire.take(Hire.WAGE_PENCE, values, new int[]{1, 0, 0});
+        check(taken != null && taken[0] == 1, "a sovereign alone is taken whole: the hand keeps the change");
+        check(Hire.take(Hire.WAGE_PENCE, values, new int[]{0, 1, 11}) == null, "twenty-three pence is not a wage");
+        check(Hire.take(Hire.WAGE_PENCE, new long[0], new int[0]) == null, "an empty crate pays nobody");
+        int[] none = Hire.take(0, values, new int[]{1, 1, 1});
+        check(none != null && none[0] + none[1] + none[2] == 0, "no wage takes no coin");
+        boolean threw = false;
+        try { Hire.take(1, new long[]{1}, new int[]{1, 1}); } catch (IllegalArgumentException e) { threw = true; }
+        check(threw, "mismatched coins are refused");
+        // Whatever is offered, what is taken is worth at least the wage and never more than one coin over it.
+        for (int sov = 0; sov <= 2; sov++)
+            for (int sh = 0; sh <= 4; sh++)
+                for (int d = 0; d <= 30; d += 3) {
+                    int[] t = Hire.take(Hire.WAGE_PENCE, values, new int[]{sov, sh, d});
+                    long offered = sov * Coin.SOVEREIGN + sh * Coin.SHILLING + d;
+                    if (offered < Hire.WAGE_PENCE) { check(t == null, "short coin pays nothing"); continue; }
+                    check(t != null, "enough coin always pays");
+                    long got = t[0] * Coin.SOVEREIGN + t[1] * Coin.SHILLING + t[2];
+                    check(got >= Hire.WAGE_PENCE, "the wage is covered");
+                    check(t[0] <= sov && t[1] <= sh && t[2] <= d, "nothing is taken that was not there");
+                    long overBy = got - Hire.WAGE_PENCE;
+                    long biggest = t[0] > 0 ? Coin.SOVEREIGN : t[1] > 0 ? Coin.SHILLING : Coin.PENNY;
+                    check(overBy < biggest, "the change kept is less than the largest coin taken");
+                }
     }
 }

@@ -47,14 +47,18 @@ public final class Crews {
         return data.crew().isBlank() ? 0 : of(player).with(data.crew());
     }
 
-    private static void moved(ServerPlayer player, String crew, double delta) {
+    /** A crew's name for a message: the design's label, or the id for a crew it does not know. */
+    public static String label(String crew) {
+        Standing.Crew known = Standing.Crew.byId(crew);
+        return known != null ? known.label : crew;
+    }
+
+    static void moved(ServerPlayer player, String crew, double delta) {
         Standings standings = of(player);
         standings.move(crew, delta);
         player.setData(ModAttachments.STANDINGS.get(), standings);
-        Standing.Crew known = Standing.Crew.byId(crew);
-        String label = known != null ? known.label : crew;
         ProductItem.actionBar(player, Component.translatable("message.slumdrugs.standing",
-                label, (int) Math.round(standings.with(crew)))
+                label(crew), (int) Math.round(standings.with(crew)))
                 .withStyle(s -> s.withColor(delta < 0 ? 0xB05050 : 0x70B090)));
     }
 

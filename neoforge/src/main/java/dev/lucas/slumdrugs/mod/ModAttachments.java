@@ -131,6 +131,12 @@ public final class ModAttachments {
                     .copyOnDeath()
                     .build());
 
+    /** Who holds which corner, one map per level. A corner is a chunk. */
+    public static final DeferredHolder<AttachmentType<?>, AttachmentType<TurfMap>> TURF =
+            TYPES.register("turf", () -> AttachmentType.builder((java.util.function.Supplier<TurfMap>) TurfMap::new)
+                    .serialize(TurfMap.CODEC.fieldOf("cells"))
+                    .build());
+
     /** Not copied on death: a villager that dies is gone, and their replacement is a new person. */
     public static final DeferredHolder<AttachmentType<?>, AttachmentType<NpcData>> NPC =
             TYPES.register("npc", () -> AttachmentType.builder(() -> NpcData.NONE)

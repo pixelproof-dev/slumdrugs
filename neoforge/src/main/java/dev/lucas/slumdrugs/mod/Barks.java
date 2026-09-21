@@ -105,6 +105,7 @@ public final class Barks {
                 case WARY -> "crew.wary";
                 case CALM -> Crews.standing(player, data) >= 30 ? "crew.friendly" : "crew.calm";
             };
+            case HAND -> data.crew().equals(Turfs.id(player)) ? "hand.boss" : "hand.other";
             case RESIDENT -> {
                 if (hot) yield "resident.hot";
                 yield level.isDarkOutside() ? "resident.night" : "resident.day";

@@ -49,7 +49,7 @@ Working today:
 Needs nothing but the wrapper; Gradle fetches Java 25 and NeoForge itself.
 
 ```
-sim/        the simulation: no Minecraft, no loader, no I/O — 93,416 assertions, about a second
+sim/        the simulation: no Minecraft, no loader, no I/O — 94,118 assertions, about a second
 neoforge/   the platform layer: registries, blocks, block entities, commands, NPCs
 ```
 

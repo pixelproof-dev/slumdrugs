@@ -59,7 +59,7 @@ public final class DryingLoftBlock extends BaseEntityBlock {
     }
 
     /** Keeps the visible bundle count and dryness in step with the rails. */
-    private static void show(Level level, BlockPos pos, BlockState state, DryingLoftBlockEntity loft) {
+    static void show(Level level, BlockPos pos, BlockState state, DryingLoftBlockEntity loft) {
         BlockState next = state.setValue(BUNDLES, loft.hung()).setValue(DRY, loft.allReady(level));
         if (next != state) level.setBlock(pos, next, Block.UPDATE_CLIENTS);
     }

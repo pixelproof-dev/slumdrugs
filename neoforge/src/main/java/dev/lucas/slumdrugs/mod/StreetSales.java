@@ -3,6 +3,7 @@ package dev.lucas.slumdrugs.mod;
 import dev.lucas.slumdrugs.sim.economy.Coin;
 import dev.lucas.slumdrugs.sim.npc.Loyalty;
 import dev.lucas.slumdrugs.sim.npc.Npc;
+import dev.lucas.slumdrugs.sim.npc.Turf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -86,9 +87,11 @@ public final class StreetSales {
         int quality = ModComponents.qualityOf(held);
         int floor = NpcTrades.floor(villager);
         boolean cut = ModComponents.cutOf(held) > 0;
-        // Below their floor they still buy, at a grudging price; friends pay better.
+        // Below their floor they still buy, at a grudging price; friends pay better, and so
+        // does anyone on a corner that is yours.
+        boolean ownCorner = Turfs.own(player, villager.blockPosition());
         double markup = Tuning.CUSTOMER_MARKUP.get() * Loyalty.priceFactor(data.loyalty()) * (quality < floor ? 0.7 : 1.0)
-                * ModComponents.strainOf(held).reputationFactor();
+                * ModComponents.strainOf(held).reputationFactor() * Turf.priceFactor(ownCorner);
         long pence = Market.pence(level, wants, held, units, markup);
 
         double loyaltyAfter = Loyalty.afterSale(data.loyalty(), quality, floor, cut);
@@ -101,7 +104,9 @@ public final class StreetSales {
         Purse.pay(player, pence, false);
         SalesLedger.record(player, units, pence);
         // Sick customers talk: cut goods are noticed as if there were twice as many of them.
-        Watch.noticed(player, ModComponents.cutOf(held) > 0 ? units * 2 : units, false, ModComponents.strainOf(held).subtletyFactor());
+        // On your own corner the street looks the other way a little.
+        Watch.noticed(player, ModComponents.cutOf(held) > 0 ? units * 2 : units, false,
+                ModComponents.strainOf(held).subtletyFactor() * Turf.suspicionFactor(ownCorner));
 
         String key = cut ? "message.slumdrugs.street_sale_cut" : quality < floor ? "message.slumdrugs.street_sale_poor"
                 : Loyalty.lost(loyaltyAfter) ? "message.slumdrugs.street_sale_last" : "message.slumdrugs.street_sale";

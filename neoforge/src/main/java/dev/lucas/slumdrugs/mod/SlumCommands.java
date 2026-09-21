@@ -11,6 +11,7 @@ import dev.lucas.slumdrugs.sim.drug.Strain;
 import dev.lucas.slumdrugs.sim.economy.Coin;
 import dev.lucas.slumdrugs.sim.npc.Npc;
 import dev.lucas.slumdrugs.sim.npc.Standing;
+import dev.lucas.slumdrugs.sim.npc.Turf;
 import dev.lucas.slumdrugs.sim.player.Condition;
 import dev.lucas.slumdrugs.sim.player.Progression;
 import dev.lucas.slumdrugs.sim.player.Suspicion;
@@ -66,7 +67,8 @@ public final class SlumCommands {
                 .then(suspicion())
                 .then(coin())
                 .then(strain())
-                .then(standing());
+                .then(standing())
+                .then(turf());
         event.getDispatcher().register(root);
         event.getDispatcher().register(Commands.literal("slumdrugs").redirect(event.getDispatcher().register(root)));
     }
@@ -715,6 +717,68 @@ public final class SlumCommands {
         standings.set(crew, value);
         player.setData(ModAttachments.STANDINGS.get(), standings);
         reply(ctx, "Standing with " + crew + " set to " + value);
+        return 1;
+    }
+
+    // ------------------------------------------------------------------ turf
+
+    private static LiteralArgumentBuilder<CommandSourceStack> turf() {
+        return Commands.literal("turf")
+                .then(Commands.literal("here").executes(ctx -> turfHere(ctx, ctx.getSource().getPlayerOrException())))
+                .then(Commands.literal("claim").executes(ctx -> turfClaim(ctx, ctx.getSource().getPlayerOrException())))
+                .then(Commands.literal("release").executes(ctx -> turfRelease(ctx, ctx.getSource().getPlayerOrException())))
+                .then(Commands.literal("list").executes(ctx -> turfList(ctx, ctx.getSource().getPlayerOrException())))
+                .then(Commands.literal("give").requires(Commands.hasPermission(OP))
+                        .then(Commands.argument("crew", StringArgumentType.word())
+                                .suggests((ctx, builder) -> SharedSuggestionProvider.suggest(
+                                        java.util.Arrays.stream(Standing.Crew.values()).map(c -> c.id).toList(), builder))
+                                .executes(ctx -> turfGive(ctx, ctx.getSource().getPlayerOrException(), StringArgumentType.getString(ctx, "crew")))))
+                .then(Commands.literal("clear").requires(Commands.hasPermission(OP))
+                        .executes(ctx -> turfGive(ctx, ctx.getSource().getPlayerOrException(), "")));
+    }
+
+    private static int turfHere(CommandContext<CommandSourceStack> ctx, ServerPlayer player) {
+        ctx.getSource().sendSuccess(() -> Turfs.describe(player.level(), player, player.blockPosition()), false);
+        return 1;
+    }
+
+    private static int turfClaim(CommandContext<CommandSourceStack> ctx, ServerPlayer player) {
+        var verdict = Turfs.claim(player.level(), player);
+        String key = verdict == null ? "turf_need_sovereign" : switch (verdict) {
+            case OK -> "turf_claimed";
+            case YOURS_ALREADY -> "turf_yours_already";
+            case ANOTHER_PLAYER -> "turf_another";
+            case CREW_REFUSES -> "turf_crew_refuses";
+            case TOO_MANY -> "turf_too_many";
+            case TIER_TOO_LOW -> "turf_tier_low";
+        };
+        var message = Component.translatable("message.slumdrugs." + key, Coin.format(Turf.CLAIM_PENCE), Turf.CLAIM_STANDING);
+        if (verdict == Turf.Verdict.OK) ctx.getSource().sendSuccess(() -> message, false);
+        else ctx.getSource().sendFailure(message);
+        return verdict == Turf.Verdict.OK ? 1 : 0;
+    }
+
+    private static int turfRelease(CommandContext<CommandSourceStack> ctx, ServerPlayer player) {
+        boolean released = Turfs.release(player.level(), player);
+        var message = Component.translatable(released ? "message.slumdrugs.turf_released" : "message.slumdrugs.turf_not_yours");
+        if (released) ctx.getSource().sendSuccess(() -> message, false); else ctx.getSource().sendFailure(message);
+        return released ? 1 : 0;
+    }
+
+    private static int turfList(CommandContext<CommandSourceStack> ctx, ServerPlayer player) {
+        var cells = Turfs.of(player.level()).cellsOf(Turfs.id(player));
+        int max = Turf.maxHeld(player.getData(ModAttachments.PROGRESSION.get()).tier(Tuning.progression()));
+        ctx.getSource().sendSuccess(() -> Component.translatable("message.slumdrugs.turf_held", cells.size(), max), false);
+        for (long key : cells) {
+            int x = Turfs.chunkX(key), z = Turfs.chunkZ(key);
+            reply(ctx, "  " + x + ", " + z + "  (blocks " + (x << 4) + ", " + (z << 4) + ")");
+        }
+        return 1;
+    }
+
+    private static int turfGive(CommandContext<CommandSourceStack> ctx, ServerPlayer player, String crew) {
+        Turfs.assign(player.level(), player.blockPosition(), crew);
+        reply(ctx, crew.isBlank() ? "This corner is nobody's now" : "This corner is " + Crews.label(crew) + "'s now");
         return 1;
     }
 

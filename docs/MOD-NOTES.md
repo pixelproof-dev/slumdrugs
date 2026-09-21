@@ -23,7 +23,7 @@ the platform layer, not here.
 ./gradlew check
 ```
 
-Runs `SimChecks`, a plain `main()` with no test framework, currently 93,416 assertions.
+Runs `SimChecks`, a plain `main()` with no test framework, currently 94,118 assertions.
 A failure prints the label of the rule that broke. It also runs `Playthrough`, a week of play
 on the rules (see below), which fails when the curve leaves the design's envelope.
 
@@ -246,6 +246,47 @@ Not built: turf cells and influence, war stages, diplomacy, poaching, player cre
 Workshop gate stays on coin alone rather than the design's standing fifteen, because a
 player who meets no crew would otherwise be stuck.
 
+### Turf, without war
+
+A corner is a chunk. It is held by nobody, by a crew, or by a player, in a level attachment
+(`TurfMap`, one per level, keyed by chunk). The rule is `Turf` in `sim`:
+
+- A player takes a free corner for a stamped sovereign in hand, from the Backroom on: one
+  corner there, three at the Workshop, five beyond. Another player's corner cannot be taken.
+- A crew's corner can be taken only when the crew's standing with the player is 40 or more,
+  and it still costs 15 with them: they let it go, and they mind.
+- On a corner of their own a player's regulars pay 15% more and a sale is noticed 15% less.
+- A crew remembers. On a corner they lost to a player, every member behaves as if standing
+  were 20 lower than it is; on a corner of their own, members are deep in their turf, and the
+  mood formula in `Npc` already weights that. Nowhere else changes.
+
+Claiming is done at the prompt for now, `/slum turf claim` standing on the corner, which is
+the stopgap the design's deeds will replace; `here`, `release` and `list` go with it, and
+`give <crew>` and `clear` set corners up for a settlement by hand. The war stages of the
+design, where a corner is taken by force and defended, are not here: standing is the only
+way in, and letting a corner go frees it rather than returning it.
+
+### A hired hand
+
+The design's first crew hire, without a crew. A Workshop grower clicks a resident with a
+stamped sovereign in hand and the resident becomes a `HAND`: a new role in `Npc`, not
+hostile-capable, wearing the leatherworker's apron, employed by the player (their crew field
+is the player's id, the same form turf uses). `Hands` runs them once a second from the NPC
+ticker:
+
+- **Wages first.** Each new game day they take two shillings from the nearest storage crate
+  within six blocks, smallest coin first, keeping the change when a coin will not split
+  (`Hire.take`, checked in `SimChecks`). No crate, or not enough in it, and they are a
+  resident again; the owner is told if online.
+- **Then work.** The nearest loft with a dry bundle or press with a batch under the plate,
+  within six blocks: walk to it, then one action a second. Dry rails come down and drop at the
+  loft; the press gets a pull, and the last pull drops the product, the same code path a
+  player's click takes. Nothing else is worked: not the frames, not the presses that need
+  wax, not anything with a screen.
+
+No orders, no loyalty, no muscle, and only one kind of coin they will take to start. The
+crew system this grows into is still parked.
+
 ### The Watch
 
 `Suspicion` in `sim` is the plugin's heat, renamed. Every sale raises it, a sealed parcel more
@@ -334,6 +375,11 @@ product item on use, and the condition commands. `Progression` is synced the sam
   few emeralds, and once in a while a remedy or a journal. It is not referenced yet: the chests
   in `trader_house.nbt` need their `LootTable` tag set to `slumdrugs:chests/trader_house`
   when the structure is next exported, which is a structure edit rather than code.
+- **War, houndsmen, crews for hire, deeds.** Turf exists without its war stages: corners
+  change hands by standing and coin, never by force, and nothing defends one. The hired hand
+  is one person with no orders, not a crew. The houndsmen and the Apothecary tier and above
+  are untouched. Each of these is a deliberate stop, not a gap: they are the parts of the
+  design that need settlements and a client in front of them to get right.
 
 ### Writing against 26.3
 
@@ -357,6 +403,10 @@ compiler settled the rest. Three things that a recalled 1.21 pattern gets wrong:
 | `useItemOn` returns `PASS` for "not my item" | return `TRY_WITH_EMPTY_HAND`, or `useWithoutItem` never runs while anything is held |
 | `BaseEntityBlock` renders invisible without `getRenderShape` | it renders the model; the override is gone |
 | `onRemove` to drop a container's contents | `BlockEntity#preRemoveSideEffects`, which any `Container` block entity already does |
+| `new ChunkPos(blockPos)`, `chunk.x`, `ChunkPos.asLong(pos)` | `ChunkPos` is a record: `ChunkPos.containing(pos)`, `chunk.x()`, `ChunkPos.pack(pos)`, `ChunkPos.getX(long)`. The turf map packs `x >> 4, z >> 4` itself and needs none of them |
+| `@OnlyIn(Dist.CLIENT)` on client classes | the annotation is a load-time warning now, not stripping; client classes are simply never referenced from common code |
+| `minecraft:air` as an empty loot entry | `{"type": "minecraft:empty"}`; an air item fails the whole registry load |
+| `level.getDayTime()`, `isDay()`, `isNight()` | `level.getDefaultClockTime()` (the world has named clocks now), `isBrightOutside()`, `isDarkOutside()` |
 
 ## A week of play
 
@@ -456,6 +506,12 @@ do not.
 | `/slum strain <trait> <value>` | Set one trait of the line on the held stack |
 | `/slum standing get` | Standing with every crew that knows you |
 | `/slum standing set <crew> <value>` | Move it; opposed crews move the other way |
+| `/slum turf here` | Whose corner you stand on |
+| `/slum turf claim` | Take it, with a stamped sovereign in hand; the verdict says why not |
+| `/slum turf release` | Let a corner of yours go |
+| `/slum turf list` | Your corners, and how many your tier allows |
+| `/slum turf give <crew>` | Hand the corner you stand on to a crew |
+| `/slum turf clear` | Make it nobody's |
 
 `/slum refine` and `/slum frame info` exist to check the simulation against the numbers on a
 running server without building anything, which matters while no client has been launched.
