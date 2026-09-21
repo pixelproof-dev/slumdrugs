@@ -4,7 +4,7 @@ plugins {
 
 // Minecraft 26.3 shipped 2026-09-15. NeoForge has betas only for this generation;
 // pin an exact build so an upstream break is a deliberate bump, not a surprise.
-val neoforgeVersion = "26.3.0.6-beta"
+val neoforgeVersion = "26.3.0.8-beta"
 
 neoForge {
     version = neoforgeVersion
