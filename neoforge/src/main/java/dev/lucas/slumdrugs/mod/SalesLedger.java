@@ -62,13 +62,14 @@ public final class SalesLedger {
     /** Units of our goods in one side of a cost: loose product by the unit, parcels by the parcelful. */
     private static int unitsIn(ItemCost cost) {
         ItemStack stack = cost.itemStack();
-        if (ModItems.drugOf("product_", stack) != null) return cost.count();
+        if (ModItems.drugOf("product_", stack) != null || ModItems.drugOf("essence_", stack) != null) return cost.count();
         if (ModItems.drugOf("package_", stack) != null) return cost.count() * Sealing.UNITS_PER_PARCEL;
         return 0;
     }
 
     private static String drugIn(ItemCost cost) {
         String drug = ModItems.drugOf("product_", cost.itemStack());
+        if (drug == null) drug = ModItems.drugOf("essence_", cost.itemStack());
         return drug != null ? drug : ModItems.drugOf("package_", cost.itemStack());
     }
 }

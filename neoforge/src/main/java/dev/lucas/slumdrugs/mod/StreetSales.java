@@ -87,7 +87,8 @@ public final class StreetSales {
         int floor = NpcTrades.floor(villager);
         boolean cut = ModComponents.cutOf(held) > 0;
         // Below their floor they still buy, at a grudging price; friends pay better.
-        double markup = Tuning.CUSTOMER_MARKUP.get() * Loyalty.priceFactor(data.loyalty()) * (quality < floor ? 0.7 : 1.0);
+        double markup = Tuning.CUSTOMER_MARKUP.get() * Loyalty.priceFactor(data.loyalty()) * (quality < floor ? 0.7 : 1.0)
+                * ModComponents.strainOf(held).reputationFactor();
         long pence = Market.pence(level, wants, held, units, markup);
 
         double loyaltyAfter = Loyalty.afterSale(data.loyalty(), quality, floor, cut);

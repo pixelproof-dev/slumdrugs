@@ -45,7 +45,10 @@ public final class ModComponents {
             Codec.intRange(0, 100).fieldOf("potency").forGetter(Strain::potency),
             Codec.intRange(0, 100).fieldOf("vigour").forGetter(Strain::vigour),
             Codec.intRange(0, 100).fieldOf("hardiness").forGetter(Strain::hardiness),
-            Codec.intRange(0, 100).fieldOf("subtlety").forGetter(Strain::subtlety)
+            Codec.intRange(0, 100).fieldOf("subtlety").forGetter(Strain::subtlety),
+            Codec.INT.optionalFieldOf("stable", 0).forGetter(Strain::stable),
+            Codec.STRING.optionalFieldOf("name", "").forGetter(Strain::name),
+            Codec.INT.optionalFieldOf("anchor", 0).forGetter(Strain::anchor)
     ).apply(instance, Strain::new));
 
     private static final StreamCodec<RegistryFriendlyByteBuf, Strain> STRAIN_STREAM = StreamCodec.composite(
@@ -53,6 +56,9 @@ public final class ModComponents {
             ByteBufCodecs.VAR_INT, Strain::vigour,
             ByteBufCodecs.VAR_INT, Strain::hardiness,
             ByteBufCodecs.VAR_INT, Strain::subtlety,
+            ByteBufCodecs.VAR_INT, Strain::stable,
+            ByteBufCodecs.STRING_UTF8, Strain::name,
+            ByteBufCodecs.VAR_INT, Strain::anchor,
             Strain::new);
 
     /** The line a seed belongs to, carried down the whole chain. Absent means the average line. */

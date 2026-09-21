@@ -16,7 +16,7 @@ seen working in play so far.
 
 Working today:
 
-- 26 items with quality, grower, seal, strain and cut carried as real data components, shown on tooltips
+- 31 items with quality, grower, seal, strain and cut carried as real data components, shown on tooltips
 - 10 working stations, all craftable: a forcing frame with five growth stages that reads
   warmth and damp, a drying loft whose rails show what hangs, a hand-worked pressing bench, a
   sealing press that stamps parcels with the sealer's name, a storage crate, a cutting bench
@@ -26,6 +26,9 @@ Working today:
 - Street sales paid by quality, potency and demand, brokers repriced from a living market
 - Strains: four traits on the seed, bred at the grafting bench, felt all down the chain
 - Crews with standing that rests their mood, tribute that buys it back, and a memory for the dead
+- Regulars with loyalty and a quality floor; a gaol with bail in stamped coin; bribes that go in a book
+- Named strain lines, essence from the still, the healer's treatment and clean streaks
+- A server config for every number, tonic mode, and an advancement tree that unlocks recipes by tier
 - A three-step tier ladder gating the workshop stations on units sold and coin earned, read
   back through a journal item
 - The Watch: suspicion per sale, a bell two minutes ahead, a raid that takes what you carry
@@ -46,7 +49,7 @@ Working today:
 Needs nothing but the wrapper; Gradle fetches Java 25 and NeoForge itself.
 
 ```
-sim/        the simulation: no Minecraft, no loader, no I/O — 93,068 assertions, about a second
+sim/        the simulation: no Minecraft, no loader, no I/O — 93,416 assertions, about a second
 neoforge/   the platform layer: registries, blocks, block entities, commands, NPCs
 ```
 

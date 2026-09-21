@@ -23,7 +23,7 @@ the platform layer, not here.
 ./gradlew check
 ```
 
-Runs `SimChecks`, a plain `main()` with no test framework, currently 93,068 assertions.
+Runs `SimChecks`, a plain `main()` with no test framework, currently 93,416 assertions.
 A failure prints the label of the rule that broke.
 
 ## Status
@@ -71,7 +71,7 @@ their quality and grower through the whole chain; the tooltip shows both.
 | Pressing bench | Dried material, one batch of up to 16 | Empty hand pulls the screw; five pulls press the batch | The last pull drops the product. Sneak: the batch back |
 | Sealing press | Product on the bench, honeycomb in the pot | Empty hand pulls the lever once per parcel | A parcel of 8 units under the puller's seal. Sneak: everything back |
 | Centrifuge | Dried in the vessels, charcoal on top, coal at the side | Runs on its own; the screen shows progress | Product in the vessels, three quarters of it, stronger |
-| Still | Dried in the vessels, sugar on top, coal at the side | Runs on its own; the same screen | Product in the vessels, half of it, strongest of all |
+| Still | Dried in the vessels, sugar on top, coal at the side | Runs on its own; the same screen | Essence in the vessels, half the volume, hitting nearly twice as hard |
 | Cutting bench | Product on the board, sugar or bone meal on the heap up to equal parts | Empty hand pulls the blade | More product, worse, marked with how much is filler. Sneak: everything back |
 | Grafting bench | Two seeds of one plant, one in each pot | Empty hand makes the cross | One seed near the parents' mean; both parents spent. Sneak: the parents back |
 | Counting house desk | Emeralds, or loose coin | — | Stamped shillings one to one for emeralds; stamped coin less a tenth for loose. Sneak with a coin: change |
@@ -86,15 +86,14 @@ Cutting is the design's moral pressure valve. A cut batch carries a `cut` compon
 that survives sealing and opening; the tooltip shows it in red. Cut goods sell for their
 lower quality, draw suspicion as if there were twice as many of them because sick customers
 talk, and tip a user into overdose sooner: the overdose line comes down by up to forty
-percent with the cut. Customer loyalty, which the design has cutting cost most, waits on
-customers having loyalty at all. The design gates cutting at the Apothecary; that tier is not
-reachable yet, so the Workshop has it.
+percent with the cut. Regulars remember: cut goods cost fifteen points of loyalty, which is
+what the design has cutting cost most. The design gates cutting at the Apothecary; that tier
+is not reachable yet, so the Workshop has it.
 
 Every station has a crafting recipe under `data/slumdrugs/recipe/`: wood, glass and string
 for the frame and the loft, iron and copper on wood for the workshop pieces. The centrifuge
 and the still share `RefineryBlockEntity` and the brewing-stand menu; each supplies its
-method and its reagent. The design's alembic makes essence; until essence exists as an item
-the still makes product at what the DISTIL rule says it is worth.
+method and its reagent. The still is the design's alembic and makes essence; see below.
 
 ### Climate
 
@@ -135,8 +134,20 @@ one place shillings become emeralds, at ten to one. `/slum market` reads and set
 
 The remedy draught holds withdrawal off for five minutes and takes a little dependence and
 tolerance with it. It refuses while the last one is still working, so it cannot be chained
-into a cure; the way out is still to stop. The design's infirmary stay and clean streak are
-not built.
+into a cure; the way out is still to stop.
+
+The healer's **treatment** is the infirmary stay: stamped coin clicked on the healer buys
+twenty off dependence, half that off tolerance, and ten minutes' hold on withdrawal. It
+refuses while a draught or a treatment is working. The **clean streak** is the permanent
+part: three days without a use lowers the tolerance ceiling by ten, once per streak, down to
+fifty, and tolerance can never climb past the ceiling again. Both numbers are in the config.
+
+### Essence
+
+The still makes essence, not product: five `essence_` items, half the volume of the batch
+at the DISTIL quality, hitting nearly twice as hard when used. Brokers buy it at a higher
+rate per unit; customers, the sealing press and the cutting bench take product only. The
+textures are placeholder phials the drawn ones overwrite by name.
 
 ### Strains
 
@@ -149,8 +160,17 @@ carries the line forward with `ModComponents.inherit`, so product knows its line
 show the four traits on seed and potency on goods.
 
 The grafting bench crosses two seeds of one plant into one seed at the parents' mean, moved
-by up to ten points per trait, and spends both parents. Not built from the design: relatedness
-and inbreeding defects, and stabilising a line over five generations to name it.
+by up to ten points per trait, and spends both parents.
+
+A line can be **named**. Every harvest whose seed stays within five points, on every trait,
+of where the line started counts a generation. Drift is a random walk of up to three points
+a generation, so a line wanders: a seed that passes the tolerance is a new line, its own
+anchor, with no count and no name. Holding a line means choosing the seed that stayed
+closest each harvest, and crossing a strayed seed back toward the line at the grafting
+bench. After five generations the seed's tooltip says so: rename it at an anvil and plant it,
+and the line takes the name; wander past tolerance and the name goes with the line. The name
+shows on everything down the chain, and regulars pay a tenth more for a line they know. Not
+built: relatedness and inbreeding defects.
 
 ### Crews and standing
 
@@ -179,8 +199,25 @@ watched. Nothing else is touched, and it never comes without the bell. While wat
 worse, constables nearby are stirred to wary, and to demanding during a raid. The HUD shows
 the level and the countdown. `/slum suspicion` reads and sets it.
 
-Not built from the design: writs, the gaol, houndsmen, golems, bribery, evidence filed by
-seal. The suspicion attachment is per player; quarter suspicion and bounty wait on turf.
+**The gaol.** A raid with a constable within range ends in custody: the player is held where
+they were caught for the cell's time, walked back if they wander, in the dark and slow. Stamped
+coin held in hand and used is bail, and the magistrate takes nothing else. No gaol building
+yet: the cell is wherever you were caught. **Bribery**: loose coin into a constable's hand
+takes a shilling a point off suspicion, up to a cap, calms the constable, and adds a name to
+the count the journal keeps. Stamped coin is refused.
+
+Not built from the design: writs, houndsmen, golems, evidence filed by seal, the Warden's
+inspection that the bribe count exists for. The suspicion attachment is per player; quarter
+suspicion and bounty wait on turf.
+
+### Regulars
+
+Each customer has loyalty, 0-100, and a quality floor of their own between 20 and 60. Goods
+above the floor raise loyalty, premium goods more; goods below it cost and sell at a grudging
+price; cut goods cost most. Friends pay better, a devoted regular takes a double hand, and one
+you have lost buys nothing and mentions to the Watch that you asked. Left alone, a regular
+drifts back toward indifference. `/slum npc list` shows each customer's want, floor and
+loyalty. Schedules, haunts and informants proper are not built.
 
 ### Progression
 
@@ -256,6 +293,26 @@ compiler settled the rest. Three things that a recalled 1.21 pattern gets wrong:
 
 `.github/workflows/build.yml` runs `./gradlew build` on every push and pull request and keeps
 the jar as an artifact. It has not launched a client or server; that is still done by hand.
+
+## Configuration
+
+`config/slumdrugs-server.toml` holds every number a server might move, with the design's
+defaults: drying time, the pull of a press, growth time, the customer's hand and markup, the
+coin scale and the stamp cut, the starting purse, treatment and bail prices, the market, the
+tier gates, every threshold and rate of the Watch and the cell, bribe rates, the crews' costs
+and tribute cap, and the whole condition model with the remedy, treatment and clean streak.
+`Tuning` builds the sim's settings records from it; the sim never reads the file. It is a
+server config, so clients see the server's numbers.
+
+`tonicMode` is the design's no-vice switch: the condition layer becomes tonic fatigue, with no
+dependence, no craving and no withdrawal, and the words change with it.
+
+## Advancements
+
+A tree under `data/slumdrugs/advancement/`: a root, the tiers as goals that the ledger awards
+when a player climbs (and on login for anyone who climbed before the tree existed), and a
+station under each tier that triggers on placing it. Each tier unlocks its stations' recipes
+in the recipe book, which stands in for the recipe viewer the design forgoes.
 
 ## Commands
 

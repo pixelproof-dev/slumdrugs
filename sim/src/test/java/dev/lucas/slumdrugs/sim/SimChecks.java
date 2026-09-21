@@ -502,6 +502,28 @@ public final class SimChecks {
         // Restoring carries the timer.
         var restored = Condition.of(0, 0, 50, 0, 0, now + minute);
         check(restored.soothed(now) && !restored.soothed(now + 2 * minute), "the soothed timer survives a restore");
+        // A treatment cuts deeper, holds longer, and is refused while anything is working.
+        var patient = new Condition(0, 40, 70);
+        check(patient.treat(now, 20, 10 * minute), "a treatment is taken");
+        check(patient.dependence == 50 && patient.tolerance == 30, "a treatment takes twenty off dependence and half that off tolerance");
+        check(patient.soothed(now + 10 * minute - 1) && !patient.soothed(now + 10 * minute), "and holds withdrawal off for its time");
+        check(!patient.treat(now + minute, 20, 10 * minute) && !patient.remedy(now + minute), "nothing stacks on a treatment");
+
+        // A clean streak lowers the ceiling for good, once per streak, never below the floor.
+        var clean = new Condition(0, 90, 20);
+        clean.lastUse = 1;
+        check(!clean.cleanStreak(minute, 60 * minute), "a streak takes its time");
+        check(clean.cleanStreak(61 * minute, 60 * minute), "and then pays");
+        check(clean.toleranceCeiling == 90 && clean.tolerance == 90, "the ceiling comes down and tolerance with it");
+        check(!clean.cleanStreak(200 * minute, 60 * minute), "one streak pays once");
+        clean.use(20, 50, 50, 0, 200 * minute);
+        check(clean.tolerance == 90, "tolerance cannot climb past the ceiling");
+        for (int i = 0; i < 20; i++) { clean.lastUse = i * 1000L + 1; clean.cleanStreak(1_000_000L * (i + 2), 60 * minute); }
+        check(clean.toleranceCeiling == Condition.CEILING_FLOOR, "the ceiling stops at the floor");
+        check(new Condition(0, 0, 0).cleanStreak(1000 * minute, minute) == false, "nobody who never used has a streak");
+        var ceilinged = Condition.of(0, 95, 0, 0, 0, 0, 80, 5);
+        check(ceilinged.toleranceCeiling == 80 && ceilinged.tolerance == 80 && ceilinged.streakRewardedAt == 5, "a restored ceiling clamps what it must");
+
         var strong = new Condition(0, 40, 70);
         strong.remedy(now, 20, 10, minute);
         check(strong.dependence == 50 && strong.tolerance == 30 && strong.soothed(now + minute - 1) && !strong.soothed(now + minute),
@@ -694,13 +716,48 @@ public final class SimChecks {
         check(Strain.cross(new Strain(100, 100, 100, 100), new Strain(100, 100, 100, 100), high).potency() == 100, "a cross never leaves the scale");
 
         // Drift is smaller than a cross's spread, and centred.
-        check(a.drift(mid).equals(a), "middling rolls drift nowhere");
+        var still = a.drift(mid);
+        check(still.potency() == a.potency() && still.vigour() == a.vigour() && still.hardiness() == a.hardiness()
+                && still.subtlety() == a.subtlety() && still.stable() == 1, "middling rolls drift nowhere, and count a generation");
         check(a.drift(high).potency() == 80 + Strain.DRIFT && a.drift(low).potency() == 80 - Strain.DRIFT, "drift is the drift");
         check(Strain.DRIFT < Strain.CROSS_SPREAD, "a harvest holds a line steadier than a cross does");
 
         boolean rejected = false;
         try { Strain.cross(a, b, new double[]{0.5}); } catch (IllegalArgumentException expected) { rejected = true; }
         check(rejected, "a cross wants four rolls");
+
+        // A line held within tolerance for enough generations can be named, once.
+        var line = new Strain(70, 50, 50, 50);
+        check(line.stable() == 0 && !line.named() && !line.canName(), "a fresh line has no generations and no name");
+        for (int g = 1; g <= Strain.STABLE_GENERATIONS; g++) {
+            line = line.drift(mid);
+            check(line.stable() == g, "a steady generation counts: " + g);
+        }
+        check(line.canName(), "five steady generations can be named");
+        var named = line.withName("  Ashfall Gold ");
+        check(named.named() && named.name().equals("Ashfall Gold") && !named.canName(), "a name is trimmed and given once");
+        close(named.reputationFactor(), Strain.NAMED_REPUTATION, "a name is worth something");
+        close(line.reputationFactor(), 1.0, "no name, no reputation");
+        check(named.drift(mid).name().equals("Ashfall Gold") && named.drift(mid).stable() == Strain.STABLE_GENERATIONS + 1,
+                "the name and the count carry to the next generation");
+
+        // Stability is measured from where the line started, so a random walk can lose it.
+        var walk = new Strain(70, 50, 50, 50, 4, "");
+        var once = walk.drift(high);
+        check(once.stable() == 5 && once.potency() == 73 && once.origin().potency() == 70, "three points out is still the line, anchored where it began");
+        var twice = once.drift(high);
+        check(twice.stable() == 0 && twice.potency() == 76 && twice.origin().potency() == 76 && twice.anchor() == 0,
+                "six points out is a new line, its own anchor");
+        var namedWalk = named.drift(high).drift(high);
+        check(!namedWalk.named(), "a named line that wanders past tolerance loses the name");
+        check(named.drift(high).drift(low).named(), "and one that wanders back keeps it");
+        check(!Strain.cross(named, named, mid).named() && Strain.cross(named, named, mid).stable() == 0
+                && Strain.cross(named, named, mid).anchor() == 0, "a cross is a new line");
+        var packed = new Strain(100, 0, 63, 1, 1, "", Strain.pack(100, 0, 63, 1));
+        check(packed.origin().equals(new Strain(100, 0, 63, 1)), "the anchor packs and unpacks every trait");
+        check(new Strain(50, 50, 50, 50).sameLine(new Strain(55, 45, 50, 50)) && !new Strain(50, 50, 50, 50).sameLine(new Strain(56, 50, 50, 50)),
+                "the same line is within tolerance on every trait");
+        check(new Strain(1, 1, 1, 1, -3, null).stable() == 0 && new Strain(1, 1, 1, 1, 0, null).name().isEmpty(), "restored lines are tidied");
     }
 
     // ---------------------------------------------------------------- cutting

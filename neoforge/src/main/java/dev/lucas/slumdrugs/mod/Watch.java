@@ -29,7 +29,7 @@ public final class Watch {
     private static final double CONSTABLE_RANGE = 24;
 
     /** Stages of the chain the Watch will take off a player. */
-    private static final List<String> CONTRABAND = List.of("raw_", "dried_", "product_", "package_");
+    private static final List<String> CONTRABAND = List.of("raw_", "dried_", "product_", "essence_", "package_");
 
     private Watch() {}
 

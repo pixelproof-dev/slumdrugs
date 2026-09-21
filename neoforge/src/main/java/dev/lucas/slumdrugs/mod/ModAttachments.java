@@ -27,10 +27,12 @@ public final class ModAttachments {
                     Codec.DOUBLE.fieldOf("dependence").forGetter(c -> c.dependence),
                     Codec.LONG.fieldOf("last_use").forGetter(c -> c.lastUse),
                     Codec.LONG.fieldOf("last_sleep").forGetter(c -> c.lastSleep),
-                    Codec.LONG.optionalFieldOf("soothed_until", 0L).forGetter(c -> c.soothedUntil)
+                    Codec.LONG.optionalFieldOf("soothed_until", 0L).forGetter(c -> c.soothedUntil),
+                    Codec.DOUBLE.optionalFieldOf("tolerance_ceiling", 100.0).forGetter(c -> c.toleranceCeiling),
+                    Codec.LONG.optionalFieldOf("streak_rewarded_at", 0L).forGetter(c -> c.streakRewardedAt)
             ).apply(instance, Condition::of));
 
-    /** The same five fields over the wire, for the HUD. Sent to the player it belongs to and nobody else. */
+    /** The same fields over the wire, for the HUD. Sent to the player it belongs to and nobody else. */
     private static final StreamCodec<RegistryFriendlyByteBuf, Condition> CONDITION_STREAM = StreamCodec.composite(
             ByteBufCodecs.DOUBLE, c -> c.intoxication,
             ByteBufCodecs.DOUBLE, c -> c.tolerance,
@@ -38,6 +40,8 @@ public final class ModAttachments {
             ByteBufCodecs.VAR_LONG, c -> c.lastUse,
             ByteBufCodecs.VAR_LONG, c -> c.lastSleep,
             ByteBufCodecs.VAR_LONG, c -> c.soothedUntil,
+            ByteBufCodecs.DOUBLE, c -> c.toleranceCeiling,
+            ByteBufCodecs.VAR_LONG, c -> c.streakRewardedAt,
             Condition::of);
 
     /**

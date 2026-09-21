@@ -48,6 +48,9 @@ public final class ModItems {
             // Products are usable, so they get their own item class rather than a plain one.
             REGISTERED.put("product_" + drug,
                     ITEMS.registerItem("product_" + drug, props -> new ProductItem(props, drug)));
+            // Essence is product boiled down: the same item, hitting harder.
+            REGISTERED.put("essence_" + drug,
+                    ITEMS.registerItem("essence_" + drug, props -> new ProductItem(props, drug, "essence_", ProductItem.ESSENCE_DOSE)));
             // Parcels open back into product, so they have behaviour too.
             REGISTERED.put("package_" + drug,
                     ITEMS.registerItem("package_" + drug, props -> new ParcelItem(props, drug)));

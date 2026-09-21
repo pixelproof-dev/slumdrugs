@@ -162,5 +162,19 @@
   "loyalty.slumdrugs.cool": "kühl",
   "loyalty.slumdrugs.lost": "fertig",
   "journal.slumdrugs.bribes": "%s Konstabler bestochen. Jeder ein Name in irgendeinem Buch.",
-  "hud.slumdrugs.cell": "Die Zelle — %s s · Kaution %s gestempelt"
-}
+  "hud.slumdrugs.cell": "Die Zelle — %s s · Kaution %s gestempelt",
+  "item.slumdrugs.essence_sunleaf": "Sunleaf-Essenz",
+  "item.slumdrugs.essence_frostroot": "Frostroot-Essenz",
+  "item.slumdrugs.essence_emberbloom": "Emberbloom-Essenz",
+  "item.slumdrugs.essence_glowcap": "Glowcap-Essenz",
+  "item.slumdrugs.essence_sparkshard": "Sparkshard-Essenz",
+  "message.slumdrugs.line_named": "Die Linie hat jetzt einen Namen: %s.",
+  "tooltip.slumdrugs.line_named": "Linie: %s",
+  "tooltip.slumdrugs.line_generations": "%s von %s Generationen gehalten",
+  "tooltip.slumdrugs.line_ready": "%s Generationen gehalten. Am Amboss benennen und pflanzen.",
+  "message.slumdrugs.clean_streak": "%s Tage sauber. Dein Körper vergisst ein wenig: die Toleranz reicht jetzt höchstens bis %s.",
+  "message.slumdrugs.treatment_loose": "%s führt Buch. Nur gestempelte Münze.",
+  "message.slumdrugs.treatment_short": "Die Behandlung kostet %s gestempelt. Das sind %s.",
+  "message.slumdrugs.treatment_working": "Du bist noch von der letzten in Behandlung.",
+  "message.slumdrugs.treated": "%s kümmert sich um dich. Abhängigkeit auf %s gesunken."
+}\n

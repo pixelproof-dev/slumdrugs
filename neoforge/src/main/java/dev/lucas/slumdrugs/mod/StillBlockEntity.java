@@ -8,10 +8,9 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.state.BlockState;
 
 /**
- * Boils a batch down. Half the volume comes through, and it is the strongest thing a player
- * can make. Sugar is the wash it works on; coal under it halves the run. The design calls
- * this the alembic and gives it essence to make; until essence exists as an item, the still
- * makes product at what the DISTIL rule says it is worth.
+ * Boils a batch down into essence. Half the volume comes through, at what the DISTIL rule
+ * says it is worth, and essence hits nearly twice as hard as product. Sugar is the wash it
+ * works on; coal under it halves the run. The design calls this the alembic.
  */
 public final class StillBlockEntity extends RefineryBlockEntity {
 
@@ -26,4 +25,5 @@ public final class StillBlockEntity extends RefineryBlockEntity {
     @Override protected Refining.Method method() { return Refining.Method.DISTIL; }
     @Override protected Item reagent() { return Items.SUGAR; }
     @Override protected int reagentQuality() { return REAGENT_QUALITY; }
+    @Override protected String outputStage() { return "essence_"; }
 }

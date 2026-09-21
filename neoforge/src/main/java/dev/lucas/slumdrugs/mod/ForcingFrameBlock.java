@@ -2,6 +2,8 @@ package dev.lucas.slumdrugs.mod;
 
 import dev.lucas.slumdrugs.sim.drug.Strain;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -73,7 +75,15 @@ public final class ForcingFrameBlock extends BaseEntityBlock {
         if (drug == null) return InteractionResult.TRY_WITH_EMPTY_HAND;
         if (level.isClientSide()) return InteractionResult.SUCCESS;
 
-        frame.plant(level, drug, player.getName().getString(), ModComponents.qualityOf(stack), ModComponents.strainOf(stack));
+        // A seed of a line that has held for enough generations, renamed at an anvil, names the line.
+        Strain line = ModComponents.strainOf(stack);
+        var custom = stack.get(DataComponents.CUSTOM_NAME);
+        if (custom != null && line.canName()) {
+            line = line.withName(custom.getString());
+            ProductItem.actionBar(player, Component.translatable("message.slumdrugs.line_named", line.name())
+                    .withStyle(s -> s.withColor(0x70B090)));
+        }
+        frame.plant(level, drug, player.getName().getString(), ModComponents.qualityOf(stack), line);
         level.setBlock(pos, state.setValue(STAGE, frame.state().stage()), 2);
         stack.consume(1, player);
         return InteractionResult.SUCCESS;

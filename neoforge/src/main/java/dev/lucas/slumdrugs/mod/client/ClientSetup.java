@@ -62,11 +62,17 @@ public final class ClientSetup {
 
         Strain strain = stack.get(ModComponents.STRAIN.get());
         if (strain != null) {
-            if (ModItems.drugOf("seed_", stack) != null)
+            if (strain.named())
+                lines.add(Component.translatable("tooltip.slumdrugs.line_named", strain.name()).withStyle(ChatFormatting.GREEN));
+            if (ModItems.drugOf("seed_", stack) != null) {
                 lines.add(Component.translatable("tooltip.slumdrugs.strain", strain.potency(), strain.vigour(),
                         strain.hardiness(), strain.subtlety()).withStyle(ChatFormatting.DARK_GREEN));
-            else
+                if (!strain.named())
+                    lines.add(Component.translatable(strain.canName() ? "tooltip.slumdrugs.line_ready" : "tooltip.slumdrugs.line_generations",
+                            strain.stable(), Strain.STABLE_GENERATIONS).withStyle(ChatFormatting.DARK_GRAY));
+            } else {
                 lines.add(Component.translatable("tooltip.slumdrugs.potency", strain.potency()).withStyle(ChatFormatting.DARK_GREEN));
+            }
         }
 
         double cut = ModComponents.cutOf(stack);

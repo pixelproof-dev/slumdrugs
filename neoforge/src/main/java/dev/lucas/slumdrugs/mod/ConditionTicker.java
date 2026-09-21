@@ -41,6 +41,10 @@ public final class ConditionTicker {
         long now = gameTime * 50L;
         long previous = Math.max(condition.lastUse, now - INTERVAL * 50L);
         condition.advance(previous, now, settings);
+        // A long enough time clean lowers the ceiling for good.
+        if (condition.cleanStreak(now, Tuning.CLEAN_STREAK_DAYS.get() * 20L * 60000L))
+            player.sendSystemMessage(Component.translatable("message.slumdrugs.clean_streak",
+                    Tuning.CLEAN_STREAK_DAYS.get(), (int) condition.toleranceCeiling).withStyle(s -> s.withColor(0x70B090)));
         // Once a second, to the owner only: what the HUD draws.
         player.syncData(ModAttachments.CONDITION.get());
 

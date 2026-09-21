@@ -31,6 +31,21 @@ public final class Condition {
     /** Until when a remedy draught holds withdrawal off. Zero when none is working. */
     public long soothedUntil;
 
+    /** The most tolerance this person can carry. Comes down for good with every clean streak. */
+    public double toleranceCeiling = 100;
+
+    /** The last use a clean streak was rewarded from, so one streak pays once. */
+    public long streakRewardedAt;
+
+    /** How far the ceiling can fall. */
+    public static final double CEILING_FLOOR = 50;
+
+    /** What one clean streak takes off the ceiling. */
+    public static final double CEILING_STEP = 10;
+
+    /** How long a treatment holds withdrawal off. */
+    public static final long TREATMENT_MILLIS = 10 * 60000L;
+
     /** Dependence a remedy takes off. Small on purpose: it is help, not a cure. */
     public static final double REMEDY_DEPENDENCE = 4;
 
@@ -56,11 +71,45 @@ public final class Condition {
 
     public static Condition of(double intoxication, double tolerance, double dependence,
                                long lastUse, long lastSleep, long soothedUntil) {
+        return of(intoxication, tolerance, dependence, lastUse, lastSleep, soothedUntil, 100, 0);
+    }
+
+    public static Condition of(double intoxication, double tolerance, double dependence,
+                               long lastUse, long lastSleep, long soothedUntil,
+                               double toleranceCeiling, long streakRewardedAt) {
         Condition c = new Condition(intoxication, tolerance, dependence);
         c.lastUse = lastUse;
         c.lastSleep = lastSleep;
         c.soothedUntil = Math.max(0, soothedUntil);
+        c.toleranceCeiling = Math.max(CEILING_FLOOR, Math.min(100, toleranceCeiling));
+        c.streakRewardedAt = Math.max(0, streakRewardedAt);
+        c.tolerance = Math.min(c.tolerance, c.toleranceCeiling);
         return c;
+    }
+
+    /**
+     * A stay at the infirmary: a real cut to dependence, some tolerance with it, and a long
+     * hold on withdrawal. Refused while a draught or a treatment is still working.
+     */
+    public boolean treat(long now, double dependenceOff, long millis) {
+        if (soothed(now)) return false;
+        dependence = clamp(dependence - Math.max(0, dependenceOff));
+        tolerance = clamp(tolerance - Math.max(0, dependenceOff) / 2);
+        soothedUntil = now + Math.max(0, millis);
+        return true;
+    }
+
+    /**
+     * A clean streak: this long since the last use, with a use to be clean from, lowers the
+     * tolerance ceiling for good, once per streak. Returns whether it just did.
+     */
+    public boolean cleanStreak(long now, long streakMillis) {
+        if (lastUse <= 0 || streakRewardedAt == lastUse) return false;
+        if (now - lastUse < Math.max(1, streakMillis)) return false;
+        streakRewardedAt = lastUse;
+        toleranceCeiling = Math.max(CEILING_FLOOR, toleranceCeiling - CEILING_STEP);
+        tolerance = Math.min(tolerance, toleranceCeiling);
+        return true;
     }
 
     /** Whether a draught is holding withdrawal off right now. */
@@ -98,7 +147,7 @@ public final class Condition {
         double landed = effectiveDose(dose, quality);
         double before = intoxication;
         intoxication = clamp(intoxication + landed);
-        tolerance = clamp(tolerance + Math.max(0, toleranceGain));
+        tolerance = Math.min(toleranceCeiling, clamp(tolerance + Math.max(0, toleranceGain)));
         dependence = clamp(dependence + Math.max(0, dependenceGain));
         lastUse = Math.max(lastUse, now);
         return intoxication - before;

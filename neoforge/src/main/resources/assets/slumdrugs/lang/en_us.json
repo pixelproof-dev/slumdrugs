@@ -162,5 +162,19 @@
   "loyalty.slumdrugs.cool": "cool",
   "loyalty.slumdrugs.lost": "done",
   "journal.slumdrugs.bribes": "%s constables paid off. Each one is a name in a book somewhere.",
-  "hud.slumdrugs.cell": "The cell — %s s · bail %s stamped"
-}
+  "hud.slumdrugs.cell": "The cell — %s s · bail %s stamped",
+  "item.slumdrugs.essence_sunleaf": "Sunleaf Essence",
+  "item.slumdrugs.essence_frostroot": "Frostroot Essence",
+  "item.slumdrugs.essence_emberbloom": "Emberbloom Essence",
+  "item.slumdrugs.essence_glowcap": "Glowcap Essence",
+  "item.slumdrugs.essence_sparkshard": "Sparkshard Essence",
+  "message.slumdrugs.line_named": "The line has a name now: %s.",
+  "tooltip.slumdrugs.line_named": "Line: %s",
+  "tooltip.slumdrugs.line_generations": "Held %s of %s generations",
+  "tooltip.slumdrugs.line_ready": "Held %s generations. Name it at an anvil and plant it.",
+  "message.slumdrugs.clean_streak": "%s days clean. Your body forgets a little: tolerance can reach %s at most now.",
+  "message.slumdrugs.treatment_loose": "%s keeps books. Stamped coin only.",
+  "message.slumdrugs.treatment_short": "The treatment is %s stamped. That is %s.",
+  "message.slumdrugs.treatment_working": "You are still under care from the last one.",
+  "message.slumdrugs.treated": "%s sees to you. Dependence down to %s."
+}\n

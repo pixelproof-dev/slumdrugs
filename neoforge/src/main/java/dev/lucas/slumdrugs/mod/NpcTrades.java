@@ -73,6 +73,9 @@ public final class NpcTrades {
                     offers.add(buy(ModItems.get("product_" + drug).get(), 1, price(villager, drug, 1.2)));
                 for (String drug : ModItems.SUBSTANCES)
                     offers.add(buy(ModItems.get("package_" + drug).get(), 1, parcelPrice(villager, drug, 1.4)));
+                // Essence is half the volume at nearly twice the strength; the broker pays for the strength.
+                for (String drug : ModItems.SUBSTANCES)
+                    offers.add(buy(ModItems.get("essence_" + drug).get(), 1, price(villager, drug, 2.2)));
                 offers.add(sell(Items.CHARCOAL, 4, Coin.SHILLING));
                 offers.add(sell(ModItems.get("seed_sunleaf").get(), 1, price(villager, "sunleaf", 2.5)));
                 // The two substances nobody grows come in from elsewhere, dear, until the

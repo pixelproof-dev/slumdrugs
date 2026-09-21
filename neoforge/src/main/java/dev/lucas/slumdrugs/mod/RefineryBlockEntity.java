@@ -50,6 +50,9 @@ public abstract class RefineryBlockEntity extends BaseContainerBlockEntity {
     /** What halves the run when it sits in the side slot. */
     protected Item fuel() { return net.minecraft.world.item.Items.COAL; }
 
+    /** The stage this machine makes: product, or the still's essence. */
+    protected String outputStage() { return "product_"; }
+
     @Override protected NonNullList<ItemStack> getItems() { return items; }
     @Override protected void setItems(NonNullList<ItemStack> items) { this.items = items; }
     @Override public int getContainerSize() { return CentrifugeMenu.SIZE; }
@@ -105,7 +108,7 @@ public abstract class RefineryBlockEntity extends BaseContainerBlockEntity {
                     new Refining.Batch(ModComponents.qualityOf(input), input.getCount()),
                     reagentQuality(), 0);
 
-            ItemStack product = new ItemStack(ModItems.get("product_" + drug).get(), result.units());
+            ItemStack product = new ItemStack(ModItems.get(outputStage() + drug).get(), result.units());
             String grower = input.get(ModComponents.GROWER.get());
             items.set(slot, ModComponents.inherit(input, ModComponents.withQuality(product, result.quality(), grower)));
             didWork = true;
