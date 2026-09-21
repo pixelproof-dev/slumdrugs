@@ -1,0 +1,13 @@
+# Commands the server smoke test runs over RCON once the server is up, one per line, with
+# the text the reply must contain after " => ". The console has no position of its own, so
+# the chunks around the origin are force-loaded first, given a moment to arrive, and every
+# command runs positioned there. "sleep N" waits N seconds without sending anything.
+slum version => SlumDrugs
+forceload add -8 -8 8 8 => Marked
+sleep 8
+execute positioned 0 64 0 run slum structure place resident_house => moved in
+sleep 2
+execute positioned 0 64 0 run slum npc list 24 => resident
+execute positioned 0 64 0 run slum npc list 24 => customer
+execute positioned 0 64 0 run slum structure place trader_house => Placed trader_house
+slum market get => sunleaf

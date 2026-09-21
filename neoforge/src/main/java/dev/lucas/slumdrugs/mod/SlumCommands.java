@@ -401,7 +401,7 @@ public final class SlumCommands {
                 .then(Commands.literal("place")
                         .then(Commands.argument("piece", StringArgumentType.word())
                                 .suggests((ctx, builder) ->
-                                        SharedSuggestionProvider.suggest(List.of("trader_house"), builder))
+                                        SharedSuggestionProvider.suggest(StructurePlacer.PIECES.keySet(), builder))
                                 .executes(ctx -> placeStructure(ctx, net.minecraft.world.level.block.Rotation.NONE))
                                 .then(Commands.argument("rotation", StringArgumentType.word())
                                         .suggests((ctx, builder) -> SharedSuggestionProvider.suggest(
@@ -422,17 +422,18 @@ public final class SlumCommands {
     private static int placeStructure(CommandContext<CommandSourceStack> ctx,
                                       net.minecraft.world.level.block.Rotation rotation) {
         String name = StringArgumentType.getString(ctx, "piece");
-        if (!name.equals("trader_house")) {
+        StructurePlacer.Piece piece = StructurePlacer.PIECES.get(name);
+        if (piece == null) {
             ctx.getSource().sendFailure(Component.literal("No such piece: " + name));
             return 0;
         }
         var result = StructurePlacer.place(ctx.getSource().getLevel(),
-                BlockPos.containing(ctx.getSource().getPosition()),
-                StructurePlacer.TRADER_HOUSE, rotation);
+                BlockPos.containing(ctx.getSource().getPosition()), piece, rotation);
 
         if (result instanceof StructurePlacer.Result.Placed placed) {
             reply(ctx, "Placed " + name + " at " + placed.origin().toShortString()
-                    + " (" + placed.size().getX() + "x" + placed.size().getY() + "x" + placed.size().getZ() + ")");
+                    + " (" + placed.size().getX() + "x" + placed.size().getY() + "x" + placed.size().getZ() + ")"
+                    + (placed.people() > 0 ? ", " + placed.people() + " people moved in" : ""));
             return 1;
         }
         if (result instanceof StructurePlacer.Result.Missing missing) {

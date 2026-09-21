@@ -23,6 +23,7 @@ RES = ROOT / 'neoforge/src/main/resources'
 ASSETS = RES / 'assets/slumdrugs'
 DATA = RES / 'data/slumdrugs'
 JAVA = ROOT / 'neoforge/src/main/java'
+sys.path.insert(0, str(ROOT / 'tools'))
 NS = 'slumdrugs'
 
 problems = []
@@ -107,7 +108,9 @@ def vanilla():
         with zipfile.ZipFile(src_jar) as sz:
             if 'net/minecraft/sounds/SoundEvents.java' in sz.namelist():
                 sounds = set(re.findall(r'"([a-z_]+(?:\.[a-z_0-9]+)+)"', sz.read('net/minecraft/sounds/SoundEvents.java').decode()))
-    return {'items': items | blocks, 'textures': textures, 'models': models, 'item_tags': tags, 'sound_events': sounds}
+    block_ids = {n[len('assets/minecraft/blockstates/'):-5] for n in names
+                 if n.startswith('assets/minecraft/blockstates/') and n.endswith('.json')}
+    return {'items': items | blocks, 'blocks': block_ids, 'textures': textures, 'models': models, 'item_tags': tags, 'sound_events': sounds}
 
 
 def check_id(ref, kind, ours, van, where):
@@ -373,6 +376,57 @@ def check_sounds(src, van):
                 problem(f'sounds.json: subtitle {sub} not in en_us.json')
 
 
+def check_structures(van):
+    """Every structure file parses, is not from a newer game than ours, names blocks that
+    exist, and every marker in it names a role the placer knows."""
+    import mcnbt
+    roles = set(re.findall(r'^\s+([A-Z_]+)\((?:true|false)\)', (ROOT / 'sim/src/main/java/dev/lucas/slumdrugs/sim/npc/Npc.java').read_text(), re.M))
+    van_blocks = van['blocks'] if van else None
+    for p in sorted((DATA / 'structure').glob('*.nbt')):
+        where = str(p.relative_to(RES))
+        try:
+            root = mcnbt.read(p)
+        except Exception as e:
+            problem(f'{where}: does not parse ({e})'); continue
+        for key in ('size', 'blocks', 'palette', 'DataVersion'):
+            if key not in root:
+                problem(f'{where}: no {key}')
+        if root.get('DataVersion', 0) > 5023:
+            problem(f'{where}: DataVersion {root["DataVersion"]} is newer than 26.3')
+        size = [int(v) for v in root.get('size', [0, 0, 0])]
+        # A piece saved by an older game is upgraded by the data fixer when it loads, renames
+        # included (the trader house's 1.20.6 chain is 26.3's iron_chain), so only a piece of
+        # our own version is held to today's block names.
+        current = int(root.get('DataVersion', 0)) >= 5023
+        for entry in root.get('palette', []):
+            name = entry.get('id') or entry.get('Name', '')
+            if current and 'id' not in entry:
+                problem(f'{where}: palette entry uses Name/Properties, which 26.3 reads as air; a current piece needs id/properties')
+            ns, path = (name.split(':', 1) if ':' in name else ('minecraft', name))
+            if ns == 'minecraft' and current and van_blocks is not None and path not in van_blocks:
+                problem(f'{where}: block {name} does not exist in vanilla')
+            elif ns == NS and path not in set(registered()[1]):
+                problem(f'{where}: block {name} is not one of ours')
+        markers = 0
+        for b in root.get('blocks', []):
+            pos = [int(v) for v in b['pos']]
+            if any(c < 0 or c >= s for c, s in zip(pos, size)):
+                problem(f'{where}: block at {pos} outside size {size}')
+            nbt = b.get('nbt') or {}
+            target = nbt.get('target', '')
+            if target.startswith(NS + ':npc/'):
+                markers += 1
+                role = target.split('/')[1].upper()
+                if role not in roles:
+                    problem(f'{where}: marker names unknown role {role.lower()}')
+            if nbt.get('LootTable', '').startswith(NS + ':'):
+                table = nbt['LootTable'].split(':', 1)[1]
+                if not (DATA / 'loot_table' / f'{table}.json').exists():
+                    problem(f'{where}: chest names missing loot table {nbt["LootTable"]}')
+        if markers == 0:
+            notes.append(f'{where}: no people markers; nobody moves in when it is placed')
+
+
 def main():
     src = java_text()
     items, blocks = registered()
@@ -381,6 +435,7 @@ def main():
     check_models(items, blocks, van)
     check_textures()
     check_sounds(src, van)
+    check_structures(van)
     check_recipes(items, van)
     check_loot(items, blocks, van)
     check_advancements(items, blocks, van)

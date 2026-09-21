@@ -49,6 +49,15 @@ is the only check that loads data the way the game does: its first run found the
 house chest table using `minecraft:air` as an empty entry, which stops the server from
 starting at all, and the `@OnlyIn` annotations that 26.3 no longer honours.
 
+With the server up it runs the commands in `tools/smoke_commands.txt` over RCON
+(`tools/rcon.py`, no dependencies) and checks each reply for the text after `=>`: the
+version, a force-load of the chunks at the origin, `/slum structure place resident_house`
+with its two people moving in, `/slum npc list` finding them, the trader house, the market.
+That is a piece placed and its markers turned into villagers on a real server, with no
+client. The first run of it found the placer asking a loaded chunk for the worldgen-only
+heightmap, and a generated piece whose block states the game read as air (see the 26.3
+table). The server never pauses while empty for this, or a force-loaded chunk never arrives.
+
 ## Status
 
 Both modules are live and the build is green. The mod has run in a local dev client, where
@@ -366,10 +375,11 @@ product item on use, and the condition commands. `Progression` is synced the sam
 
 ### Parked
 
-- **Residents for the trader house.** The house places, but nobody lives in it; villagers of
-  ours still only come from `/slum npc spawn`. The house should bring its trader with it when
-  it generates. This waits on the village wiring, which exists locally and is not merged yet,
-  because both touch structure placement.
+- **Residents for the trader house.** Solved in general: a jigsaw marker in a piece becomes
+  a person when the placer sets it (see `docs/STRUCTURES.md`, "People markers"), and the
+  generated `resident_house` brings a resident and a regular. The trader house itself still
+  has no markers, because it is a hand-built piece that has to be re-exported with a
+  `slumdrugs:npc/trader` jigsaw in it, which is a structure edit rather than code.
 - **Spawn pool for the house's chests.** A chest loot table is ready at
   `data/slumdrugs/loot_table/chests/trader_house.json`: seed, compost, honeycomb, charcoal, a
   few emeralds, and once in a while a remedy or a journal. It is not referenced yet: the chests
@@ -407,6 +417,9 @@ compiler settled the rest. Three things that a recalled 1.21 pattern gets wrong:
 | `@OnlyIn(Dist.CLIENT)` on client classes | the annotation is a load-time warning now, not stripping; client classes are simply never referenced from common code |
 | `minecraft:air` as an empty loot entry | `{"type": "minecraft:empty"}`; an air item fails the whole registry load |
 | `level.getDayTime()`, `isDay()`, `isNight()` | `level.getDefaultClockTime()` (the world has named clocks now), `isBrightOutside()`, `isDarkOutside()` |
+| `Heightmap.Types.WORLD_SURFACE_WG` on a loaded chunk | that heightmap exists only during generation; a loaded chunk logs "Unprimed heightmap" and answers from nothing. `WORLD_SURFACE` |
+| `{Name: "minecraft:bricks", Properties: {...}}` in a structure file's palette | a piece at the current DataVersion is read with `id` and `properties`; the old keys are only ever upgraded by the data fixer, so a current piece with them is all air |
+| a server left alone keeps ticking | it pauses when empty after `pause-when-empty-seconds` (default 60), and a force-loaded chunk then never arrives; the smoke test sets it to 0 |
 
 ## A week of play
 
@@ -494,7 +507,7 @@ do not.
 | `/slum frame grow` | Ripen it now |
 | `/slum frame water <seconds>` | Set its water |
 | `/slum refine <method> <quality> <units>` | A dry run against the rules — no blocks needed |
-| `/slum structure place <piece> [rotation]` | Places a saved building, sunk so its ground floor meets the terrain |
+| `/slum structure place <piece> [rotation]` | Places a saved building, sunk so its ground floor meets the terrain, and spawns whoever its markers call for. Pieces: `trader_house`, `resident_house` |
 | `/slum progress get [targets]` | Tier, units sold, coin earned, and what the next gate costs |
 | `/slum progress set units\|coin <value> [targets]` | Move a player up or down the ladder |
 | `/slum progress reset [targets]` | Back to hand to mouth |
