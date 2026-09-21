@@ -161,7 +161,8 @@ if __name__ == '__main__':
     if not jars:
         sys.exit("Run ./gradlew build first so the Minecraft jar is available for textures.")
 
-    tex = pathlib.Path('/tmp/slumdrugs-render-tex'); tex.mkdir(exist_ok=True)
+    # beside the previews rather than in /tmp, which is not a path on Windows
+    tex = root / 'build/model-previews/textures'; tex.mkdir(parents=True, exist_ok=True)
     jar = zipfile.ZipFile(jars[0])
     ours = root / 'neoforge/src/main/resources/assets/slumdrugs/textures'
     for p in models.glob('*.json'):

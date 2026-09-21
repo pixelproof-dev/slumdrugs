@@ -76,6 +76,10 @@ compiler settled the rest. Three things that a recalled 1.21 pattern gets wrong:
 | `EntityType.VILLAGER` | the constants moved to `EntityTypes`; villagers live in `entity.npc.villager` |
 | `source.hasPermission(2)` | named permissions: `Commands.hasPermission(new PermissionCheck.Require(Permissions.COMMANDS_GAMEMASTER))` |
 | `player.drop(stack, false)` | takes a `Prediction` (`PREDICTED` / `SERVER_ONLY`) |
+| An item needs only `models/item/<name>.json` | it also needs `assets/<ns>/items/<name>.json`, the model *definition* (`ClientItemInfoLoader` reads `items/`). Without it `ModelManager.getItemModel` logs `Missing item model for location` and draws the missing-model cube |
+| `@OnlyIn(Dist.CLIENT)` keeps a class off the server | the runtime member stripping is gone. The annotation now only earns a warning screen at launch; scope client classes by registering them for `Dist.CLIENT` and never naming them from common code |
+| `Heightmap.Types.WORLD_SURFACE_WG` works on a live chunk | the `_WG` maps are `Usage.WORLDGEN`, so `keepAfterWorldgen()` is false. On a loaded chunk the game primes one on demand, logs an error in dev, and never updates it again — use `WORLD_SURFACE` |
+| A rotated `placeInWorld` writes from the box's lowest corner | it rotates about `StructurePlaceSettings#getRotationPivot`, which defaults to zero. Pass `getZeroPositionWithTransform(corner, mirror, rotation)`, or the piece lands a full width away |
 
 ## Commands
 
