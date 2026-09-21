@@ -1,3 +1,5 @@
+import java.util.zip.ZipFile
+
 plugins {
     id("net.neoforged.moddev") version "2.0.147"
 }
@@ -19,6 +21,25 @@ neoForge {
 
 dependencies {
     implementation(project(":sim"))
+}
+
+// sim is an internal library, not a mod of its own, so its classes have to travel inside this
+// jar. A development run does not need that — the module is on the classpath there — which is
+// why the mod ran for months and then failed on the first server it was installed on with
+// NoClassDefFoundError: dev/lucas/slumdrugs/sim/drug/Strain. The check is part of the fix: a
+// jar without those classes is not a mod, and the build should say so rather than ship it.
+tasks.named<Jar>("jar") {
+    val simJar = project(":sim").tasks.named<Jar>("jar")
+    dependsOn(simJar)
+    from(simJar.map { zipTree(it.archiveFile) })
+    doLast {
+        val carried = ZipFile(archiveFile.get().asFile).use { zip ->
+            zip.entries().asSequence().count { it.name.startsWith("dev/lucas/slumdrugs/sim/") }
+        }
+        if (carried == 0) throw GradleException(
+            "the mod jar carries no sim classes; it would not load outside a development run")
+        logger.lifecycle("jar carries $carried sim classes")
+    }
 }
 
 tasks.withType<ProcessResources>().configureEach {
