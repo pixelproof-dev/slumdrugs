@@ -1,149 +1,128 @@
-# Blockbench briefs — station blocks
+# Station models
 
-The six station blocks are currently plain cubes assembled from vanilla textures. They read as
-furniture only once they are modelled. Items stay flat sprites: vanilla items are 2D, and a 3D
-item icon looks wrong in a hotbar next to everything else.
+The ten station blocks each have their own model, built to be told apart at a glance from
+across a room. None of them is a cube. They are generated, not hand-modelled: `tools/build_models.py`
+writes every block model JSON from a short description of boxes, octagons and crossed planes, so
+a change to a model is a change to that script, run again. Items stay flat sprites: vanilla items
+are 2D, and a 3D item icon looks wrong in a hotbar next to everything else.
 
-## Setup, the same for every model
+```
+python3 tools/make_textures.py     # the palette PNGs (deterministic; safe to re-run)
+python3 tools/build_models.py      # all seventeen block models
+python3 tools/render_models.py     # previews in build/model-previews/
+```
 
-- Format **Java Block/Item**. Model space is the 16×16×16 block grid.
-- Textures stay **vanilla paths** (`minecraft:block/cut_copper` and so on) until we draw our own.
-  Assign them in Blockbench as texture slots named `#side`, `#top`, `#frame` and reference the
-  vanilla path, so a later swap to our own art is a one-line change per model.
-- **Set a particle texture.** Without it the block throws missing-texture particles when broken.
-  It is the single most common thing forgotten in a hand-built model.
-- Export to `neoforge/src/main/resources/assets/slumdrugs/models/block/<name>.json`; the
-  blockstate file already points there.
+## Why generated
 
-### The rotation limit that breaks exports
+Vanilla JSON allows one rotation axis per element, at ±22.5 or ±45 degrees only, with every
+coordinate between -16 and 32. Blockbench lets you rotate freely, shows it, then the export
+silently drops it. The generator only produces legal geometry: anything round is an octagon
+made of four bars (two square, two at 45°), anything leafy is two planes crossed at 45°, and
+every angle is one of the four allowed. The `Model` class has three primitives:
 
-Vanilla JSON allows **one rotation axis per element**, at **±22.5 or ±45 degrees only**.
-Blockbench lets you rotate freely and will happily show it, then the export silently loses it.
-Anything round — the centrifuge drum, the wax pot — has to be faked with two or three boxes at
-0° and 45°, not with an actual rotation.
+- `box(from, to, texture, faces=…, rot=…, only=…, skip=…, shade=…)`: one element, optional per-face
+  texture override, optional single-axis rotation, optional face culling.
+- `octagon(cx, y0, y1, cz, width, texture, top=…, bottom=…, axis=…)`: a drum or a pot. The diagonal
+  pair is shrunk by 0.02 so the bars never z-fight.
+- `cross(cx, y0, y1, cz, width, texture)`: a plant, a hanging bundle. Unshaded so it reads flat.
 
----
+Every model is written with the vanilla block-item display transforms (gui 30/225/0 at 0.625,
+third person 0/45/0 at 0.4), a particle texture, and `#slot` texture names, so a texture swap is a
+one-line change in the script.
 
-## `centrifuge`
+## The palette
 
-Cast-iron base, brass drum, hand crank. The one machine in the set, so it should look heavier
-than the woodwork around it.
+The stations share one set of materials so they read as one workshop. The textures live in
+`assets/slumdrugs/textures/block/` and are drawn by `tools/make_textures.py`: flat, low-noise
+surfaces, because the models stretch them across faces of every size and the detail lives in the
+geometry. They are placeholders in the sense that matters: the hand-drawn art overwrites them by
+filename, and nothing in the models changes when it does.
 
-| Element | From | To | Texture |
-| --- | --- | --- | --- |
-| Base plinth | 2, 0, 2 | 14, 3, 14 | `block/deepslate_tiles` |
-| Four feet | 2, 0, 2 / 12, 0, 2 / 2, 0, 12 / 12, 0, 12 | +2, 1, +2 each | `block/iron_block` |
-| Drum, square core | 3, 3, 3 | 13, 12, 13 | `block/cut_copper` |
-| Drum, 45° box | 3, 3, 3 | 13, 12, 13 | same, rotated 45° on Y to octagonalise |
-| Lid | 4, 12, 4 | 12, 14, 12 | `block/copper_grate` |
-| Crank shaft | 13, 7, 7 | 16, 9, 9 | `block/iron_block` |
-| Crank handle | 15, 9, 7 | 16, 12, 8 | `block/iron_block` |
-| Fuel hatch | 1, 4, 6 | 3, 8, 10 | `block/furnace_front` |
+| Slot | File | Where it shows |
+| --- | --- | --- |
+| brass, brass_band | `brass.png`, `brass_band.png` | frame posts, capstan wheel, drum, lever, fittings |
+| copper | `copper.png` | the still's boiler, neck and worm |
+| iron | `iron.png` | legs, press frame, scale beam, cleaver |
+| walnut | `walnut.png` | dark furniture: bench tops, desk, loft posts |
+| pine | `pine.png` | pale furniture: crate, sealing bench, grafting bench |
+| end_grain | `end_grain.png` | the cutting block's top |
+| terracotta | `terracotta.png` | wax pot, plant pots |
+| leather_green | `leather_green.png` | the desk's writing slope |
+| wax, paper, parcel_top | `wax.png`, `paper.png`, `parcel_top.png` | sealed parcels waiting on the benches |
+| glass | `glass.png` | cold-frame panes, receiver flask |
+| soil, herb, powder | `soil.png`, `herb.png`, `powder.png` | beds, a heap of dried herb, a heap of cut |
+| twine, crate_label, gauge, firebox, ledger, lamp, gold_stack | one file each | the small tells |
+| plant_1..4 | `plant_1.png` … `plant_4.png` | crop stages on the crossed planes |
+| bundle | `bundle.png` | hanging herb in the loft |
 
-The two drum boxes at 0° and 45° are the whole trick: from any angle it reads round without a
-single rotated face beyond what vanilla allows.
+## The models
 
----
+Each is described by its silhouette, the one thing you recognise it by, and its footprint.
+Extents past the block are allowed by the format and used sparingly for height and for parts
+that should hang over the edge.
 
-## `forcing_frame`
+**`forcing_frame_stage0..4`.** A brass-framed glasshouse on a walnut bed: four brass posts, glass
+walls, a gabled glass roof with a brass ridge, and a lit lantern hung inside under the ridge. The
+crop is the only thing that changes between stages: nothing at stage 0, one crossed plant from
+stage 1 growing taller, two more sprouting beside it from stage 3. The tell is the glow inside
+the glass. Footprint 16×16, 15 high.
 
-A glazed cold frame over a soil bed, with a sloped lid. Five stages, so the crop element is the
-only part that changes.
+**`drying_loft_0..2`** and the plain `drying_loft`. Four tall walnut posts, a low pine shelf, two
+rails with a cord slung between them, under a peaked roof of pine slats. Bundles of herb hang
+from the rails as crossed planes: none, a few, a full row. The tell is the peaked slat roof and
+what hangs beneath it. Footprint 18×16 (the eaves overhang), 18 high.
 
-| Element | From | To | Texture |
-| --- | --- | --- | --- |
-| Soil bed | 1, 0, 1 | 15, 5, 15 | `block/coarse_dirt` |
-| Four corner posts | 0, 0, 0 / 14, 0, 0 / 0, 0, 14 / 14, 0, 14 | +2, 10, +2 each | `block/spruce_log` |
-| Glass panels, four sides | 2, 5, 0 | 14, 9, 1 (and the three mirrored) | `block/glass` |
-| Lid frame | 1, 9, 1 | 15, 10, 15 | `block/spruce_planks`, rotated 22.5° on X |
-| Lid glass | 2, 9, 2 | 14, 10, 14 | `block/glass`, same rotation |
-| **Crop** | 4, 5, 4 | 12, 9, 12 | two crossed planes, `block/wheat_stage2/4/6/7` by stage |
+**`pressing_bench`.** A walnut bench with a tall iron frame standing on it and a brass capstan
+wheel on top of the screw. Dried herb sits under the plate. The tell is the wheel, held well
+above everything else in the room. Footprint 16×16, 27 high.
 
-Stage 0 has no crop element at all — an empty frame should look empty through the glass.
+**`sealing_press`.** A pine bench with a brass lever press, a die under the lever, a terracotta
+wax pot beside it, and finished parcels stacked at the other end. The tell is the pot of red wax
+next to brown paper. Footprint 16×16, 19 high.
 
----
+**`storage_crate`.** A pine crate with diagonal walnut braces on each side, the lid propped open
+a crack, a paper label on the front and rope handles on the ends. The tell is the braces and the
+open lid. Footprint 16×16, 14 high.
 
-## `drying_loft`
+**`centrifuge`.** An octagonal brass drum with a band around its waist, standing on four iron
+legs, with a lid, a gauge on the front and a crank on the side. The only thing in the set that is
+mostly round and mostly metal. Footprint 16×16, 17 high.
 
-An open rack. What is hanging on it should be visible from outside, because that is how a player
-sees it is working.
+**`still`.** A copper onion boiler on a firebox, its swan neck bending over and down into a
+walnut worm barrel, a glass receiver at the outlet. Bands of brass where copper meets copper. The
+tell is the swan neck. Footprint 18×12, 22 high.
 
-| Element | From | To | Texture |
-| --- | --- | --- | --- |
-| Two uprights | 1, 0, 1 / 13, 0, 1 | +2, 16, +2 | `block/spruce_log` |
-| Three rails | 1, 6, 1 / 1, 10, 1 / 1, 14, 1 | 15, +1, 3 each | `block/spruce_planks` |
-| Hanging bundles | below each rail | thin planes, 2 deep | `block/dried_kelp_side` |
-| Back brace | 1, 2, 1 | 15, 3, 3 | `block/spruce_planks` |
+**`cutting_bench`.** A thick end-grain block on walnut legs, a heap of powder on it, a cleaver
+stuck upright, and a brass balance scale standing at the end with its pans hanging over the edge.
+The tell is the scale. Footprint 18×16, 21 high.
 
----
+**`grafting_bench`.** A pine potting bench with a trellis of twine-lashed laths at the back and
+two terracotta pots on top, each with a young plant, tools hung on the trellis. The tell is the
+trellis. Footprint 16×16, 22 high.
 
-## `pressing_bench`
-
-A work table with a screw press standing on it.
-
-| Element | From | To | Texture |
-| --- | --- | --- | --- |
-| Table top | 0, 10, 0 | 16, 12, 16 | `block/stripped_oak_log` |
-| Four legs | 1, 0, 1 / 12, 0, 1 / 1, 0, 12 / 12, 0, 12 | +3, 10, +3 each | `block/oak_planks` |
-| Press posts | 3, 12, 6 / 11, 12, 6 | +2, 16, +4 | `block/iron_block` |
-| Crossbar | 3, 15, 6 | 13, 16, 10 | `block/iron_block` |
-| Screw shaft | 7, 12, 7 | 9, 16, 9 | `block/iron_block` |
-| Press plate | 5, 12, 5 | 11, 13, 11 | `block/smooth_stone` |
-
----
-
-## `sealing_press`
-
-A bench with a lever press and a pot of wax beside it. The wax is the colour cue that ties it to
-the sealed parcels.
-
-| Element | From | To | Texture |
-| --- | --- | --- | --- |
-| Table top | 0, 9, 0 | 16, 11, 16 | `block/spruce_planks` |
-| Four legs | 1, 0, 1 / 12, 0, 1 / 1, 0, 12 / 12, 0, 12 | +3, 9, +3 each | `block/spruce_planks` |
-| Lever arm | 6, 11, 7 | 14, 12, 9 | `block/iron_block`, rotated 22.5° on Z |
-| Stamp block | 7, 11, 4 | 11, 13, 8 | `block/cut_copper` |
-| Wax pot | 2, 11, 2 | 6, 14, 6 | `block/cauldron_side` |
-| Wax surface | 3, 13, 3 | 5, 14, 5 | `block/red_concrete` |
-
----
-
-## `storage_crate`
-
-Plain, sturdy, no hinges. It should look like the cheapest thing in the room.
-
-| Element | From | To | Texture |
-| --- | --- | --- | --- |
-| Body | 1, 0, 1 | 15, 13, 15 | `block/barrel_side` |
-| Lid | 0, 13, 0 | 16, 15, 16 | `block/barrel_top` |
-| Corner battens | four verticals at the corners | 1 thick, full height | `block/stripped_spruce_log` |
-| Rope handle | 0, 6, 5 | 1, 8, 11 | `block/brown_wool` |
-
----
+**`counting_house`.** A walnut clerk's desk with a green leather writing slope, an open ledger
+on it, stacks of coin, an ink pot and a brass stamp. The tell is the green leather and gold.
+Footprint 16×16, 20 high.
 
 ## Seeing a model without Blockbench
 
-`tools/render_models.py` draws the model JSON with the real vanilla textures and writes a PNG to
-`build/model-previews/`. It needs nothing installed — no Blockbench, no running game, no image
-library — only that `./gradlew build` has run once so the Minecraft jar is on disk for the
-textures.
+`tools/render_models.py` draws the model JSON with the textures and writes a PNG to
+`build/model-previews/`. It needs nothing installed, only that `./gradlew build` has run once so
+the Minecraft jar is on disk for any vanilla texture a model still references.
 
 ```
 python3 tools/render_models.py                 # every block model
 python3 tools/render_models.py centrifuge      # just one
 ```
 
-It is an orthographic, z-buffered renderer using Minecraft's own per-face shading, so it shows
-proportion and silhouette faithfully. It does **not** show ambient occlusion, block light, or
-how a model behaves in the hand, so it answers "are the proportions right" and not "does it look
-good in the world".
+It is an orthographic, z-buffered renderer using Minecraft's own per-face shading, with element
+rotation. It shows proportion and silhouette faithfully. It does not show ambient occlusion,
+block light, per-face UV mapping, or how a model behaves in the hand, so it answers "are the
+proportions right" and not "does it look good in the world".
 
-Two alternatives if you want to edit rather than look: **blockbench.net/web** runs in a browser
-with nothing installed, and `File → Import → JSON Model` opens these files directly.
+## Editing by hand
 
-## Afterwards
-
-Each model needs its **item display** set, or it will look wrong in the hand and in the hotbar.
-In Blockbench: Display tab, `gui` rotation 30 / 225 / 0 at scale 0.625, `thirdperson_righthand`
-rotation 0 / 45 / 0 at scale 0.4. Those are the vanilla block-item values; copying them keeps our
-blocks consistent with everything else in the inventory.
+**blockbench.net/web** opens these files directly with `File → Import → JSON Model`. Anything
+edited there and exported back will be overwritten the next time the generator runs, so either
+make the change in `tools/build_models.py` or delete that model's function from the script and
+own the JSON by hand from then on. The rotation limit above still applies to hand edits.
