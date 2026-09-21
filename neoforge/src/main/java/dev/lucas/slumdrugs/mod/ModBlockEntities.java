@@ -34,5 +34,9 @@ public final class ModBlockEntities {
             TYPES.register("storage_crate", () -> new BlockEntityType<>(
                     StorageCrateBlockEntity::new, ModBlocks.STORAGE_CRATE.get()));
 
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<StillBlockEntity>> STILL =
+            TYPES.register("still", () -> new BlockEntityType<>(
+                    StillBlockEntity::new, ModBlocks.STILL.get()));
+
     private ModBlockEntities() {}
 }

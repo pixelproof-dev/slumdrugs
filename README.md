@@ -17,16 +17,19 @@ seen working in play so far.
 Working today:
 
 - 23 items with quality, grower and seal carried as real data components, shown on tooltips
-- 6 working stations, all craftable: a forcing frame with five growth stages, a drying loft
-  whose rails show what hangs, a hand-worked pressing bench, a sealing press that stamps
-  parcels with the sealer's name, a storage crate, and a centrifuge laid out like a brewing stand
+- 7 working stations, all craftable: a forcing frame with five growth stages that reads
+  warmth and damp, a drying loft whose rails show what hangs, a hand-worked pressing bench, a
+  sealing press that stamps parcels with the sealer's name, a storage crate, and a centrifuge
+  and a still laid out like a brewing stand
+- Street sales paid by quality and demand, brokers repriced from a living market
 - A three-step tier ladder gating the workshop stations on units sold and coin earned, read
   back through a journal item
-- A condition HUD: intoxication meter, craving pip, withdrawal timer
+- The Watch: suspicion per sale, a bell two minutes ahead, a raid that takes what you carry
+- A condition HUD: intoxication meter, craving pip, withdrawal timer, the Watch's interest
 - Cultivation where seed, soil and compost decide both the quality and the size of a harvest
 - Refining: press, centrifuge and still, each trading volume for strength, with spent mash
   returning as compost
-- The condition system: use, tolerance, dependence, craving, withdrawal and recovery
+- The condition system: use, tolerance, dependence, craving, withdrawal, recovery and the remedy draught
 - NPCs as villagers carrying an aggression model, trading through the vanilla merchant screen
 - A full `/slum` command tree, including dry runs of the rules
 
@@ -39,7 +42,7 @@ Working today:
 Needs nothing but the wrapper; Gradle fetches Java 25 and NeoForge itself.
 
 ```
-sim/        the simulation: no Minecraft, no loader, no I/O — 86,396 assertions, about a second
+sim/        the simulation: no Minecraft, no loader, no I/O — 86,877 assertions, about a second
 neoforge/   the platform layer: registries, blocks, block entities, commands, NPCs
 ```
 

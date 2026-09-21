@@ -5,6 +5,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.lucas.slumdrugs.sim.economy.MarketState;
 import dev.lucas.slumdrugs.sim.player.Condition;
 import dev.lucas.slumdrugs.sim.player.Progression;
+import dev.lucas.slumdrugs.sim.player.Suspicion;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -25,7 +26,8 @@ public final class ModAttachments {
                     Codec.DOUBLE.fieldOf("tolerance").forGetter(c -> c.tolerance),
                     Codec.DOUBLE.fieldOf("dependence").forGetter(c -> c.dependence),
                     Codec.LONG.fieldOf("last_use").forGetter(c -> c.lastUse),
-                    Codec.LONG.fieldOf("last_sleep").forGetter(c -> c.lastSleep)
+                    Codec.LONG.fieldOf("last_sleep").forGetter(c -> c.lastSleep),
+                    Codec.LONG.optionalFieldOf("soothed_until", 0L).forGetter(c -> c.soothedUntil)
             ).apply(instance, Condition::of));
 
     /** The same five fields over the wire, for the HUD. Sent to the player it belongs to and nobody else. */
@@ -35,6 +37,7 @@ public final class ModAttachments {
             ByteBufCodecs.DOUBLE, c -> c.dependence,
             ByteBufCodecs.VAR_LONG, c -> c.lastUse,
             ByteBufCodecs.VAR_LONG, c -> c.lastSleep,
+            ByteBufCodecs.VAR_LONG, c -> c.soothedUntil,
             Condition::of);
 
     /**
@@ -68,6 +71,25 @@ public final class ModAttachments {
                     .serialize(PROGRESSION_CODEC)
                     .copyOnDeath()
                     .sync((holder, to) -> holder == to, PROGRESSION_STREAM)
+                    .build());
+
+    private static final com.mojang.serialization.MapCodec<Suspicion> SUSPICION_CODEC =
+            RecordCodecBuilder.mapCodec(instance -> instance.group(
+                    Codec.DOUBLE.fieldOf("value").forGetter(s -> s.value),
+                    Codec.LONG.optionalFieldOf("raid_at", 0L).forGetter(s -> s.raidAt)
+            ).apply(instance, Suspicion::new));
+
+    private static final StreamCodec<RegistryFriendlyByteBuf, Suspicion> SUSPICION_STREAM = StreamCodec.composite(
+            ByteBufCodecs.DOUBLE, s -> s.value,
+            ByteBufCodecs.VAR_LONG, s -> s.raidAt,
+            Suspicion::new);
+
+    /** How much the Watch has noticed. Kept through death: the Watch does not forget a face. */
+    public static final DeferredHolder<AttachmentType<?>, AttachmentType<Suspicion>> SUSPICION =
+            TYPES.register("suspicion", () -> AttachmentType.builder(Suspicion::new)
+                    .serialize(SUSPICION_CODEC)
+                    .copyOnDeath()
+                    .sync((holder, to) -> holder == to, SUSPICION_STREAM)
                     .build());
 
     private static final com.mojang.serialization.MapCodec<MarketState> MARKET_CODEC =

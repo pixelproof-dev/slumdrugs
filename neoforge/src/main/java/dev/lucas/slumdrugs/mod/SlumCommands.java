@@ -10,6 +10,7 @@ import dev.lucas.slumdrugs.sim.drug.Refining;
 import dev.lucas.slumdrugs.sim.npc.Npc;
 import dev.lucas.slumdrugs.sim.player.Condition;
 import dev.lucas.slumdrugs.sim.player.Progression;
+import dev.lucas.slumdrugs.sim.player.Suspicion;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
@@ -58,7 +59,8 @@ public final class SlumCommands {
                 .then(refine())
                 .then(structure())
                 .then(progress())
-                .then(market());
+                .then(market())
+                .then(suspicion());
         event.getDispatcher().register(root);
         event.getDispatcher().register(Commands.literal("slumdrugs").redirect(event.getDispatcher().register(root)));
     }
@@ -340,6 +342,8 @@ public final class SlumCommands {
         reply(ctx, String.format("Frame at %s — %s, %.0f%% grown, %.0fs water, soil %s, compost %d",
                 pos.toShortString(), state.drug, state.progress * 100, state.waterSeconds,
                 inputs.soil().name().toLowerCase(java.util.Locale.ROOT), frame.fertiliserCharges()));
+        reply(ctx, String.format("  warmth %.2f, damp %.2f, environment fit %.2f",
+                frame.warmth(level, pos), frame.damp(level, pos), inputs.environmentFit()));
         reply(ctx, String.format("  would yield %d units at quality %d",
                 Cultivation.units(ForcingFrameBlockEntity.BASE_YIELD, inputs, Cultivation.quality(inputs)),
                 Cultivation.quality(inputs)));
@@ -562,6 +566,45 @@ public final class SlumCommands {
         level.setData(ModAttachments.MARKET.get(), market);
         reply(ctx, String.format("%s demand set to %.0f", drug, market.demand(drug)));
         return 1;
+    }
+
+    // ------------------------------------------------------------------ suspicion
+
+    private static LiteralArgumentBuilder<CommandSourceStack> suspicion() {
+        return Commands.literal("suspicion")
+                .then(Commands.literal("get")
+                        .executes(ctx -> suspicionGet(ctx, List.of(ctx.getSource().getPlayerOrException())))
+                        .then(Commands.argument("targets", EntityArgument.players())
+                                .requires(Commands.hasPermission(OP))
+                                .executes(ctx -> suspicionGet(ctx, EntityArgument.getPlayers(ctx, "targets")))))
+                .then(Commands.literal("set").requires(Commands.hasPermission(OP))
+                        .then(Commands.argument("value", DoubleArgumentType.doubleArg(0, 100))
+                                .executes(ctx -> suspicionSet(ctx, List.of(ctx.getSource().getPlayerOrException())))
+                                .then(Commands.argument("targets", EntityArgument.players())
+                                        .executes(ctx -> suspicionSet(ctx, EntityArgument.getPlayers(ctx, "targets"))))));
+    }
+
+    private static int suspicionGet(CommandContext<CommandSourceStack> ctx, Collection<ServerPlayer> targets) {
+        for (ServerPlayer player : targets) {
+            Suspicion s = Watch.of(player);
+            long until = s.untilRaid(player.level().getGameTime() * 50L);
+            reply(ctx, String.format("%s — suspicion %.0f (%s)%s", player.getName().getString(), s.value,
+                    s.level().name().toLowerCase(java.util.Locale.ROOT),
+                    until < 0 ? "" : ", raid in " + (until / 1000) + "s"));
+        }
+        return targets.size();
+    }
+
+    private static int suspicionSet(CommandContext<CommandSourceStack> ctx, Collection<ServerPlayer> targets) {
+        double value = DoubleArgumentType.getDouble(ctx, "value");
+        for (ServerPlayer player : targets) {
+            Suspicion s = Watch.of(player);
+            s.value = value;
+            if (value < Suspicion.HUNTED_AT) s.cancelRaid();
+            player.syncData(ModAttachments.SUSPICION.get());
+        }
+        reply(ctx, "Set suspicion to " + value + " on " + targets.size() + " player(s)");
+        return targets.size();
     }
 
     // ------------------------------------------------------------------ helpers

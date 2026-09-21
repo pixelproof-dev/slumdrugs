@@ -70,5 +70,19 @@
   "hud.slumdrugs.withdrawal": "Entzug %s — %s min",
   "message.slumdrugs.customer_wants": "%s will %s.",
   "message.slumdrugs.street_flooded": "%s hat vorerst genug. Die Straße ist überschwemmt.",
-  "message.slumdrugs.street_sale": "%s zahlt %s Smaragde für %s %s."
+  "message.slumdrugs.street_sale": "%s zahlt %s Smaragde für %s %s.",
+  "block.slumdrugs.still": "Destille",
+  "message.slumdrugs.remedy_taken": "Das Zittern lässt nach.",
+  "message.slumdrugs.remedy_working": "Der letzte Trank wirkt noch.",
+  "message.slumdrugs.suspicion_noticed": "Jemand hat dich bemerkt.",
+  "message.slumdrugs.suspicion_watched": "Die Wache fragt nach dir.",
+  "message.slumdrugs.suspicion_hunted": "Die Konstabler suchen dich mit Namen.",
+  "message.slumdrugs.raid_called": "Die Glocke. In zwei Minuten steht die Wache vor deiner Tür. Trag nichts bei dir, was du nicht erklären könntest.",
+  "message.slumdrugs.raid_lapsed": "Die Glocke verstummt. Sie haben das Interesse verloren, vorerst.",
+  "message.slumdrugs.raided": "Die Wache stellt dich auf den Kopf und nimmt %s Einheiten Ware.",
+  "hud.slumdrugs.suspicion_noticed": "Bemerkt",
+  "hud.slumdrugs.suspicion_watched": "Beobachtet",
+  "hud.slumdrugs.suspicion_hunted": "Gesucht",
+  "hud.slumdrugs.suspicion_raid": "Die Wache",
+  "hud.slumdrugs.raid": "Die Wache — %s s"
 }

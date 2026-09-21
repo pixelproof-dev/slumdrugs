@@ -38,6 +38,13 @@ public final class ModBlocks {
                     .strength(3.5f)
                     .sound(SoundType.COPPER));
 
+    /** The still is machinery too: copper over a firebox. */
+    public static final DeferredBlock<StillBlock> STILL =
+            BLOCKS.registerBlock("still", StillBlock::new, () -> BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_ORANGE)
+                    .strength(3.5f)
+                    .sound(SoundType.COPPER));
+
     static {
         // Block items live in the item registry and in the creative tab, in this order. The
         // tier is the one that lets a player set the station up; see Progression for why the
@@ -48,6 +55,7 @@ public final class ModBlocks {
         ModItems.blockItem("sealing_press", SEALING_PRESS, Progression.Tier.WORKSHOP);
         ModItems.blockItem("storage_crate", STORAGE_CRATE, Progression.Tier.WORKSHOP);
         ModItems.blockItem("centrifuge", CENTRIFUGE, Progression.Tier.WORKSHOP);
+        ModItems.blockItem("still", STILL, Progression.Tier.WORKSHOP);
     }
 
     private ModBlocks() {}

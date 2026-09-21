@@ -73,6 +73,7 @@ public final class StreetSales {
         ItemStack pay = new ItemStack(Items.EMERALD, coin);
         if (!player.getInventory().add(pay)) player.drop(pay, false, Prediction.SERVER_ONLY);
         SalesLedger.record(player, units, coin);
+        Watch.noticed(player, units, false);
 
         ProductItem.actionBar(player, Component.translatable("message.slumdrugs.street_sale",
                 villager.getName(), coin, units, Component.translatable("item.slumdrugs.product_" + wants)));

@@ -28,6 +28,18 @@ public final class Condition {
     public long lastUse;
     public long lastSleep;
 
+    /** Until when a remedy draught holds withdrawal off. Zero when none is working. */
+    public long soothedUntil;
+
+    /** Dependence a remedy takes off. Small on purpose: it is help, not a cure. */
+    public static final double REMEDY_DEPENDENCE = 4;
+
+    /** Tolerance a remedy takes off. */
+    public static final double REMEDY_TOLERANCE = 2;
+
+    /** How long one draught holds withdrawal off. */
+    public static final long REMEDY_MILLIS = 5 * 60000L;
+
     public Condition() {}
 
     public Condition(double intoxication, double tolerance, double dependence) {
@@ -39,10 +51,32 @@ public final class Condition {
     /** Full restore, for whatever the platform layer persists with. */
     public static Condition of(double intoxication, double tolerance, double dependence,
                                long lastUse, long lastSleep) {
+        return of(intoxication, tolerance, dependence, lastUse, lastSleep, 0);
+    }
+
+    public static Condition of(double intoxication, double tolerance, double dependence,
+                               long lastUse, long lastSleep, long soothedUntil) {
         Condition c = new Condition(intoxication, tolerance, dependence);
         c.lastUse = lastUse;
         c.lastSleep = lastSleep;
+        c.soothedUntil = Math.max(0, soothedUntil);
         return c;
+    }
+
+    /** Whether a draught is holding withdrawal off right now. */
+    public boolean soothed(long now) { return now < soothedUntil; }
+
+    /**
+     * A remedy draught: a little dependence and tolerance off, and withdrawal held at bay for
+     * a while. Refused while the last one is still working, so it cannot be chained into a
+     * cure; the way out is still to stop.
+     */
+    public boolean remedy(long now) {
+        if (soothed(now)) return false;
+        dependence = clamp(dependence - REMEDY_DEPENDENCE);
+        tolerance = clamp(tolerance - REMEDY_TOLERANCE);
+        soothedUntil = now + REMEDY_MILLIS;
+        return true;
     }
 
     private static double clamp(double v) { return Math.max(0, Math.min(100, v)); }
@@ -95,10 +129,11 @@ public final class Condition {
                 && now - lastUse >= settings.cravingDelayMillis();
     }
 
-    /** Withdrawal is the harder state, and needs real dependence behind it. */
+    /** Withdrawal is the harder state, and needs real dependence behind it. A draught holds it off. */
     public boolean withdrawing(long now, Settings settings) {
         return dependence >= WITHDRAWAL_MIN
                 && intoxication < 5
+                && !soothed(now)
                 && now - lastUse >= settings.withdrawalDelayMillis();
     }
 

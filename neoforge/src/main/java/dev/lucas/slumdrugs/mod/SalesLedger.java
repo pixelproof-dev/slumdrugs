@@ -41,6 +41,7 @@ public final class SalesLedger {
             level.setData(ModAttachments.MARKET.get(), market);
         }
         record(player, units, coin);
+        Watch.noticed(player, units, ModItems.drugOf("package_", offer.getItemCostA().itemStack()) != null);
     }
 
     /** Counts a sale, however it was made, and tells the player when it moved them up. */

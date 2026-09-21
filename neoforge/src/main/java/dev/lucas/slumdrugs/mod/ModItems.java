@@ -52,7 +52,7 @@ public final class ModItems {
                     ITEMS.registerItem("package_" + drug, props -> new ParcelItem(props, drug)));
         }
         simple("fertilizer");
-        simple("remedy");
+        REGISTERED.put("remedy", ITEMS.registerItem("remedy", RemedyItem::new));
         REGISTERED.put("journal", ITEMS.registerItem("journal", JournalItem::new, p -> p.stacksTo(1)));
     }
 

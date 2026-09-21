@@ -2,6 +2,7 @@ package dev.lucas.slumdrugs.mod.client;
 
 import dev.lucas.slumdrugs.mod.ModAttachments;
 import dev.lucas.slumdrugs.sim.player.Condition;
+import dev.lucas.slumdrugs.sim.player.Suspicion;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -33,6 +34,7 @@ public final class ConditionHud implements GuiLayer {
     private static final int PIP = 0xFFB0A070;
     private static final int TEXT = 0xFFE8E0D0;
     private static final int WITHDRAWAL = 0xFF9A6BA8;
+    private static final int WATCH = 0xFFC0A050;
 
     @Override
     public void render(GuiGraphicsExtractor graphics, DeltaTracker delta) {
@@ -47,13 +49,24 @@ public final class ConditionHud implements GuiLayer {
         int severity = condition.withdrawalSeverity(now, settings);
         double untilWithdrawal = condition.minutesUntilWithdrawal(now, settings);
 
-        boolean anything = condition.intoxication > 0.5 || craving || severity > 0
-                || (untilWithdrawal >= 0 && condition.intoxication < 5);
-        if (!anything) return;
+        Suspicion suspicion = player.getData(ModAttachments.SUSPICION.get());
+        long untilRaid = suspicion.untilRaid(now);
 
         Font font = minecraft.font;
         int x = MARGIN;
         int y = graphics.guiHeight() - MARGIN - METER_HEIGHT - 2;
+
+        // The Watch, above everything else, only once it has noticed.
+        if (suspicion.level().ordinal() >= Suspicion.Level.NOTICED.ordinal()) {
+            Component watch = untilRaid >= 0
+                    ? Component.translatable("hud.slumdrugs.raid", (untilRaid + 999) / 1000)
+                    : Component.translatable("hud.slumdrugs.suspicion_" + suspicion.level().name().toLowerCase(java.util.Locale.ROOT));
+            graphics.text(font, watch, x, y - 2 * font.lineHeight - 2, untilRaid >= 0 ? METER_HIGH : WATCH, true);
+        }
+
+        boolean anything = condition.intoxication > 0.5 || craving || severity > 0
+                || (untilWithdrawal >= 0 && condition.intoxication < 5);
+        if (!anything) return;
 
         // The meter: how high they are, red once the next dose would be one too many.
         graphics.fill(x - 1, y - 1, x + METER_WIDTH + 1, y + METER_HEIGHT + 1, FRAME);

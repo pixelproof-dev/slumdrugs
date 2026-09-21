@@ -70,5 +70,19 @@
   "hud.slumdrugs.withdrawal": "Withdrawal %s — %s min",
   "message.slumdrugs.customer_wants": "%s wants %s.",
   "message.slumdrugs.street_flooded": "%s has had enough for now. The street is flooded.",
-  "message.slumdrugs.street_sale": "%s pays %s emeralds for %s %s."
+  "message.slumdrugs.street_sale": "%s pays %s emeralds for %s %s.",
+  "block.slumdrugs.still": "Still",
+  "message.slumdrugs.remedy_taken": "The shaking eases.",
+  "message.slumdrugs.remedy_working": "The last draught is still working.",
+  "message.slumdrugs.suspicion_noticed": "Someone has noticed you.",
+  "message.slumdrugs.suspicion_watched": "The Watch is asking about you.",
+  "message.slumdrugs.suspicion_hunted": "Constables are looking for you by name.",
+  "message.slumdrugs.raid_called": "The bell. The Watch will be at your door in two minutes. Carry nothing you would not explain.",
+  "message.slumdrugs.raid_lapsed": "The bell falls silent. They have lost interest, for now.",
+  "message.slumdrugs.raided": "The Watch turns you out and takes %s units of goods.",
+  "hud.slumdrugs.suspicion_noticed": "Noticed",
+  "hud.slumdrugs.suspicion_watched": "Watched",
+  "hud.slumdrugs.suspicion_hunted": "Hunted",
+  "hud.slumdrugs.suspicion_raid": "The Watch",
+  "hud.slumdrugs.raid": "The Watch — %s s"
 }

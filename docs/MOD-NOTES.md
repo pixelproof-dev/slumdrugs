@@ -23,7 +23,7 @@ the platform layer, not here.
 ./gradlew check
 ```
 
-Runs `SimChecks`, a plain `main()` with no test framework, currently 86,396 assertions.
+Runs `SimChecks`, a plain `main()` with no test framework, currently 86,877 assertions.
 A failure prints the label of the rule that broke.
 
 ## Status
@@ -70,17 +70,63 @@ their quality and grower through the whole chain; the tooltip shows both.
 | Drying loft | Raw harvest, up to 8 units on each of three rails | Wait 90 s; the rails show what hangs | Empty hand: every dried bundle. Sneak: everything, raw if unready |
 | Pressing bench | Dried material, one batch of up to 16 | Empty hand pulls the screw; five pulls press the batch | The last pull drops the product. Sneak: the batch back |
 | Sealing press | Product on the bench, honeycomb in the pot | Empty hand pulls the lever once per parcel | A parcel of 8 units under the puller's seal. Sneak: everything back |
-| Centrifuge | Dried in the vessels, charcoal on top, coal at the side | Runs on its own; the screen shows progress | Product in the vessels |
+| Centrifuge | Dried in the vessels, charcoal on top, coal at the side | Runs on its own; the screen shows progress | Product in the vessels, three quarters of it, stronger |
+| Still | Dried in the vessels, sugar on top, coal at the side | Runs on its own; the same screen | Product in the vessels, half of it, strongest of all |
 | Storage crate | Anything | — | The chest screen, 27 slots |
 
 A parcel is used like any item to break the seal and get its 8 units back. A bundle left on
 the loft long past done slowly loses quality, and none of the stations tick except the
-centrifuge; the loft and the presses only move when someone moves them. Breaking any station
+centrifuge and the still; the loft and the presses only move when someone moves them. Breaking any station
 drops what it held. The rules behind them are `Drying`, `Sealing` and `Refining` in `sim`.
 
 Every station has a crafting recipe under `data/slumdrugs/recipe/`: wood, glass and string
-for the frame and the loft, iron and copper on wood for the workshop pieces. Brokers buy
-sealed parcels at a better rate per unit than loose goods; customers only take loose goods.
+for the frame and the loft, iron and copper on wood for the workshop pieces. The centrifuge
+and the still share `RefineryBlockEntity` and the brewing-stand menu; each supplies its
+method and its reagent. The design's alembic makes essence; until essence exists as an item
+the still makes product at what the DISTIL rule says it is worth.
+
+### Climate
+
+The frame's environment is light and climate together. Warmth comes from the biome's base
+temperature plus anything burning within two blocks (lava, fire and magma most, lit furnaces
+and campfires less, torches barely; ice and snow cool). Damp comes from water within two
+blocks, rain on the frame, and whether the biome rains at all. Each grown substance has a
+comfort band in `Substances`: sunleaf temperate, frostroot cold and wet, emberbloom hot and
+dry. `Cultivation.climateFit` scores the distance outside the band and bottoms out at 0.4, so
+a frame in the wrong place is poor, never dead. `/slum frame info` prints all three numbers.
+
+### Economy
+
+The merchant screen cannot read quality, so customers do not use it. A player clicks a
+customer with product in hand and sells a handful of four, paid by the batch's quality and
+by demand; each customer wants one substance, fixed per person. Brokers and traders keep
+the merchant screen at standard quality, but their offers are rebuilt every five minutes
+from the market. Brokers buy sealed parcels at a better rate per unit than loose goods, and
+sell glowcap and sparkshard at a steep markup, since nothing produces those two yet.
+
+The market is the sim's `MarketState` as a level attachment, ticked once a world minute:
+every sale drains that substance's pool, time refills it, rivals drain it. `Market` is the
+one place shillings become emeralds, at ten to one. `/slum market` reads and sets the pools.
+
+### Recovery
+
+The remedy draught holds withdrawal off for five minutes and takes a little dependence and
+tolerance with it. It refuses while the last one is still working, so it cannot be chained
+into a cure; the way out is still to stop. The design's infirmary stay and clean streak are
+not built.
+
+### The Watch
+
+`Suspicion` in `sim` is the plugin's heat, renamed. Every sale raises it, a sealed parcel more
+than loose goods because the seal is evidence, and quiet minutes lower it. Past 20 the player
+is noticed, past 40 watched, past 60 hunted, and at 80 the bell rings: two minutes later the
+Watch arrives and takes every stage of the chain the player is carrying, then stands down to
+watched. Nothing else is touched, and it never comes without the bell. While watched or
+worse, constables nearby are stirred to wary, and to demanding during a raid. The HUD shows
+the level and the countdown. `/slum suspicion` reads and sets it.
+
+Not built from the design: writs, the gaol, houndsmen, golems, bribery, evidence filed by
+seal. The suspicion attachment is per player; quarter suspicion and bounty wait on turf.
 
 ### Progression
 
@@ -93,7 +139,7 @@ are never gated.
 | --- | --- | --- |
 | Hand to mouth | start | Forcing frame, drying loft |
 | Backroom | 20 units sold | nothing yet; the design's first regulars and journal go here |
-| Workshop | 60 coin earned | Pressing bench, sealing press, storage crate, centrifuge |
+| Workshop | 60 coin earned | Pressing bench, sealing press, storage crate, centrifuge, still |
 | Apothecary and up | not reachable | needs standing, turf and influence, none of which exist |
 
 Two deliberate departures from the design document, both to be tightened when the systems
@@ -152,6 +198,11 @@ compiler settled the rest. Three things that a recalled 1.21 pattern gets wrong:
 | `BaseEntityBlock` renders invisible without `getRenderShape` | it renders the model; the override is gone |
 | `onRemove` to drop a container's contents | `BlockEntity#preRemoveSideEffects`, which any `Container` block entity already does |
 
+## Continuous integration
+
+`.github/workflows/build.yml` runs `./gradlew build` on every push and pull request and keeps
+the jar as an artifact. It has not launched a client or server; that is still done by hand.
+
 ## Commands
 
 Everything the mod can do from a prompt. `/slumdrugs` is an alias of `/slum`. Anything that
@@ -169,7 +220,7 @@ do not.
 | `/slum npc list [radius]` | Who is nearby, their crew, aggression and stance |
 | `/slum npc aggression set\|provoke\|appease <value> [radius]` | Move their mood |
 | `/slum npc remove [radius]` | Remove ours only — never a village's own villagers |
-| `/slum frame info` | The nearest forcing frame: crop, growth, water, soil, compost, and what it would yield |
+| `/slum frame info` | The nearest forcing frame: crop, growth, water, soil, compost, climate, and what it would yield |
 | `/slum frame grow` | Ripen it now |
 | `/slum frame water <seconds>` | Set its water |
 | `/slum refine <method> <quality> <units>` | A dry run against the rules — no blocks needed |
@@ -177,6 +228,10 @@ do not.
 | `/slum progress get [targets]` | Tier, units sold, coin earned, and what the next gate costs |
 | `/slum progress set units\|coin <value> [targets]` | Move a player up or down the ladder |
 | `/slum progress reset [targets]` | Back to hand to mouth |
+| `/slum market get` | Demand, price factor and broker price for every substance |
+| `/slum market set <substance> <demand>` | Move a pool |
+| `/slum suspicion get [targets]` | Suspicion, its level, and the raid countdown if one is called |
+| `/slum suspicion set <value> [targets]` | Move it; below hunted cancels a called raid |
 
 `/slum refine` and `/slum frame info` exist to check the simulation against the numbers on a
 running server without building anything, which matters while no client has been launched.

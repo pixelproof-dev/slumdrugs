@@ -32,6 +32,45 @@ public final class Cultivation {
     /** The most compost a single frame will take. Beyond this it is wasted, and the game says so. */
     public static final int MAX_CHARGES = 3;
 
+    /**
+     * Where a substance is comfortable: warmth and damp both 0-1, each with a band it likes.
+     * Inside the band it grows as well as it can; outside, fit falls off with distance, and it
+     * is a poor frame rather than a dead one at the far end.
+     */
+    public record Band(double warmthLow, double warmthHigh, double dampLow, double dampHigh) {
+        public Band {
+            warmthLow = clampUnit(warmthLow);
+            warmthHigh = Math.max(warmthLow, clampUnit(warmthHigh));
+            dampLow = clampUnit(dampLow);
+            dampHigh = Math.max(dampLow, clampUnit(dampHigh));
+        }
+
+        /** Likes everything: the fit of a substance nobody has tuned yet. */
+        public static Band any() { return new Band(0, 1, 0, 1); }
+    }
+
+    /** How far outside a band before fit reaches its floor. */
+    public static final double BAND_FALLOFF = 0.5;
+
+    /** The worst climate fit. Light alone can already take a frame to 0.6; this stacks on it. */
+    public static final double CLIMATE_FLOOR = 0.4;
+
+    private static double clampUnit(double v) { return Math.max(0, Math.min(1, v)); }
+
+    private static double distanceOutside(double v, double low, double high) {
+        v = clampUnit(v);
+        return v < low ? low - v : v > high ? v - high : 0;
+    }
+
+    /** 0-1 climate fit: one inside the band on both axes, falling to the floor as either strays. */
+    public static double climateFit(double warmth, double damp, Band band) {
+        if (band == null) return 1;
+        double outside = distanceOutside(warmth, band.warmthLow(), band.warmthHigh())
+                + distanceOutside(damp, band.dampLow(), band.dampHigh());
+        double fit = 1 - outside / BAND_FALLOFF * (1 - CLIMATE_FLOOR);
+        return Math.max(CLIMATE_FLOOR, Math.min(1, fit));
+    }
+
     /** Neutral quality: an average seed in tilled ground with nothing added returns this. */
     public static final int BASELINE = 20;
 

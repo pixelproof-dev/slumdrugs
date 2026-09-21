@@ -11,6 +11,7 @@ import dev.lucas.slumdrugs.sim.npc.Npc;
 import dev.lucas.slumdrugs.sim.player.Condition;
 import dev.lucas.slumdrugs.sim.player.Progression;
 import dev.lucas.slumdrugs.sim.player.Recovery;
+import dev.lucas.slumdrugs.sim.player.Suspicion;
 import dev.lucas.slumdrugs.sim.station.GrowboxState;
 import dev.lucas.slumdrugs.sim.world.RoomFlood;
 
@@ -40,6 +41,9 @@ public final class SimChecks {
         recovery();
         condition();
         withdrawalTimers();
+        remedy();
+        suspicion();
+        climate();
         progression();
         unitTransfer();
         quality();
@@ -407,6 +411,128 @@ public final class SimChecks {
         rejected = false;
         try { new Cultivation.Inputs(50, null, 0, 0, 1); } catch (IllegalArgumentException expected) { rejected = true; }
         check(rejected, "soil is required");
+    }
+
+    // ---------------------------------------------------------------- climate
+
+    private static void climate() {
+        var band = new Cultivation.Band(0.5, 0.8, 0.2, 0.6);
+
+        // Inside the band on both axes is perfect; a null band, or one that likes everything, too.
+        close(Cultivation.climateFit(0.6, 0.4, band), 1, "inside the band is a perfect fit");
+        close(Cultivation.climateFit(0.5, 0.2, band), 1, "the band's edges are inside it");
+        close(Cultivation.climateFit(0, 1, Cultivation.Band.any()), 1, "an untuned substance likes everything");
+        close(Cultivation.climateFit(0, 1, null), 1, "no band is no penalty");
+
+        // Outside, fit falls with distance and bottoms out at the floor.
+        double near = Cultivation.climateFit(0.4, 0.4, band);
+        double far = Cultivation.climateFit(0.0, 0.4, band);
+        check(near < 1 && near > far, "further outside is a worse fit");
+        close(far, Cultivation.CLIMATE_FLOOR, "far outside is the floor, not death");
+        close(Cultivation.climateFit(0, 1, band), Cultivation.CLIMATE_FLOOR, "wrong on both axes is still the floor");
+        for (double w = 0; w <= 1.0001; w += 0.05)
+            for (double d = 0; d <= 1.0001; d += 0.05) {
+                double fit = Cultivation.climateFit(w, d, band);
+                check(fit >= Cultivation.CLIMATE_FLOOR && fit <= 1, "climate fit stays in range");
+            }
+
+        // Both axes cost the same, and the band tolerates a reversed pair by fixing it.
+        close(Cultivation.climateFit(0.3, 0.4, band), Cultivation.climateFit(0.6, 0.8, band),
+                "warmth and damp are weighed alike");
+        var flipped = new Cultivation.Band(0.8, 0.5, 0.6, 0.2);
+        check(flipped.warmthHigh() >= flipped.warmthLow() && flipped.dampHigh() >= flipped.dampLow(),
+                "a reversed band is straightened");
+
+        // Climate feeds the same environment input the frame already had.
+        var good = new Cultivation.Inputs(50, Cultivation.Soil.TILLED, 0, 0, 1);
+        var poor = new Cultivation.Inputs(50, Cultivation.Soil.TILLED, 0, 0, Cultivation.CLIMATE_FLOOR);
+        check(Cultivation.quality(good) > Cultivation.quality(poor), "a bad climate costs quality");
+    }
+
+    // ---------------------------------------------------------------- remedy
+
+    private static void remedy() {
+        long minute = 60000L;
+        var settings = Condition.Settings.defaults();
+        var c = new Condition(0, 40, 70);
+        c.lastUse = 0;
+        long now = settings.withdrawalDelayMillis() + minute;
+        check(c.withdrawing(now, settings), "deep dependence, long clean: withdrawing");
+
+        // A draught takes a little off and holds withdrawal away for its duration.
+        check(c.remedy(now), "the first draught works");
+        close(c.dependence, 70 - Condition.REMEDY_DEPENDENCE, "a draught takes a little dependence off");
+        close(c.tolerance, 40 - Condition.REMEDY_TOLERANCE, "and a little tolerance");
+        check(!c.withdrawing(now, settings), "withdrawal is held off");
+        check(c.withdrawalSeverity(now + Condition.REMEDY_MILLIS - 1, settings) == 0, "right up to the end");
+        check(c.withdrawing(now + Condition.REMEDY_MILLIS, settings), "and comes back when it wears off");
+
+        // It cannot be chained.
+        check(!c.remedy(now + minute), "a second draught while the first works is refused");
+        close(c.dependence, 70 - Condition.REMEDY_DEPENDENCE, "and takes nothing off");
+        check(c.remedy(now + Condition.REMEDY_MILLIS), "once it wears off, another works");
+
+        // It never goes below zero, and craving is not held off: only the hard state is.
+        var light = new Condition(0, 1, 2);
+        light.remedy(now);
+        check(light.dependence == 0 && light.tolerance == 0, "a draught cannot go below zero");
+        var craver = new Condition(0, 0, 30);
+        craver.lastUse = 0;
+        craver.remedy(now);
+        check(craver.craving(now, settings), "a draught does not quiet a craving");
+
+        // Restoring carries the timer.
+        var restored = Condition.of(0, 0, 50, 0, 0, now + minute);
+        check(restored.soothed(now) && !restored.soothed(now + 2 * minute), "the soothed timer survives a restore");
+    }
+
+    // ---------------------------------------------------------------- suspicion
+
+    private static void suspicion() {
+        long minute = 60000L;
+        var s = new Suspicion();
+        check(s.level() == Suspicion.Level.CLEAR && s.untilRaid(0) == -1, "nobody starts under suspicion");
+
+        // Sealed goods draw more than loose ones.
+        var loose = new Suspicion();
+        var sealed = new Suspicion();
+        loose.sold(8, false);
+        sealed.sold(8, true);
+        check(sealed.value > loose.value, "a seal is evidence");
+        close(loose.value, 8 * Suspicion.PER_LOOSE_UNIT, "loose units at the loose rate");
+
+        // Quiet time fades it, never below zero.
+        loose.decay(4);
+        close(loose.value, 8 * Suspicion.PER_LOOSE_UNIT - 4 * Suspicion.DECAY_PER_MINUTE, "quiet minutes fade it");
+        loose.decay(1000);
+        check(loose.value == 0, "fading stops at zero");
+
+        // The levels climb in order and top out.
+        for (int i = 0; i < 200; i++) s.sold(1, false);
+        check(s.value == 100 && s.level() == Suspicion.Level.RAID, "suspicion tops out at a raid");
+        check(Suspicion.Level.of(Suspicion.WATCHED_AT) == Suspicion.Level.WATCHED
+                && Suspicion.Level.of(Suspicion.WATCHED_AT - 0.01) == Suspicion.Level.NOTICED, "levels sit on their thresholds");
+
+        // A raid is called once, warned ahead, and lands on time.
+        check(s.shouldCallRaid(), "at the top the bell rings");
+        s.callRaid(10 * minute);
+        check(!s.shouldCallRaid(), "it rings once");
+        check(s.untilRaid(10 * minute) == Suspicion.RAID_WARNING_MILLIS, "the whole warning remains when called");
+        check(!s.raidDue(10 * minute + Suspicion.RAID_WARNING_MILLIS - 1), "not a moment early");
+        check(s.raidDue(10 * minute + Suspicion.RAID_WARNING_MILLIS), "and lands on time");
+        s.raided();
+        check(s.value == Suspicion.AFTER_RAID && s.raidAt == 0 && s.level() == Suspicion.Level.NOTICED,
+                "after a raid the Watch remembers but stands down");
+
+        // Laying low before it lands calls it off.
+        var lying = new Suspicion(85, 0);
+        lying.callRaid(0);
+        check(!lying.raidLapsed(), "a called raid holds while suspicion is high");
+        lying.decay(100);
+        check(lying.raidLapsed(), "and lapses once the player has laid low");
+        lying.cancelRaid();
+        check(lying.raidAt == 0 && lying.untilRaid(0) == -1, "a cancelled raid is gone");
+        check(new Suspicion(-5, -5).value == 0, "restored values are clamped");
     }
 
     // ---------------------------------------------------------------- refining
