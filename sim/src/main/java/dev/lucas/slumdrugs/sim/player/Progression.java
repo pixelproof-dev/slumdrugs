@@ -30,8 +30,14 @@ public final class Progression {
     /** Units sold that open the Backroom. */
     public static final int BACKROOM_UNITS = 20;
 
-    /** Coin earned that opens the Workshop. Standing 15 is the other half, once standing exists. */
-    public static final int WORKSHOP_COIN = 60;
+    /**
+     * Coin earned, in shillings, that opens the Workshop. Standing 15 is the other half, once
+     * standing exists. The design said sixty; the week-of-play simulation showed sixty is
+     * earned by the same twenty units that open the Backroom, so the two tiers opened at the
+     * same moment. Twelve sovereigns puts the Workshop a few days behind the Backroom for a
+     * careful grower with two frames, and a day behind for one with four.
+     */
+    public static final int WORKSHOP_COIN = 240;
 
     /** The two gates, so a server can set its own. */
     public record Settings(int backroomUnits, int workshopCoin) {

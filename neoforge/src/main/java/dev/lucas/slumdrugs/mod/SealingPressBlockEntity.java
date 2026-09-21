@@ -37,16 +37,30 @@ public final class SealingPressBlockEntity extends BlockEntity {
     public int units() { return stock.getCount(); }
     public int wax() { return wax; }
 
-    /** Adds product to the bench: one substance, one quality, one grower at a time. Returns the units taken. */
+    /**
+     * Adds product to the bench: one substance at a time, at any quality. Batches of different
+     * quality pool, and the pool's quality is the weighted mean of what went in, so a grower
+     * whose frames yield three or four units a time can still fill a parcel of eight. The
+     * first batch's grower and line name the parcel; a cut batch cuts the whole pool. Returns
+     * the units taken.
+     */
     public int addStock(ItemStack stack) {
         int room;
         if (stock.isEmpty()) room = STOCK_UNITS;
-        else if (ItemStack.isSameItemSameComponents(stock, stack)) room = STOCK_UNITS - stock.getCount();
+        else if (stack.is(stock.getItem())) room = STOCK_UNITS - stock.getCount();
         else return 0;
 
         int units = Math.min(room, stack.getCount());
         if (units <= 0) return 0;
-        if (stock.isEmpty()) stock = stack.copyWithCount(units); else stock.grow(units);
+        if (stock.isEmpty()) stock = stack.copyWithCount(units);
+        else {
+            int have = stock.getCount();
+            int quality = (ModComponents.qualityOf(stock) * have + ModComponents.qualityOf(stack) * units) / (have + units);
+            double cut = (ModComponents.cutOf(stock) * have + ModComponents.cutOf(stack) * units) / (have + units);
+            stock.grow(units);
+            ModComponents.withQuality(stock, quality, null);
+            ModComponents.withCut(stock, cut);
+        }
         setChanged();
         return units;
     }

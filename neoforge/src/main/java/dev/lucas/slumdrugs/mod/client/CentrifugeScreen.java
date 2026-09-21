@@ -7,15 +7,12 @@ import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 
 /**
  * Borrows the brewing stand's background and its slot positions, so the machine reads as
  * familiar equipment rather than a new puzzle. No new art, and nothing is redistributed:
  * the texture is referenced from the game the player already owns.
  */
-@OnlyIn(Dist.CLIENT)
 public final class CentrifugeScreen extends AbstractContainerScreen<CentrifugeMenu> {
 
     private static final Identifier BACKGROUND =

@@ -13,8 +13,6 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.client.gui.GuiLayer;
 
 /**
@@ -24,7 +22,6 @@ import net.neoforged.neoforge.client.gui.GuiLayer;
  *
  * <p>Reads the synced attachment and nothing else; the server decides every number.
  */
-@OnlyIn(Dist.CLIENT)
 public final class ConditionHud implements GuiLayer {
 
     private static final int MARGIN = 4;

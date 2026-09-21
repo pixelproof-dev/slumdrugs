@@ -24,7 +24,30 @@ the platform layer, not here.
 ```
 
 Runs `SimChecks`, a plain `main()` with no test framework, currently 93,416 assertions.
-A failure prints the label of the rule that broke.
+A failure prints the label of the rule that broke. It also runs `Playthrough`, a week of play
+on the rules (see below), which fails when the curve leaves the design's envelope.
+
+Two more checks sit outside Gradle, because they look at what the game would load:
+
+```
+python3 tools/check_data.py     # data and assets against each other, a second
+tools/smoke_server.sh           # the dedicated server, headless, about two minutes
+```
+
+The checker parses every JSON file under the resources and reads the registrations out of
+`ModItems` and `ModBlocks`, then asks: does every item and block have a name in every
+language, does every key the code or the data uses exist, does every recipe result and
+ingredient exist, does every advancement's parent and icon exist, does every blockstate point
+at a model and every model at a texture, do the loot tables name real items. Vanilla ids are
+checked against the Minecraft jar once `./gradlew build` has put it on disk. Its first run
+found five item models and both lang files ending in a literal `\n` after the closing brace,
+which the game would have shown as missing models and raw translation keys.
+
+The smoke test starts the real server in `neoforge/run` (ignored by git, EULA accepted for
+the throwaway world), waits for "Done", and fails on any ERROR line or mod-loading issue. It
+is the only check that loads data the way the game does: its first run found the trader
+house chest table using `minecraft:air` as an empty entry, which stops the server from
+starting at all, and the `@OnlyIn` annotations that 26.3 no longer honours.
 
 ## Status
 
@@ -236,7 +259,7 @@ are never gated.
 | --- | --- | --- |
 | Hand to mouth | start | Forcing frame, drying loft |
 | Backroom | 20 units sold | Counting house desk |
-| Workshop | 60 shillings earned | Pressing bench, sealing press, storage crate, centrifuge, still, cutting bench, grafting bench |
+| Workshop | 240 shillings (12 sovereigns) earned | Pressing bench, sealing press, storage crate, centrifuge, still, cutting bench, grafting bench |
 | Apothecary and up | not reachable | needs standing, turf and influence, none of which exist |
 
 Two deliberate departures from the design document, both to be tightened when the systems
@@ -295,10 +318,50 @@ compiler settled the rest. Three things that a recalled 1.21 pattern gets wrong:
 | `BaseEntityBlock` renders invisible without `getRenderShape` | it renders the model; the override is gone |
 | `onRemove` to drop a container's contents | `BlockEntity#preRemoveSideEffects`, which any `Container` block entity already does |
 
+## A week of play
+
+`sim/src/test/.../Playthrough.java` plays seven twenty-minute days, second by second, on the
+sim rules alone: sunleaf in a few frames, dried, pressed, sold, under a handful of policies.
+The platform's own defaults (growth 600 s, base yield 3, a hand of 4, the broker's rates) are
+mirrored at the top of the file and must be kept in step with `Tuning`. It runs in
+`./gradlew check` and prints this table:
+
+| policy | grown | sold | earned | pence/hour | Backroom | Workshop | raids | peak suspicion |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| careful street, 2 frames | 78 | 78 | 15 sov 8s | 1584 | day 3 | day 6 | 0 | 18 |
+| careful street, 4 frames | 156 | 126 | 24 sov 16s | 2555 | day 2 | day 4 | 0 | 63 |
+| street + compost, 2 frames | 168 | 127 | 29 sov 7s | 3019 | day 2 | day 3 | 0 | 64 |
+| greedy street, 4 frames | 156 | 156 | 30 sov 14s | 3162 | day 2 | day 4 | 1 | 81 |
+| broker loose, 2 frames | 78 | 78 | 11 sov 2s | 1142 | day 3 | never | 0 | 18 |
+| broker parcels, 4 frames | 156 | 88 | 14 sov 12s | 1503 | day 2 | day 6 | 0 | 72 |
+
+What it changed on its first run:
+
+- **The Workshop gate.** At the design's sixty shillings the Workshop opened at the same
+  moment as the Backroom: the twenty units that open one earn the sixty shillings that open
+  the other. The gate is now 240 shillings, twelve sovereigns, which puts the Workshop three
+  days behind the Backroom for a careful grower with two frames and two days for one with four.
+- **Pooling at the sealing press.** The press refused product of a different quality, and a
+  frame yields three or four units a time at a quality that drifts, so a parcel of eight was
+  hard to fill. The press now pools batches of one substance at any quality, at the weighted
+  mean, and the sim seals from the pool.
+
+What it says that is worth knowing:
+
+- Compost is worth as much as doubling the frames: two composted frames out-earn four bare ones.
+- Laying low at Hunted costs about a fifth of the week's coin against a player who ignores
+  the Watch and eats one raid. The raid takes the stock in hand and three minutes; that is
+  cheaper than the caution. If the Watch should be feared, the raid needs to cost more, or
+  the cell longer: a lever, not a fix made here.
+- The broker is a floor, not a living: loose goods to the broker earn about two thirds of
+  what regulars pay, and parcels draw enough suspicion that a four-frame grower spends most
+  of the week laying low.
+
 ## Continuous integration
 
-`.github/workflows/build.yml` runs `./gradlew build` on every push and pull request and keeps
-the jar as an artifact. It has not launched a client or server; that is still done by hand.
+`.github/workflows/build.yml` runs `./gradlew build`, then `tools/check_data.py`, then
+`tools/smoke_server.sh`, on every push and pull request, and keeps the jar and the server log
+as artifacts. A client has still never been launched by CI; that is done by hand.
 
 ## Configuration
 
