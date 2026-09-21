@@ -12,12 +12,20 @@ public final class ModBlocks {
 
     public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(SlumDrugsMod.ID);
 
-    /** Wood-framed working furniture: quick to break, quiet, nothing exotic. */
+    /**
+     * Wood-framed working furniture: quick to break, quiet, nothing exotic.
+     *
+     * <p>{@code noOcclusion} is not decoration. Every station's model is a set of cuboids with
+     * gaps, not a filled cube, and a block that does not say so is treated as one: the game
+     * culls the touching faces of its neighbours and you see straight through the floor to the
+     * sky. Vanilla does the same on every piece of furniture — brewing stand, cauldron, lectern.
+     */
     private static BlockBehaviour.Properties wooden() {
         return BlockBehaviour.Properties.of()
                 .mapColor(MapColor.WOOD)
                 .strength(2.0f)
-                .sound(SoundType.WOOD);
+                .sound(SoundType.WOOD)
+                .noOcclusion();
     }
 
     public static final DeferredBlock<ForcingFrameBlock> FORCING_FRAME =
@@ -32,7 +40,8 @@ public final class ModBlocks {
             BLOCKS.registerBlock("centrifuge", CentrifugeBlock::new, () -> BlockBehaviour.Properties.of()
                     .mapColor(MapColor.METAL)
                     .strength(3.5f)
-                    .sound(SoundType.COPPER));
+                    .sound(SoundType.COPPER)
+                    .noOcclusion());
 
     static {
         // Block items live in the item registry and in the creative tab, in this order.

@@ -7,15 +7,17 @@ import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 
 /**
  * Borrows the brewing stand's background and its slot positions, so the machine reads as
  * familiar equipment rather than a new puzzle. No new art, and nothing is redistributed:
  * the texture is referenced from the game the player already owns.
+ *
+ * <p>Deliberately not annotated {@code @OnlyIn(Dist.CLIENT)}. 26.3 no longer strips members
+ * for that annotation and warns about every mod still using it, which stops the launch on a
+ * warning screen. What keeps this class off the server is that only {@link ClientSetup} names
+ * it, and that class is registered for {@code Dist.CLIENT} alone.
  */
-@OnlyIn(Dist.CLIENT)
 public final class CentrifugeScreen extends AbstractContainerScreen<CentrifugeMenu> {
 
     private static final Identifier BACKGROUND =
