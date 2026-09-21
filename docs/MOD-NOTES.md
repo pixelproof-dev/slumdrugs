@@ -23,7 +23,7 @@ the platform layer, not here.
 ./gradlew check
 ```
 
-Runs `SimChecks`, a plain `main()` with no test framework, currently 90,155 assertions.
+Runs `SimChecks`, a plain `main()` with no test framework, currently 93,068 assertions.
 A failure prints the label of the rule that broke.
 
 ## Status
@@ -73,6 +73,8 @@ their quality and grower through the whole chain; the tooltip shows both.
 | Centrifuge | Dried in the vessels, charcoal on top, coal at the side | Runs on its own; the screen shows progress | Product in the vessels, three quarters of it, stronger |
 | Still | Dried in the vessels, sugar on top, coal at the side | Runs on its own; the same screen | Product in the vessels, half of it, strongest of all |
 | Cutting bench | Product on the board, sugar or bone meal on the heap up to equal parts | Empty hand pulls the blade | More product, worse, marked with how much is filler. Sneak: everything back |
+| Grafting bench | Two seeds of one plant, one in each pot | Empty hand makes the cross | One seed near the parents' mean; both parents spent. Sneak: the parents back |
+| Counting house desk | Emeralds, or loose coin | — | Stamped shillings one to one for emeralds; stamped coin less a tenth for loose. Sneak with a coin: change |
 | Storage crate | Anything | — | The chest screen, 27 slots |
 
 A parcel is used like any item to break the seal and get its 8 units back. A bundle left on
@@ -106,6 +108,18 @@ a frame in the wrong place is poor, never dead. `/slum frame info` prints all th
 
 ### Economy
 
+Money is items: a copper penny, a silver shilling of twelve, a gold sovereign of twenty
+shillings. `Coin` in `sim` splits sums and takes the counting house's tenth; `Purse` in the
+platform layer makes stacks, pays players, and builds the merchant screen's costs and
+results. Every price runs in pence at the design's scale: a Standard unit at the plugin's
+base price of ten is about two shillings. Coin is loose until the counting house stamps it,
+which is a component; the design's stamped-only sinks (deeds, charters, bail) do not exist
+yet, so today the stamp is a mark and a tenth. A new player is handed ten shillings loose on
+their first day. Merchants ask in shillings and sovereigns, rounded up to the shilling, and
+pay in one stack of the largest denomination that fits, so a big parcel loses a little to the
+broker's rounding. The three coin items are named after the art prompts; their textures are
+placeholders the drawn ones overwrite.
+
 The merchant screen cannot read quality, so customers do not use it. A player clicks a
 customer with product in hand and sells a handful of four, paid by the batch's quality and
 by demand; each customer wants one substance, fixed per person. Brokers and traders keep
@@ -123,6 +137,37 @@ The remedy draught holds withdrawal off for five minutes and takes a little depe
 tolerance with it. It refuses while the last one is still working, so it cannot be chained
 into a cure; the way out is still to stop. The design's infirmary stay and clean streak are
 not built.
+
+### Strains
+
+`Strain` in `sim` is four traits on the seed, 0-100 each, as one component; unbred seed is
+average and carries no mark. Potency multiplies the dose and the street price. Vigour
+multiplies growth speed and yield. Hardiness raises the floor a bad climate can push a frame
+to. Subtlety multiplies the suspicion a sale draws. The frame plants the line, the harvest
+carries it, and the seed it returns drifts by up to three points per trait. Every station
+carries the line forward with `ModComponents.inherit`, so product knows its line: tooltips
+show the four traits on seed and potency on goods.
+
+The grafting bench crosses two seeds of one plant into one seed at the parents' mean, moved
+by up to ten points per trait, and spends both parents. Not built from the design: relatedness
+and inbreeding defects, and stabilising a line over five generations to name it.
+
+### Crews and standing
+
+`Standing` in `sim` names the design's four crews and their opposed pairs: Ashfall against the
+Glass Choir, the Tidewater Boatmen against the Quarry Kings. A player's standing with each,
+-100 to 100, lives in the `Standings` attachment and moves zero-sum between opposed pairs.
+Hitting one of theirs costs five and provokes the one hit; killing one costs twenty-five and
+every crew member within thirty-two blocks inherits the dead one's anger, at least sixty.
+Coin pressed into a crew member's hand is tribute: a point a shilling up to ten, and it calms
+the one who took it. The NPC ticker rests every crew member's mood on the nearest player's
+standing with their crew, and a lieutenant's mood spreads to crew within eight blocks. The
+journal lists standings; `/slum standing` reads and sets them. Crews still only come from
+`/slum npc spawn <role> <crew>`, with any crew name; the four known ones get their opposites.
+
+Not built: turf cells and influence, war stages, diplomacy, poaching, player crews. The
+Workshop gate stays on coin alone rather than the design's standing fifteen, because a
+player who meets no crew would otherwise be stuck.
 
 ### The Watch
 
@@ -147,8 +192,8 @@ are never gated.
 | Tier | Opens at | Unlocks |
 | --- | --- | --- |
 | Hand to mouth | start | Forcing frame, drying loft |
-| Backroom | 20 units sold | nothing yet; the design's first regulars and journal go here |
-| Workshop | 60 coin earned | Pressing bench, sealing press, storage crate, centrifuge, still, cutting bench |
+| Backroom | 20 units sold | Counting house desk |
+| Workshop | 60 shillings earned | Pressing bench, sealing press, storage crate, centrifuge, still, cutting bench, grafting bench |
 | Apothecary and up | not reachable | needs standing, turf and influence, none of which exist |
 
 Two deliberate departures from the design document, both to be tightened when the systems
@@ -241,6 +286,10 @@ do not.
 | `/slum market set <substance> <demand>` | Move a pool |
 | `/slum suspicion get [targets]` | Suspicion, its level, and the raid countdown if one is called |
 | `/slum suspicion set <value> [targets]` | Move it; below hunted cancels a called raid |
+| `/slum coin <pence> [stamped]` | A purse of that value, as the fewest coins |
+| `/slum strain <trait> <value>` | Set one trait of the line on the held stack |
+| `/slum standing get` | Standing with every crew that knows you |
+| `/slum standing set <crew> <value>` | Move it; opposed crews move the other way |
 
 `/slum refine` and `/slum frame info` exist to check the simulation against the numbers on a
 running server without building anything, which matters while no client has been launched.

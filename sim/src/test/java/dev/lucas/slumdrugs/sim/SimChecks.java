@@ -11,6 +11,7 @@ import dev.lucas.slumdrugs.sim.drug.UnitTransfer;
 import dev.lucas.slumdrugs.sim.economy.Coin;
 import dev.lucas.slumdrugs.sim.economy.MarketState;
 import dev.lucas.slumdrugs.sim.npc.Npc;
+import dev.lucas.slumdrugs.sim.npc.Standing;
 import dev.lucas.slumdrugs.sim.player.Condition;
 import dev.lucas.slumdrugs.sim.player.Progression;
 import dev.lucas.slumdrugs.sim.player.Recovery;
@@ -58,6 +59,7 @@ public final class SimChecks {
         sealing();
         market();
         coin();
+        standing();
         npcs();
         System.out.println("PASS: " + checks + " simulation assertions.");
     }
@@ -833,6 +835,47 @@ public final class SimChecks {
     }
 
     // ---------------------------------------------------------------- npcs
+
+    private static void standing() {
+        var map = new java.util.HashMap<String, Double>();
+        check(Standing.of(map, "ashfall") == 0 && Standing.of(map, null) == 0, "nobody starts with a standing");
+
+        // A hit costs, and the opposed crew gains exactly what was lost.
+        Standing.apply(map, "ashfall", Standing.HIT);
+        close(Standing.of(map, "ashfall"), Standing.HIT, "a hit costs the hit");
+        close(Standing.of(map, "choir"), -Standing.HIT, "and the Choir is glad of it");
+        check(Standing.of(map, "tidewater") == 0 && Standing.of(map, "quarry") == 0, "the other pair is untouched");
+
+        // A kill costs more; tribute buys back, a shilling a point, capped.
+        Standing.apply(map, "ashfall", Standing.KILL);
+        close(Standing.of(map, "ashfall"), Standing.HIT + Standing.KILL, "a kill costs the kill");
+        close(Standing.tribute(5 * 12), 5, "five shillings, five points");
+        close(Standing.tribute(100 * 12), Standing.TRIBUTE_CAP, "no tribute buys more than the cap");
+        check(Standing.tribute(-12) == 0, "no negative tribute");
+
+        // Clamped at both ends, and war has a line.
+        Standing.apply(map, "quarry", -1000);
+        check(Standing.of(map, "quarry") == Standing.MIN && Standing.of(map, "tidewater") == Standing.MAX, "standing is clamped both ways");
+        check(Standing.atWar(Standing.WAR_AT) && !Standing.atWar(Standing.WAR_AT + 1), "war starts at the line");
+
+        // A crew the design does not know moves alone, and a blank crew moves nothing.
+        Standing.apply(map, "dockside", 10);
+        check(Standing.of(map, "dockside") == 10 && map.size() == 5, "an unknown crew has no opposite");
+        Standing.apply(map, "", 10);
+        Standing.apply(map, null, 10);
+        check(map.size() == 5, "no crew, no change");
+
+        // Every crew has an opposite and the pairing is mutual.
+        for (var c : Standing.Crew.values()) {
+            check(c.opposed().opposed() == c, "opposition is mutual: " + c);
+            check(Standing.Crew.byId(c.id) == c, "every crew is found by id: " + c);
+        }
+        check(Standing.Crew.byId("nobody") == null, "an unknown id is nobody");
+
+        // And standing is what rests a crew member's mood.
+        check(Npc.restingAggression(Npc.Role.BRUISER, -100, 0) > Npc.restingAggression(Npc.Role.BRUISER, 100, 0),
+                "a crew that hates you rests angrier");
+    }
 
     private static void npcs() {
         // Roles that cannot turn on you never do, whatever their aggression says.

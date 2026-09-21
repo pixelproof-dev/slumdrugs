@@ -111,6 +111,13 @@ public final class ModAttachments {
                     .serialize(MARKET_CODEC)
                     .build());
 
+    /** Standing with every crew. Kept through death: the crews remember too. */
+    public static final DeferredHolder<AttachmentType<?>, AttachmentType<Standings>> STANDINGS =
+            TYPES.register("standings", () -> AttachmentType.builder((java.util.function.Supplier<Standings>) Standings::new)
+                    .serialize(Standings.CODEC.fieldOf("standings"))
+                    .copyOnDeath()
+                    .build());
+
     /** Not copied on death: a villager that dies is gone, and their replacement is a new person. */
     public static final DeferredHolder<AttachmentType<?>, AttachmentType<NpcData>> NPC =
             TYPES.register("npc", () -> AttachmentType.builder(() -> NpcData.NONE)

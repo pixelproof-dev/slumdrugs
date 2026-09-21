@@ -1,5 +1,6 @@
 package dev.lucas.slumdrugs.mod;
 
+import dev.lucas.slumdrugs.sim.npc.Standing;
 import dev.lucas.slumdrugs.sim.player.Progression;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -44,6 +45,18 @@ public final class JournalItem extends Item {
         else
             player.sendSystemMessage(Component.translatable("journal.slumdrugs.gate_coin", gate.coinNeeded(), tierName(gate.next()))
                     .withStyle(ChatFormatting.GRAY));
+
+        var standings = Crews.of(player).all();
+        if (!standings.isEmpty()) {
+            var line = new StringBuilder();
+            standings.entrySet().stream().sorted(java.util.Map.Entry.comparingByKey()).forEach(e -> {
+                Standing.Crew crew = Standing.Crew.byId(e.getKey());
+                if (!line.isEmpty()) line.append(" · ");
+                line.append(crew != null ? crew.label : e.getKey()).append(' ').append(Math.round(e.getValue()));
+            });
+            player.sendSystemMessage(Component.translatable("journal.slumdrugs.standings", line.toString())
+                    .withStyle(ChatFormatting.GRAY));
+        }
 
         level.playSound(null, player.blockPosition(), SoundEvents.BOOK_PAGE_TURN, SoundSource.PLAYERS, 0.8f, 1.0f);
         return InteractionResult.SUCCESS;

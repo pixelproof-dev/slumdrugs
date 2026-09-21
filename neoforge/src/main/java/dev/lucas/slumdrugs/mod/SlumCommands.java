@@ -10,6 +10,7 @@ import dev.lucas.slumdrugs.sim.drug.Refining;
 import dev.lucas.slumdrugs.sim.drug.Strain;
 import dev.lucas.slumdrugs.sim.economy.Coin;
 import dev.lucas.slumdrugs.sim.npc.Npc;
+import dev.lucas.slumdrugs.sim.npc.Standing;
 import dev.lucas.slumdrugs.sim.player.Condition;
 import dev.lucas.slumdrugs.sim.player.Progression;
 import dev.lucas.slumdrugs.sim.player.Suspicion;
@@ -64,7 +65,8 @@ public final class SlumCommands {
                 .then(market())
                 .then(suspicion())
                 .then(coin())
-                .then(strain());
+                .then(strain())
+                .then(standing());
         event.getDispatcher().register(root);
         event.getDispatcher().register(Commands.literal("slumdrugs").redirect(event.getDispatcher().register(root)));
     }
@@ -676,6 +678,40 @@ public final class SlumCommands {
         ModComponents.withStrain(held, changed);
         reply(ctx, String.format("Line: potency %d, vigour %d, hardiness %d, subtlety %d",
                 changed.potency(), changed.vigour(), changed.hardiness(), changed.subtlety()));
+        return 1;
+    }
+
+    // ------------------------------------------------------------------ standing
+
+    private static LiteralArgumentBuilder<CommandSourceStack> standing() {
+        return Commands.literal("standing")
+                .then(Commands.literal("get").executes(ctx -> standingGet(ctx, ctx.getSource().getPlayerOrException())))
+                .then(Commands.literal("set").requires(Commands.hasPermission(OP))
+                        .then(Commands.argument("crew", StringArgumentType.word())
+                                .suggests((ctx, builder) -> SharedSuggestionProvider.suggest(
+                                        java.util.Arrays.stream(Standing.Crew.values()).map(c -> c.id).toList(), builder))
+                                .then(Commands.argument("value", DoubleArgumentType.doubleArg(Standing.MIN, Standing.MAX))
+                                        .executes(ctx -> standingSet(ctx, ctx.getSource().getPlayerOrException())))));
+    }
+
+    private static int standingGet(CommandContext<CommandSourceStack> ctx, ServerPlayer player) {
+        var all = Crews.of(player).all();
+        if (all.isEmpty()) {
+            reply(ctx, "No crew knows you yet");
+            return 1;
+        }
+        all.entrySet().stream().sorted(java.util.Map.Entry.comparingByKey()).forEach(e ->
+                reply(ctx, String.format("%s — %.0f%s", e.getKey(), e.getValue(), Standing.atWar(e.getValue()) ? " (war)" : "")));
+        return 1;
+    }
+
+    private static int standingSet(CommandContext<CommandSourceStack> ctx, ServerPlayer player) {
+        String crew = StringArgumentType.getString(ctx, "crew");
+        double value = DoubleArgumentType.getDouble(ctx, "value");
+        Standings standings = Crews.of(player);
+        standings.set(crew, value);
+        player.setData(ModAttachments.STANDINGS.get(), standings);
+        reply(ctx, "Standing with " + crew + " set to " + value);
         return 1;
     }
 

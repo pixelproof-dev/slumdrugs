@@ -106,5 +106,8 @@
   "message.slumdrugs.graft_mismatch": "The two parents must be the same plant.",
   "message.slumdrugs.graft_one_parent": "A cross needs two parents.",
   "tooltip.slumdrugs.strain": "Line — potency %s, vigour %s, hardiness %s, subtlety %s",
-  "tooltip.slumdrugs.potency": "Potency %s"
+  "tooltip.slumdrugs.potency": "Potency %s",
+  "message.slumdrugs.standing": "Standing with %s: %s.",
+  "message.slumdrugs.tribute": "%s pockets the %s.",
+  "journal.slumdrugs.standings": "Standing: %s"
 }

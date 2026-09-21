@@ -7,6 +7,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.npc.villager.Villager;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.AABB;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
@@ -30,6 +31,8 @@ public final class NpcTicker {
     private static final int DEMAND_INTERVAL = 20 * 10;
     private static final int ATTACK_INTERVAL = 20;
     private static final int REPRICE_INTERVAL = 20 * 60 * 5;
+    private static final int SPREAD_INTERVAL = 20 * 10;
+    private static final double SPREAD_RANGE = 8;
 
     private NpcTicker() {}
 
@@ -48,10 +51,24 @@ public final class NpcTicker {
         if (gameTime % REPRICE_INTERVAL == 0 && villager.getTradingPlayer() == null)
             NpcTrades.fill(villager, data.role());
 
-        // Moods drift back toward where this crew's standing puts them. Crew standing is not
-        // tracked yet, so neutral is the resting point for now.
-        double resting = Npc.restingAggression(data.role(), 0, 0);
+        Player nearest = level.getNearestPlayer(villager, NOTICE_RANGE);
+
+        // Moods drift back toward where this crew's standing with whoever is nearest puts
+        // them. Turf depth waits on turf; nobody stands deep in anything yet.
+        double standing = nearest == null ? 0 : Crews.standing(nearest, data);
+        double resting = Npc.restingAggression(data.role(), standing, 0);
         double settled = Npc.settle(data.aggression(), resting, INTERVAL / 20.0 / 60.0);
+
+        // A lieutenant's mood spreads to the crew around them, part of the way.
+        if (data.role() != Npc.Role.LIEUTENANT && !data.crew().isBlank() && gameTime % SPREAD_INTERVAL == 0) {
+            AABB near = villager.getBoundingBox().inflate(SPREAD_RANGE);
+            for (Villager boss : level.getEntitiesOfClass(Villager.class, near, Npcs::isOurs)) {
+                NpcData bossData = Npcs.data(boss);
+                if (bossData.role() == Npc.Role.LIEUTENANT && bossData.crew().equals(data.crew()))
+                    settled = Npc.spread(settled, bossData.aggression());
+            }
+        }
+
         if (settled != data.aggression()) {
             data = data.withAggression(settled);
             villager.setData(ModAttachments.NPC.get(), data);
@@ -59,8 +76,6 @@ public final class NpcTicker {
 
         Npc.Stance stance = data.stance();
         if (stance == Npc.Stance.CALM) return;
-
-        Player nearest = level.getNearestPlayer(villager, NOTICE_RANGE);
         if (nearest == null) return;
 
         villager.getLookControl().setLookAt(nearest);
@@ -90,6 +105,8 @@ public final class NpcTicker {
     public static void interact(PlayerInteractEvent.EntityInteract event) {
         if (!(event.getTarget() instanceof Villager villager) || !Npcs.isOurs(villager)) return;
         if (Npcs.data(villager).stance() == Npc.Stance.CALM) return;
+        // Coin in hand is tribute, and an angry crew member is exactly who takes it.
+        if (Purse.isCoin(event.getItemStack()) && !Npcs.data(villager).crew().isBlank()) return;
 
         event.setCanceled(true);
         if (event.getEntity() instanceof ServerPlayer player)
