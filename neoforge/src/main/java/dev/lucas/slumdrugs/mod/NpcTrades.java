@@ -1,6 +1,7 @@
 package dev.lucas.slumdrugs.mod;
 
 import dev.lucas.slumdrugs.sim.drug.Quality;
+import dev.lucas.slumdrugs.sim.drug.Sealing;
 import dev.lucas.slumdrugs.sim.npc.Npc;
 import net.minecraft.world.entity.npc.villager.Villager;
 import net.minecraft.world.item.ItemStack;
@@ -45,9 +46,14 @@ public final class NpcTrades {
                     offers.add(buy(ModItems.get("raw_" + drug).get(), 4, price(drug, 0.8)));
             }
             case BROKER -> {
-                // Buys finished goods at a cut, sells what the shops will not stock.
+                // Buys finished goods at a cut, sells what the shops will not stock. A sealed
+                // parcel is the wholesale unit and pays better per unit than loose goods: the
+                // seal is what the broker is paying for, since it names who to blame.
                 for (String drug : ModItems.SUBSTANCES)
                     offers.add(buy(ModItems.get("product_" + drug).get(), 1, price(drug, 1.2)));
+                for (String drug : ModItems.SUBSTANCES)
+                    offers.add(buy(ModItems.get("package_" + drug).get(), 1,
+                            price(drug, 1.4 * Sealing.UNITS_PER_PARCEL)));
                 offers.add(sell(Items.CHARCOAL, 4, 1));
                 offers.add(sell(ModItems.get("seed_sunleaf").get(), 1, price("sunleaf", 2.5)));
             }

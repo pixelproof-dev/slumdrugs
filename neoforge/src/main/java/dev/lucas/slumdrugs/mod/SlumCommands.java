@@ -9,6 +9,7 @@ import dev.lucas.slumdrugs.sim.drug.Cultivation;
 import dev.lucas.slumdrugs.sim.drug.Refining;
 import dev.lucas.slumdrugs.sim.npc.Npc;
 import dev.lucas.slumdrugs.sim.player.Condition;
+import dev.lucas.slumdrugs.sim.player.Progression;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
@@ -55,7 +56,8 @@ public final class SlumCommands {
                 .then(npc())
                 .then(frame())
                 .then(refine())
-                .then(structure());
+                .then(structure())
+                .then(progress());
         event.getDispatcher().register(root);
         event.getDispatcher().register(Commands.literal("slumdrugs").redirect(event.getDispatcher().register(root)));
     }
@@ -164,6 +166,7 @@ public final class SlumCommands {
                     return 0;
                 }
             }
+            player.syncData(ModAttachments.CONDITION.get());
         }
         reply(ctx, "Set " + field + " on " + targets.size() + " player(s)");
         return targets.size();
@@ -175,6 +178,7 @@ public final class SlumCommands {
             c.intoxication = 0;
             c.tolerance = 0;
             c.dependence = 0;
+            player.syncData(ModAttachments.CONDITION.get());
         }
         reply(ctx, "Cleared " + targets.size() + " player(s)");
         return targets.size();
@@ -454,6 +458,69 @@ public final class SlumCommands {
                 result.units(), result.quality(), result.wasteUnits(), result.compostQuality(),
                 method.seconds(false)));
         return 1;
+    }
+
+    // ------------------------------------------------------------------ progress
+
+    /** Where a player stands on the ladder, and a way to move them for testing. */
+    private static LiteralArgumentBuilder<CommandSourceStack> progress() {
+        return Commands.literal("progress")
+                .then(Commands.literal("get")
+                        .executes(ctx -> progressGet(ctx, List.of(ctx.getSource().getPlayerOrException())))
+                        .then(Commands.argument("targets", EntityArgument.players())
+                                .requires(Commands.hasPermission(OP))
+                                .executes(ctx -> progressGet(ctx, EntityArgument.getPlayers(ctx, "targets")))))
+                .then(Commands.literal("set").requires(Commands.hasPermission(OP))
+                        .then(Commands.argument("field", StringArgumentType.word())
+                                .suggests((ctx, builder) -> SharedSuggestionProvider.suggest(List.of("units", "coin"), builder))
+                                .then(Commands.argument("value", IntegerArgumentType.integer(0))
+                                        .executes(ctx -> progressSet(ctx, List.of(ctx.getSource().getPlayerOrException())))
+                                        .then(Commands.argument("targets", EntityArgument.players())
+                                                .executes(ctx -> progressSet(ctx, EntityArgument.getPlayers(ctx, "targets")))))))
+                .then(Commands.literal("reset").requires(Commands.hasPermission(OP))
+                        .executes(ctx -> progressReset(ctx, List.of(ctx.getSource().getPlayerOrException())))
+                        .then(Commands.argument("targets", EntityArgument.players())
+                                .executes(ctx -> progressReset(ctx, EntityArgument.getPlayers(ctx, "targets")))));
+    }
+
+    private static int progressGet(CommandContext<CommandSourceStack> ctx, Collection<ServerPlayer> targets) {
+        for (ServerPlayer player : targets) {
+            Progression p = player.getData(ModAttachments.PROGRESSION.get());
+            var gate = p.gate();
+            String next = !gate.reachable() ? "the ladder ends here for now"
+                    : gate.unitsNeeded() > 0 ? gate.unitsNeeded() + " more units to " + gate.next().label
+                    : gate.coinNeeded() + " more coin to " + gate.next().label;
+            reply(ctx, String.format("%s — %s: %d units sold, %d coin earned; %s",
+                    player.getName().getString(), p.tier().label, p.unitsSold, p.coinEarned, next));
+        }
+        return targets.size();
+    }
+
+    private static int progressSet(CommandContext<CommandSourceStack> ctx, Collection<ServerPlayer> targets) {
+        String field = StringArgumentType.getString(ctx, "field");
+        int value = IntegerArgumentType.getInteger(ctx, "value");
+        if (!field.equals("units") && !field.equals("coin")) {
+            ctx.getSource().sendFailure(Component.literal("No such field: " + field));
+            return 0;
+        }
+        for (ServerPlayer player : targets) {
+            Progression p = player.getData(ModAttachments.PROGRESSION.get());
+            if (field.equals("units")) p.unitsSold = value; else p.coinEarned = value;
+            player.syncData(ModAttachments.PROGRESSION.get());
+        }
+        reply(ctx, "Set " + field + " to " + value + " on " + targets.size() + " player(s)");
+        return targets.size();
+    }
+
+    private static int progressReset(CommandContext<CommandSourceStack> ctx, Collection<ServerPlayer> targets) {
+        for (ServerPlayer player : targets) {
+            Progression p = player.getData(ModAttachments.PROGRESSION.get());
+            p.unitsSold = 0;
+            p.coinEarned = 0;
+            player.syncData(ModAttachments.PROGRESSION.get());
+        }
+        reply(ctx, "Reset " + targets.size() + " player(s) to hand to mouth");
+        return targets.size();
     }
 
     // ------------------------------------------------------------------ helpers

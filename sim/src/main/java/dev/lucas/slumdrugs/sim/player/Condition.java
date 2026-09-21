@@ -110,6 +110,24 @@ public final class Condition {
         return 1;
     }
 
+    /**
+     * Minutes until withdrawal would start if the player stays clean, or -1 when their
+     * dependence is too low for it to start at all. Zero once it has started.
+     */
+    public double minutesUntilWithdrawal(long now, Settings settings) {
+        if (dependence < WITHDRAWAL_MIN) return -1;
+        return Math.max(0, (settings.withdrawalDelayMillis() - (now - lastUse)) / 60000.0);
+    }
+
+    /**
+     * Minutes of withdrawal left at the plain decay rate, which is the honest estimate for a
+     * player who does not sleep: dependence has to fall back under the threshold.
+     */
+    public double withdrawalMinutesLeft(Settings settings) {
+        if (dependence < WITHDRAWAL_MIN || settings.dependenceDecayPerMinute() <= 0) return 0;
+        return (dependence - WITHDRAWAL_MIN) / settings.dependenceDecayPerMinute();
+    }
+
     /** A full night's sleep speeds recovery for a while. */
     public void slept(long now) { lastSleep = now; }
 

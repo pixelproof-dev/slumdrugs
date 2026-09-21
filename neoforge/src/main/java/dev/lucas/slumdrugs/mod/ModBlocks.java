@@ -1,5 +1,6 @@
 package dev.lucas.slumdrugs.mod;
 
+import dev.lucas.slumdrugs.sim.player.Progression;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
@@ -38,13 +39,15 @@ public final class ModBlocks {
                     .sound(SoundType.COPPER));
 
     static {
-        // Block items live in the item registry and in the creative tab, in this order.
-        ModItems.blockItem("forcing_frame", FORCING_FRAME);
-        ModItems.blockItem("drying_loft", DRYING_LOFT);
-        ModItems.blockItem("pressing_bench", PRESSING_BENCH);
-        ModItems.blockItem("sealing_press", SEALING_PRESS);
-        ModItems.blockItem("storage_crate", STORAGE_CRATE);
-        ModItems.blockItem("centrifuge", CENTRIFUGE);
+        // Block items live in the item registry and in the creative tab, in this order. The
+        // tier is the one that lets a player set the station up; see Progression for why the
+        // frame and the loft are open from the start.
+        ModItems.blockItem("forcing_frame", FORCING_FRAME, Progression.Tier.HAND_TO_MOUTH);
+        ModItems.blockItem("drying_loft", DRYING_LOFT, Progression.Tier.HAND_TO_MOUTH);
+        ModItems.blockItem("pressing_bench", PRESSING_BENCH, Progression.Tier.WORKSHOP);
+        ModItems.blockItem("sealing_press", SEALING_PRESS, Progression.Tier.WORKSHOP);
+        ModItems.blockItem("storage_crate", STORAGE_CRATE, Progression.Tier.WORKSHOP);
+        ModItems.blockItem("centrifuge", CENTRIFUGE, Progression.Tier.WORKSHOP);
     }
 
     private ModBlocks() {}

@@ -69,6 +69,7 @@ public final class ProductItem extends Item {
         level.playSound(null, player.blockPosition(), SoundEvents.GENERIC_DRINK.value(),
                 SoundSource.PLAYERS, 0.6f, 1.1f);
         stack.consume(1, player);
+        player.syncData(ModAttachments.CONDITION.get());
         return InteractionResult.SUCCESS;
     }
 }

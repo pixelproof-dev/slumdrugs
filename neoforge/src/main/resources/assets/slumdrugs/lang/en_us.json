@@ -50,5 +50,22 @@
   "tooltip.slumdrugs.grade.premium": "Premium",
   "tooltip.slumdrugs.grower": "Grown by %s",
   "tooltip.slumdrugs.parcel": "%s units under wax",
-  "tooltip.slumdrugs.seal": "Sealed by %s"
+  "tooltip.slumdrugs.seal": "Sealed by %s",
+  "item.slumdrugs.journal": "Journal",
+  "tier.slumdrugs.hand_to_mouth": "Hand to mouth",
+  "tier.slumdrugs.backroom": "Backroom",
+  "tier.slumdrugs.workshop": "Workshop",
+  "tier.slumdrugs.apothecary": "Apothecary",
+  "tier.slumdrugs.guild": "Guild",
+  "tier.slumdrugs.kingpin": "Kingpin",
+  "message.slumdrugs.tier_locked": "A %s is beyond you until you reach %s.",
+  "message.slumdrugs.tier_reached": "You have come up in the world: %s.",
+  "journal.slumdrugs.heading": "Journal — %s",
+  "journal.slumdrugs.sold": "%s units sold, %s coin earned.",
+  "journal.slumdrugs.gate_units": "%s more units sold opens the %s.",
+  "journal.slumdrugs.gate_coin": "%s more coin earned opens the %s.",
+  "journal.slumdrugs.ceiling": "The %s waits on standing and turf, which are not yet yours to earn.",
+  "hud.slumdrugs.intoxication": "Intoxication %s",
+  "hud.slumdrugs.until_withdrawal": "Steady for %s min",
+  "hud.slumdrugs.withdrawal": "Withdrawal %s — %s min"
 }

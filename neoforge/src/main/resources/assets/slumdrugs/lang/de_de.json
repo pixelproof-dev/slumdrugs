@@ -50,5 +50,22 @@
   "tooltip.slumdrugs.grade.premium": "Erlesen",
   "tooltip.slumdrugs.grower": "Angebaut von %s",
   "tooltip.slumdrugs.parcel": "%s Einheiten unter Wachs",
-  "tooltip.slumdrugs.seal": "Versiegelt von %s"
+  "tooltip.slumdrugs.seal": "Versiegelt von %s",
+  "item.slumdrugs.journal": "Journal",
+  "tier.slumdrugs.hand_to_mouth": "Von der Hand in den Mund",
+  "tier.slumdrugs.backroom": "Hinterzimmer",
+  "tier.slumdrugs.workshop": "Werkstatt",
+  "tier.slumdrugs.apothecary": "Apotheke",
+  "tier.slumdrugs.guild": "Gilde",
+  "tier.slumdrugs.kingpin": "Pate",
+  "message.slumdrugs.tier_locked": "%s ist nichts für dich, bis du %s erreicht hast.",
+  "message.slumdrugs.tier_reached": "Du bist aufgestiegen: %s.",
+  "journal.slumdrugs.heading": "Journal — %s",
+  "journal.slumdrugs.sold": "%s Einheiten verkauft, %s Münzen verdient.",
+  "journal.slumdrugs.gate_units": "Noch %s verkaufte Einheiten öffnen %s.",
+  "journal.slumdrugs.gate_coin": "Noch %s verdiente Münzen öffnen %s.",
+  "journal.slumdrugs.ceiling": "%s wartet auf Ansehen und Revier, die du noch nicht erwerben kannst.",
+  "hud.slumdrugs.intoxication": "Rausch %s",
+  "hud.slumdrugs.until_withdrawal": "Noch %s min ruhig",
+  "hud.slumdrugs.withdrawal": "Entzug %s — %s min"
 }

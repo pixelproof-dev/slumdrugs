@@ -1,5 +1,6 @@
 package dev.lucas.slumdrugs.mod;
 
+import dev.lucas.slumdrugs.sim.player.Progression;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.neoforged.neoforge.registries.DeferredBlock;
@@ -52,11 +53,17 @@ public final class ModItems {
         }
         simple("fertilizer");
         simple("remedy");
+        REGISTERED.put("journal", ITEMS.registerItem("journal", JournalItem::new, p -> p.stacksTo(1)));
     }
 
-    /** Registers the item that places a block, and lists it in the creative tab with the rest. */
-    static void blockItem(String name, DeferredBlock<? extends Block> block) {
-        REGISTERED.put(name, ITEMS.registerSimpleBlockItem(block));
+    /**
+     * Registers the item that places a station, gated on the tier that unlocks it, and lists it
+     * in the creative tab with the rest.
+     */
+    static void blockItem(String name, DeferredBlock<? extends Block> block, Progression.Tier tier) {
+        REGISTERED.put(name, ITEMS.registerItem(name,
+                props -> new StationBlockItem(block.get(), tier, props),
+                Item.Properties::useBlockDescriptionPrefix));
     }
 
     /** Registration order, which is also the order they appear in the creative tab. */

@@ -9,6 +9,7 @@ import dev.lucas.slumdrugs.sim.drug.UnitTransfer;
 import dev.lucas.slumdrugs.sim.economy.MarketState;
 import dev.lucas.slumdrugs.sim.npc.Npc;
 import dev.lucas.slumdrugs.sim.player.Condition;
+import dev.lucas.slumdrugs.sim.player.Progression;
 import dev.lucas.slumdrugs.sim.player.Recovery;
 import dev.lucas.slumdrugs.sim.station.GrowboxState;
 import dev.lucas.slumdrugs.sim.world.RoomFlood;
@@ -38,6 +39,8 @@ public final class SimChecks {
         growbox();
         recovery();
         condition();
+        withdrawalTimers();
+        progression();
         unitTransfer();
         quality();
         cultivation();
@@ -209,6 +212,75 @@ public final class SimChecks {
         rejected = false;
         try { new Condition.Settings(1, 1, 1, 0, 0, 0, 0.5); } catch (IllegalArgumentException e) { rejected = true; }
         check(rejected, "rest must not slow recovery");
+    }
+
+    // ---------------------------------------------------------------- withdrawal timers
+
+    private static void withdrawalTimers() {
+        long minute = 60000L;
+        var settings = Condition.Settings.defaults();
+
+        // Below the threshold there is nothing to count down to.
+        var light = new Condition(0, 0, 30);
+        check(light.minutesUntilWithdrawal(minute, settings) == -1, "no withdrawal clock without dependence");
+        check(light.withdrawalMinutesLeft(settings) == 0, "nothing left of a withdrawal that cannot start");
+
+        // Above it, the clock runs from the last use down to the delay, and stops at zero.
+        var heavy = new Condition(0, 0, 60);
+        heavy.lastUse = 10 * minute;
+        close(heavy.minutesUntilWithdrawal(10 * minute, settings), settings.withdrawalDelayMillis() / (double) minute,
+                "the whole delay remains right after using");
+        close(heavy.minutesUntilWithdrawal(20 * minute, settings), settings.withdrawalDelayMillis() / (double) minute - 10,
+                "ten minutes on, ten fewer remain");
+        check(heavy.minutesUntilWithdrawal(1000 * minute, settings) == 0, "the clock stops at zero");
+        check(heavy.withdrawing(1000 * minute, settings), "and withdrawal has begun by then");
+
+        // What is left is the distance back to the threshold at the plain decay rate.
+        close(heavy.withdrawalMinutesLeft(settings), 20 / settings.dependenceDecayPerMinute(),
+                "twenty points over the threshold at the plain rate");
+        check(new Condition(0, 0, 100).withdrawalMinutesLeft(settings) > heavy.withdrawalMinutesLeft(settings),
+                "deeper dependence takes longer");
+    }
+
+    // ---------------------------------------------------------------- progression
+
+    private static void progression() {
+        var p = new Progression();
+        check(p.tier() == Progression.Tier.HAND_TO_MOUTH, "everyone starts hand to mouth");
+        check(p.gate().next() == Progression.Tier.BACKROOM && p.gate().unitsNeeded() == Progression.BACKROOM_UNITS,
+                "the first gate is units sold");
+
+        // Coin alone does not open the backroom; units do.
+        p.sold(0, 1000);
+        check(p.tier() == Progression.Tier.HAND_TO_MOUTH, "coin without sales opens nothing");
+        p.sold(Progression.BACKROOM_UNITS - 1, 0);
+        check(p.tier() == Progression.Tier.HAND_TO_MOUTH, "one unit short is short");
+        p.sold(1, 0);
+        check(p.tier() == Progression.Tier.WORKSHOP, "with the coin already banked, the units open both doors");
+
+        // The usual order: units first, then coin.
+        var q = new Progression(Progression.BACKROOM_UNITS, 0);
+        check(q.tier() == Progression.Tier.BACKROOM, "twenty units is the backroom");
+        check(q.gate().coinNeeded() == Progression.WORKSHOP_COIN && q.gate().unitsNeeded() == 0,
+                "the second gate is coin");
+        q.sold(0, Progression.WORKSHOP_COIN);
+        check(q.tier() == Progression.Tier.WORKSHOP, "sixty coin is the workshop");
+        check(q.reached(Progression.Tier.BACKROOM) && !q.reached(Progression.Tier.APOTHECARY),
+                "reached counts every tier below");
+
+        // The ladder ends where the systems it needs end, and says so.
+        var gate = q.gate();
+        check(!gate.reachable() && gate.next() == Progression.Tier.APOTHECARY, "the apothecary is not reachable yet");
+        q.sold(100000, 100000);
+        check(q.tier() == Progression.REACHABLE, "no amount of trade passes the reachable tier");
+
+        // Sales never count backwards, and the labels read.
+        var r = new Progression(5, 5);
+        r.sold(-3, -3);
+        check(r.unitsSold == 5 && r.coinEarned == 5, "a refund is not a sale undone");
+        check(new Progression(-1, -1).unitsSold == 0, "counters never start negative");
+        check(Progression.Tier.KINGPIN.next() == Progression.Tier.KINGPIN, "the top has no next");
+        for (var t : Progression.Tier.values()) check(!t.label.isBlank(), "every tier has a name");
     }
 
     // ---------------------------------------------------------------- unit transfer

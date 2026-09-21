@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "I": "minecraft:iron_ingot",
+    "P": "#minecraft:planks",
+    "S": "minecraft:smooth_stone"
+  },
+  "pattern": [
+    " I ",
+    "III",
+    "PSP"
+  ],
+  "result": {
+    "id": "slumdrugs:pressing_bench"
+  }
+}

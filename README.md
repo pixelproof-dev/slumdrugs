@@ -10,14 +10,19 @@ quarter lit by lanterns, next to a vanilla village.
 
 ## Status
 
-Builds and packages. **It has never been launched** — no client or server has run it, so
-treat everything below as untested in play.
+Builds and packages, and has run in a local dev client. Everything below compiles and passes
+the simulation checks; only the forcing frame, the centrifuge and the trader house have been
+seen working in play so far.
 
 Working today:
 
-- 22 items with quality and grower carried as real data components
-- 6 blocks: a forcing frame with five growth stages, drying loft, pressing bench, sealing
-  press, storage crate, and a centrifuge laid out like a brewing stand
+- 23 items with quality, grower and seal carried as real data components, shown on tooltips
+- 6 working stations, all craftable: a forcing frame with five growth stages, a drying loft
+  whose rails show what hangs, a hand-worked pressing bench, a sealing press that stamps
+  parcels with the sealer's name, a storage crate, and a centrifuge laid out like a brewing stand
+- A three-step tier ladder gating the workshop stations on units sold and coin earned, read
+  back through a journal item
+- A condition HUD: intoxication meter, craving pip, withdrawal timer
 - Cultivation where seed, soil and compost decide both the quality and the size of a harvest
 - Refining: press, centrifuge and still, each trading volume for strength, with spent mash
   returning as compost
@@ -34,7 +39,7 @@ Working today:
 Needs nothing but the wrapper; Gradle fetches Java 25 and NeoForge itself.
 
 ```
-sim/        the simulation: no Minecraft, no loader, no I/O — 85,866 assertions, about a second
+sim/        the simulation: no Minecraft, no loader, no I/O — 86,396 assertions, about a second
 neoforge/   the platform layer: registries, blocks, block entities, commands, NPCs
 ```
 

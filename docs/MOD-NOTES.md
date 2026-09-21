@@ -23,7 +23,7 @@ the platform layer, not here.
 ./gradlew check
 ```
 
-Runs `SimChecks`, a plain `main()` with no test framework, currently 85,866 assertions.
+Runs `SimChecks`, a plain `main()` with no test framework, currently 86,396 assertions.
 A failure prints the label of the rule that broke.
 
 ## Status
@@ -78,6 +78,57 @@ the loft long past done slowly loses quality, and none of the stations tick exce
 centrifuge; the loft and the presses only move when someone moves them. Breaking any station
 drops what it held. The rules behind them are `Drying`, `Sealing` and `Refining` in `sim`.
 
+Every station has a crafting recipe under `data/slumdrugs/recipe/`: wood, glass and string
+for the frame and the loft, iron and copper on wood for the workshop pieces. Brokers buy
+sealed parcels at a better rate per unit than loose goods; customers only take loose goods.
+
+### Progression
+
+`Progression` in `sim` turns two counters — units sold and coin earned through the merchant
+screen — into a tier, and the tier decides which stations a player may set up. The gate is
+on placing, not crafting: `StationBlockItem` refuses with a message, and creative players
+are never gated.
+
+| Tier | Opens at | Unlocks |
+| --- | --- | --- |
+| Hand to mouth | start | Forcing frame, drying loft |
+| Backroom | 20 units sold | nothing yet; the design's first regulars and journal go here |
+| Workshop | 60 coin earned | Pressing bench, sealing press, storage crate, centrifuge |
+| Apothecary and up | not reachable | needs standing, turf and influence, none of which exist |
+
+Two deliberate departures from the design document, both to be tightened when the systems
+they wait on land: tier 0's pots and hand-drying do not exist, so the frame and the loft are
+open from the start; and standing is not modelled, so the Workshop opens on coin alone.
+
+The **journal** item reads the tier, the counters and the next gate back to the player in
+chat. It has an art prompt but no drawing yet, so its model borrows the vanilla writable
+book. `SalesLedger` does the counting from `TradeWithVillagerEvent`: only the mod's goods
+count as units, only emeralds as coin, so buying seed moves nothing.
+
+### The condition HUD
+
+`ConditionHud` is a GUI layer in the bottom-left corner: an intoxication meter that turns red
+near the overdose line, a pip that lights while craving, and a line above that reads either
+the intoxication, the minutes until withdrawal starts, or the withdrawal's severity and the
+minutes it has left. It draws nothing for a sober, clean player.
+
+The numbers come from the `Condition` attachment, which is now synced to its owner through
+NeoForge's attachment sync (`AttachmentType.Builder#sync`). Sync is not automatic: every
+place that writes the condition calls `syncData` afterwards — the ticker once a second, the
+product item on use, and the condition commands. `Progression` is synced the same way.
+
+### Parked
+
+- **Residents for the trader house.** The house places, but nobody lives in it; villagers of
+  ours still only come from `/slum npc spawn`. The house should bring its trader with it when
+  it generates. This waits on the village wiring, which exists locally and is not merged yet,
+  because both touch structure placement.
+- **Spawn pool for the house's chests.** A chest loot table is ready at
+  `data/slumdrugs/loot_table/chests/trader_house.json`: seed, compost, honeycomb, charcoal, a
+  few emeralds, and once in a while a remedy or a journal. It is not referenced yet: the chests
+  in `trader_house.nbt` need their `LootTable` tag set to `slumdrugs:chests/trader_house`
+  when the structure is next exported, which is a structure edit rather than code.
+
 ### Writing against 26.3
 
 Minecraft 26.3 postdates any model's training data, so every API here was read out of the
@@ -123,6 +174,9 @@ do not.
 | `/slum frame water <seconds>` | Set its water |
 | `/slum refine <method> <quality> <units>` | A dry run against the rules — no blocks needed |
 | `/slum structure place <piece> [rotation]` | Places a saved building, sunk so its ground floor meets the terrain |
+| `/slum progress get [targets]` | Tier, units sold, coin earned, and what the next gate costs |
+| `/slum progress set units\|coin <value> [targets]` | Move a player up or down the ladder |
+| `/slum progress reset [targets]` | Back to hand to mouth |
 
 `/slum refine` and `/slum frame info` exist to check the simulation against the numbers on a
 running server without building anything, which matters while no client has been launched.

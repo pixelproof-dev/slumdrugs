@@ -3,6 +3,10 @@ package dev.lucas.slumdrugs.mod;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.lucas.slumdrugs.sim.player.Condition;
+import dev.lucas.slumdrugs.sim.player.Progression;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 import net.neoforged.neoforge.attachment.AttachmentType;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -23,14 +27,46 @@ public final class ModAttachments {
                     Codec.LONG.fieldOf("last_sleep").forGetter(c -> c.lastSleep)
             ).apply(instance, Condition::of));
 
+    /** The same five fields over the wire, for the HUD. Sent to the player it belongs to and nobody else. */
+    private static final StreamCodec<RegistryFriendlyByteBuf, Condition> CONDITION_STREAM = StreamCodec.composite(
+            ByteBufCodecs.DOUBLE, c -> c.intoxication,
+            ByteBufCodecs.DOUBLE, c -> c.tolerance,
+            ByteBufCodecs.DOUBLE, c -> c.dependence,
+            ByteBufCodecs.VAR_LONG, c -> c.lastUse,
+            ByteBufCodecs.VAR_LONG, c -> c.lastSleep,
+            Condition::of);
+
     /**
      * Kept through death on purpose: dying does not cure anyone, and a player who could reset
      * their dependence by dying would never engage with recovery at all.
+     *
+     * <p>Synced to its owner only, and only when the server says so: whoever changes the
+     * condition calls {@code syncData} afterwards.
      */
     public static final DeferredHolder<AttachmentType<?>, AttachmentType<Condition>> CONDITION =
             TYPES.register("condition", () -> AttachmentType.builder(Condition::new)
                     .serialize(CONDITION_CODEC)
                     .copyOnDeath()
+                    .sync((holder, to) -> holder == to, CONDITION_STREAM)
+                    .build());
+
+    private static final com.mojang.serialization.MapCodec<Progression> PROGRESSION_CODEC =
+            RecordCodecBuilder.mapCodec(instance -> instance.group(
+                    Codec.INT.fieldOf("units_sold").forGetter(p -> p.unitsSold),
+                    Codec.INT.fieldOf("coin_earned").forGetter(p -> p.coinEarned)
+            ).apply(instance, Progression::new));
+
+    private static final StreamCodec<RegistryFriendlyByteBuf, Progression> PROGRESSION_STREAM = StreamCodec.composite(
+            ByteBufCodecs.VAR_INT, p -> p.unitsSold,
+            ByteBufCodecs.VAR_INT, p -> p.coinEarned,
+            Progression::new);
+
+    /** What a player has sold and earned, and so which tier they stand on. Death does not demote anyone. */
+    public static final DeferredHolder<AttachmentType<?>, AttachmentType<Progression>> PROGRESSION =
+            TYPES.register("progression", () -> AttachmentType.builder(Progression::new)
+                    .serialize(PROGRESSION_CODEC)
+                    .copyOnDeath()
+                    .sync((holder, to) -> holder == to, PROGRESSION_STREAM)
                     .build());
 
     /** Not copied on death: a villager that dies is gone, and their replacement is a new person. */

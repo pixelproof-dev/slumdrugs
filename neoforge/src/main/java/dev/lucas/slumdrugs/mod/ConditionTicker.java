@@ -41,6 +41,8 @@ public final class ConditionTicker {
         long now = gameTime * 50L;
         long previous = Math.max(condition.lastUse, now - INTERVAL * 50L);
         condition.advance(previous, now, settings);
+        // Once a second, to the owner only: what the HUD draws.
+        player.syncData(ModAttachments.CONDITION.get());
 
         int severity = condition.withdrawalSeverity(now, settings);
         if (severity > 0) {

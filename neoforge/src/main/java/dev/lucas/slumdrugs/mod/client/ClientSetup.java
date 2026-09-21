@@ -8,11 +8,14 @@ import dev.lucas.slumdrugs.sim.drug.Quality;
 import dev.lucas.slumdrugs.sim.drug.Sealing;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
+import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
 
 /**
@@ -28,6 +31,12 @@ public final class ClientSetup {
     @SubscribeEvent
     public static void registerScreens(RegisterMenuScreensEvent event) {
         event.register(ModMenus.CENTRIFUGE.get(), CentrifugeScreen::new);
+    }
+
+    @SubscribeEvent
+    public static void registerHud(RegisterGuiLayersEvent event) {
+        event.registerAbove(VanillaGuiLayers.EFFECTS,
+                Identifier.fromNamespaceAndPath(SlumDrugsMod.ID, "condition"), new ConditionHud());
     }
 
     /**
