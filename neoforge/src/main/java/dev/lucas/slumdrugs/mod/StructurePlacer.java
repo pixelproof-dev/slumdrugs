@@ -66,12 +66,30 @@ public final class StructurePlacer {
     /** A resident's house, generated: footing at 0, the floor layer at 1, a resident inside and a regular at the door. */
     public static final Piece RESIDENT_HOUSE = piece("resident_house", 2);
 
+    /**
+     * Cut out of a downloaded world with {@code tools/cut_structure.py}, one layer of earth
+     * below the ground they stand on, so the offset is the generated pieces' 2. No markers yet.
+     */
+    public static final Piece TRADE_HALL = piece("trade_hall", 2);
+    public static final Piece STEAMPUNK_FARM = piece("steampunk_farm", 2);
+
+    /**
+     * Converted from a WorldEdit file. Its street is three layers of earth deep, so the level
+     * a person walks on is the fourth. WorldEdit's own reader cannot open this one — its data
+     * fixer fails on a block state from 2230 — but the game's fixer manages, which is why the
+     * converter carries the source version through rather than resolving anything itself.
+     */
+    public static final Piece POLICE_STATION = piece("police_station", 4);
+
     /** Every piece by its short name, in the order the command lists them. */
     public static final Map<String, Piece> PIECES = new LinkedHashMap<>();
 
     static {
         PIECES.put("trader_house", TRADER_HOUSE);
         PIECES.put("resident_house", RESIDENT_HOUSE);
+        PIECES.put("trade_hall", TRADE_HALL);
+        PIECES.put("steampunk_farm", STEAMPUNK_FARM);
+        PIECES.put("police_station", POLICE_STATION);
     }
 
     private StructurePlacer() {}
@@ -152,6 +170,12 @@ public final class StructurePlacer {
                 new BlockPos(ok.cornerX(), ok.cornerY(), ok.cornerZ()),
                 new Vec3i(ok.footprint().x(), ok.footprint().y(), ok.footprint().z()),
                 people);
+    }
+
+    /** A piece's own size, or null when its file is missing. The placer needs it to pick a plot. */
+    public static Vec3i sizeOf(ServerLevel level, Piece piece) {
+        return level.getServer().getStructureTemplateManager().get(piece.id())
+                .map(StructureTemplate::getSize).orElse(null);
     }
 
     /** Turns every marker in the box into the person it names. Returns how many. */
