@@ -155,9 +155,9 @@ def resident_house():
     b.set(5, 2, 10, 'air')
     # Hearth and chimney on the west wall.
     b.fill(1, 1, 5, 1, 10, 5, 'bricks')
-    b.set(1, 2, 4, 'bricks'); b.set(1, 2, 6, 'bricks')
+    b.set(2, 2, 4, 'bricks'); b.set(2, 2, 6, 'bricks')          # the hearth's cheeks, inside the room
     b.set(2, 2, 5, 'campfire', {'facing': 'north', 'lit': 'true', 'signal_fire': 'false', 'waterlogged': 'false'})
-    b.set(2, 3, 5, 'bricks')
+    b.set(2, 3, 5, 'bricks')                                     # the hood over the fire
     b.set(2, 4, 5, 'bricks')
     # The roof: a gable with the ridge along x at z=5, four courses each side, eaves at z=0 and z=10.
     for k in range(5):
