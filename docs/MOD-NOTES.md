@@ -276,6 +276,18 @@ you have lost buys nothing and mentions to the Watch that you asked. Left alone,
 drifts back toward indifference. `/slum npc list` shows each customer's want, floor and
 loyalty. Schedules, haunts and informants proper are not built.
 
+### The street talks
+
+Pass within four blocks of one of ours, in their line of sight, and they may say a line in
+chat, grey and italic, with their name. `Barks` picks the line from what they can see of
+you: a regular's loyalty and whether you carry what they want; the street's demand for a
+broker; the weather and your tier for the trader; your dependence for the healer; your
+suspicion and your bribes for a constable; a crew member's stance and your standing; the
+time of day and your heat for a resident. A hostile crew member says nothing, because he is
+already swinging. One line per person every three minutes, never more than one every half
+minute at the listener. The lines are lang keys `bark.slumdrugs.<context>.<1-3>`, 29 contexts
+by three, in both languages; nothing here changes any state.
+
 ### Progression
 
 `Progression` in `sim` turns two counters — units sold and coin earned through the merchant

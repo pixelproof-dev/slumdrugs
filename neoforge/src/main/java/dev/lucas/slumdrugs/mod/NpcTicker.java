@@ -81,6 +81,9 @@ public final class NpcTicker {
             villager.setData(ModAttachments.NPC.get(), data);
         }
 
+        // A word in passing, from anyone close enough, about what they see of you.
+        if (nearest instanceof ServerPlayer listener) Barks.maybe(level, villager, data, listener);
+
         Npc.Stance stance = data.stance();
         if (stance == Npc.Stance.CALM) return;
         if (nearest == null) return;
