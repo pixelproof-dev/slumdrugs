@@ -2,7 +2,6 @@ package dev.lucas.slumdrugs.mod;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -42,7 +41,7 @@ public final class CuttingBenchBlock extends BaseEntityBlock {
             return InteractionResult.SUCCESS;
         }
         stack.consume(taken, player);
-        level.playSound(null, pos, filler ? SoundEvents.SAND_PLACE : SoundEvents.WOOL_PLACE,
+        level.playSound(null, pos, filler ? ModSounds.CUTTING_FILLER.get() : ModSounds.CUTTING_LOAD.get(),
                 SoundSource.BLOCKS, 0.8f, 1.0f);
         return InteractionResult.SUCCESS;
     }
@@ -65,7 +64,7 @@ public final class CuttingBenchBlock extends BaseEntityBlock {
         }
         ItemStack out = bench.cut();
         if (!out.isEmpty()) popResource(level, pos, out);
-        level.playSound(null, pos, SoundEvents.GRINDSTONE_USE, SoundSource.BLOCKS, 0.7f, 1.3f);
+        level.playSound(null, pos, ModSounds.CUTTING_CHOP.get(), SoundSource.BLOCKS, 0.7f, 1.3f);
         return InteractionResult.SUCCESS;
     }
 }

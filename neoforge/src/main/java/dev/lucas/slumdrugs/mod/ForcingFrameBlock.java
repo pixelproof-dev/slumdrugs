@@ -14,7 +14,9 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.Nullable;
@@ -28,14 +30,17 @@ public final class ForcingFrameBlock extends BaseEntityBlock {
     /** 0 empty, 1-3 growing, 4 ripe. */
     public static final IntegerProperty STAGE = IntegerProperty.create("stage", 0, 4);
 
+    /** Whether the lantern inside burns: a crop is in, and the climate suits it. It gives light. */
+    public static final BooleanProperty LIT = BooleanProperty.create("lit");
+
     public ForcingFrameBlock(Properties properties) {
         super(properties);
-        registerDefaultState(stateDefinition.any().setValue(STAGE, 0));
+        registerDefaultState(stateDefinition.any().setValue(STAGE, 0).setValue(LIT, false));
     }
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        builder.add(STAGE);
+        builder.add(STAGE, LIT);
     }
 
     @Override
@@ -84,7 +89,8 @@ public final class ForcingFrameBlock extends BaseEntityBlock {
                     .withStyle(s -> s.withColor(0x70B090)));
         }
         frame.plant(level, drug, player.getName().getString(), ModComponents.qualityOf(stack), line);
-        level.setBlock(pos, state.setValue(STAGE, frame.state().stage()), 2);
+        level.setBlock(pos, state.setValue(STAGE, frame.state().stage()).setValue(LIT, frame.warm(level, pos)), 2);
+        level.playSound(null, pos, ModSounds.FRAME_PLANT.get(), SoundSource.BLOCKS, 0.8f, 1.0f);
         stack.consume(1, player);
         return InteractionResult.SUCCESS;
     }
@@ -111,7 +117,8 @@ public final class ForcingFrameBlock extends BaseEntityBlock {
                 new ItemStack(ModItems.get("seed_" + drug).get(), harvest.seeds()),
                 harvest.seedQuality(), grower), line.drift(rolls)));
 
-        level.setBlock(pos, state.setValue(STAGE, 0), 2);
+        level.setBlock(pos, state.setValue(STAGE, 0).setValue(LIT, false), 2);
+        level.playSound(null, pos, ModSounds.FRAME_HARVEST.get(), SoundSource.BLOCKS, 0.8f, 1.0f);
         return InteractionResult.SUCCESS;
     }
 

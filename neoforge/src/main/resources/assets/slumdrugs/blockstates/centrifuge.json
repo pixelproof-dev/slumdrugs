@@ -1,7 +1,10 @@
 {
   "variants": {
-    "": {
+    "working=false": {
       "model": "slumdrugs:block/centrifuge"
+    },
+    "working=true": {
+      "model": "slumdrugs:block/centrifuge_working"
     }
   }
 }

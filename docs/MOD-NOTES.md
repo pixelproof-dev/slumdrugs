@@ -124,6 +124,34 @@ for the frame and the loft, iron and copper on wood for the workshop pieces. The
 and the still share `RefineryBlockEntity` and the brewing-stand menu; each supplies its
 method and its reagent. The still is the design's alembic and makes essence; see below.
 
+### Working states and sound
+
+Four stations show their state on the block, so a player reads them from across the room
+and never opens a screen to ask:
+
+- **The still** has a `working` state. While a batch runs the firebox grate glows (an
+  animated texture, four frames, and the block gives light 8), the swan neck steams, flames
+  lick through the grate, and the wash can be heard bubbling with the fire crackling under it.
+- **The centrifuge** has the same state. Its brass band spins (an animated texture whose
+  rivets march one pixel a frame), the spigot drips, a breath of vapour leaves the hatch, and
+  it whirrs.
+- **The forcing frame** has a `lit` state beside `stage`. The lantern inside burns while a
+  crop is in the frame and the climate suits it (fit at or above 0.8), and gives light 9. A
+  dark lantern over a growing crop is the frame telling you the climate is wrong.
+- **The drying loft** has a `dry` state beside `bundles`. The bundles hang green and turn
+  brown the moment every one of them is dried, so the loft says "come and get it" itself.
+
+The refinery's block entity sets `working` as the run starts and stops; the frame and the
+loft update theirs once a second from the same server tick that already drives them. The
+particles and ambient sounds are client-side `animateTick`, the way a campfire does it.
+
+Every sound a station makes is one of the mod's own events, registered in `ModSounds` and
+mapped in `assets/slumdrugs/sounds.json` to a vanilla sound (`"type": "event"`) with its own
+subtitle in both languages. Code never names a vanilla sound for a station: a recorded sound
+drops in later by editing that one file. `tools/check_data.py` checks that every registered
+event has an entry, every entry is registered, every vanilla event it points at exists, and
+every animation strip has its `.mcmeta`.
+
 ### Climate
 
 The frame's environment is light and climate together. Warmth comes from the biome's base

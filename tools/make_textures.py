@@ -337,3 +337,75 @@ for x in range(5, 11): px[0][x] = TW_M; px[1][x] = TW_D
 png(OUT/'bundle.png', px)
 
 print("wrote:", ", ".join(sorted(p.name for p in OUT.glob('*.png'))))
+
+# ================================================================ working states
+# What a station looks like while it works, or when it is done. Two of these are animated:
+# a texture taller than it is wide is a strip of frames, and the .mcmeta beside it says how
+# fast to play them. That is the whole of a spinning band and a flickering grate, with no
+# renderer and no code.
+
+def png_frames(path, frames, frametime, interpolate=False):
+    rows = [row for f in frames for row in f]
+    raw = b''.join(b'\x00' + bytes(v for p in row for v in p) for row in rows)
+    def chunk(t, d):
+        c = t + d
+        return struct.pack('>I', len(d)) + c + struct.pack('>I', zlib.crc32(c) & 0xffffffff)
+    path.write_bytes(b'\x89PNG\r\n\x1a\n'
+        + chunk(b'IHDR', struct.pack('>IIBBBBB', W, len(rows), 8, 6, 0, 0, 0))
+        + chunk(b'IDAT', zlib.compress(raw, 9)) + chunk(b'IEND', b''))
+    meta = '{"animation": {"frametime": %d%s}}\n' % (frametime, ', "interpolate": true' if interpolate else '')
+    pathlib.Path(str(path) + '.mcmeta').write_text(meta)
+
+# The lantern, out: dark glass with a dead wick.
+png(OUT/'lamp_off.png', flat((72, 62, 50, 255), (54, 46, 38, 255), 201, 40))
+
+# A dried bundle: the green gone to brown, the tips ragged.
+DB_D, DB_M, DB_L = (74, 56, 28, 255), (112, 88, 44, 255), (150, 124, 70, 255)
+px = grid()
+for y in range(H):
+    half = 2 + 5 * (y / 15)
+    for x in range(W):
+        if abs(x - 7.5) > half: continue
+        if y > 10 and noise(x, y, 211) < 120: continue
+        px[y][x] = DB_L if abs(x - 7.5) < half * 0.35 else DB_M if abs(x - 7.5) < half * 0.7 else DB_D
+for x in range(5, 11): px[0][x] = TW_M; px[1][x] = TW_D
+png(OUT/'bundle_dry.png', px)
+
+# The firebox, cold: the grate over ash and a few dull coals.
+px = grid(FE_D)
+for y in range(H):
+    for x in range(W):
+        if 4 <= y <= 11 and 2 <= x <= 13:
+            n = noise(x, y, 221)
+            px[y][x] = (110, 40, 26, 255) if n < 25 else (70, 62, 58, 255) if n < 120 else (48, 44, 42, 255)
+for x in range(2, 14, 3):
+    for y in range(4, 12): px[y][x] = FE_M
+png(OUT/'firebox_cold.png', px)
+
+# The firebox, lit: four frames of embers breathing behind the bars.
+frames = []
+for f in range(4):
+    px = grid(FE_D)
+    for y in range(H):
+        for x in range(W):
+            if 4 <= y <= 11 and 2 <= x <= 13:
+                n = (noise(x, y, 151) + noise(x, y, 231 + f) // 3) % 256
+                px[y][x] = (255, 200, 80, 255) if n < 30 else (245, 130, 30, 255) if n < 90 else (200, 60, 20, 255) if n < 160 else (100, 30, 20, 255)
+    for x in range(2, 14, 3):
+        for y in range(4, 12): px[y][x] = FE_M
+    frames.append(px)
+png_frames(OUT/'firebox_lit.png', frames, 4, interpolate=True)
+
+# The brass band, spinning: the rivets march one pixel a frame.
+frames = []
+for f in range(4):
+    px = grid()
+    for y in range(H):
+        for x in range(W): px[y][x] = COL[x]
+    rows(px, (0, 15), BR_D); rows(px, (1, 14), BR_H)
+    for x in range(W):
+        if (x + f) % 4 == 2: px[7][x] = BR_H; px[8][x] = BR_D
+    frames.append(px)
+png_frames(OUT/'brass_band_spin.png', frames, 2)
+
+print("wrote:", ", ".join(sorted(p.name for p in OUT.glob('*.png'))))

@@ -152,15 +152,27 @@ public final class ForcingFrameBlockEntity extends BlockEntity {
         return harvest;
     }
 
-    /** Advances growth and keeps the visible stage in step. Server side, once a second. */
+    /** The climate fit at and above which the lantern burns: a crop that is comfortable. */
+    public static final double LANTERN_FIT = 0.8;
+
+    /**
+     * Whether the lantern is lit: a crop in the frame, in a climate it likes. A dark lantern
+     * over a growing crop is the frame's way of saying the climate is wrong for it.
+     */
+    public boolean warm(Level level, BlockPos pos) {
+        if (state.drug == null) return false;
+        return Cultivation.climateFit(warmth(level, pos), damp(level, pos),
+                Substances.profile(state.drug).band(), strain.climateFloor()) >= LANTERN_FIT;
+    }
+
+    /** Advances growth and keeps the visible stage and lantern in step. Server side, once a second. */
     public void serverTick(Level level, BlockPos pos, BlockState blockState) {
-        int before = state.stage();
         // A vigorous line grows faster: the same progress over fewer seconds.
         state.advance(clock(level), Tuning.GROWTH_SECONDS.get() / strain.vigourFactor());
         setChanged();
-        int after = state.stage();
-        if (after != before && blockState.getValue(ForcingFrameBlock.STAGE) != after)
-            level.setBlock(pos, blockState.setValue(ForcingFrameBlock.STAGE, after), Block_UPDATE_FLAGS);
+        BlockState next = blockState.setValue(ForcingFrameBlock.STAGE, state.stage())
+                .setValue(ForcingFrameBlock.LIT, warm(level, pos));
+        if (next != blockState) level.setBlock(pos, next, Block_UPDATE_FLAGS);
     }
 
     /** Send to clients, do not trigger neighbour updates for a cosmetic change. */

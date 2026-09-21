@@ -21,6 +21,7 @@ public final class SlumDrugsMod {
         ModItems.ITEMS.register(modBus);
         ModBlockEntities.TYPES.register(modBus);
         ModMenus.TYPES.register(modBus);
+        ModSounds.SOUNDS.register(modBus);
         ModCreativeTabs.TABS.register(modBus);
         // A server config: the server's numbers, sent to every client that joins it.
         container.registerConfig(ModConfig.Type.SERVER, Tuning.SPEC);

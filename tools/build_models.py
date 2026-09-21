@@ -48,7 +48,7 @@ class Model:
         self.elements.append(el)
         return el
 
-    def octagon(self, cx, y0, y1, cz, width, tex, top=None, bottom=None, axis='y', eps=0.02):
+    def octagon(self, cx, y0, y1, cz, width, tex, top=None, bottom=None, axis='y', eps=0.02, shade=None):
         """A regular octagonal prism from four bars: two straight, two at 45 degrees.
 
         `axis` is the prism's axis: 'y' for a drum or disc lying flat, 'x' or 'z' for a wheel
@@ -75,10 +75,10 @@ class Model:
             origin = [xc, yc, zc]
             def shrink(b): return ((b[0][0], b[0][1], b[0][2] + eps), (b[1][0], b[1][1], b[1][2] - eps))
         for frm, to in bars:
-            self.box(frm, to, tex, faces=caps)
+            self.box(frm, to, tex, faces=caps, shade=shade)
         for frm, to in bars:
             frm, to = shrink((frm, to))
-            self.box(frm, to, tex, faces=caps, rot={'origin': origin, 'axis': axis, 'angle': 45})
+            self.box(frm, to, tex, faces=caps, rot={'origin': origin, 'axis': axis, 'angle': 45}, shade=shade)
 
     def cross(self, cx, y0, y1, cz, width, tex):
         """Two crossed vertical planes, for plants and hanging bundles."""
@@ -100,10 +100,10 @@ def legs(m, tex, inset=1, size=2.5, height=8, y0=0):
 
 
 # ---------------------------------------------------------------- forcing frame
-def forcing_frame(stage):
+def forcing_frame(stage, lit=True):
     m = Model(T + 'brass')
     brass, glass, soil, walnut = m.tex('brass', T + 'brass'), m.tex('glass', T + 'glass'), m.tex('soil', T + 'soil'), m.tex('walnut', T + 'walnut')
-    lamp = m.tex('lamp', T + 'lamp')
+    lamp = m.tex('lamp', T + ('lamp' if lit else 'lamp_off'))
     # A deep bed with a soil top.
     m.box((0.5, 0, 0.5), (15.5, 4, 15.5), walnut, faces={'up': soil})
     # Brass corner posts and a top rail.
@@ -127,7 +127,7 @@ def forcing_frame(stage):
         m.box((x, 11, 7.6), (x + 1, 11.6, 16), brass, rot={'origin': [8, 11, 16], 'axis': 'x', 'angle': -22.5})
     # The lantern that keeps it warm, hung from the ridge inside.
     m.box((7, 12.2, 7.2), (9, 13.9, 8.8), brass, only=('up', 'down'))
-    m.box((6.6, 9.4, 6.6), (9.4, 12.3, 9.4), lamp, shade=False)
+    m.box((6.6, 9.4, 6.6), (9.4, 12.3, 9.4), lamp, shade=not lit)
     m.box((7.6, 12.3, 7.6), (8.4, 13.9, 8.4), brass)
     # The crop.
     if stage >= 1:
@@ -137,13 +137,14 @@ def forcing_frame(stage):
         if stage >= 3:
             m.cross(4.5, 4, 4 + size - 2, 5, size - 2, plant)
             m.cross(11.5, 4, 4 + size - 3, 11, size - 3, plant)
-    return m.write(f'forcing_frame_stage{stage}')
+    return m.write(f'forcing_frame_stage{stage}' + ('' if lit else '_dark'))
 
 
 # ---------------------------------------------------------------- drying loft
-def drying_loft(bundles):
+def drying_loft(bundles, dry=False):
     m = Model(T + 'walnut')
-    walnut, pine, twine, bundle = m.tex('walnut', T + 'walnut'), m.tex('pine', T + 'pine'), m.tex('twine', T + 'twine'), m.tex('bundle', T + 'bundle')
+    walnut, pine, twine = m.tex('walnut', T + 'walnut'), m.tex('pine', T + 'pine'), m.tex('twine', T + 'twine')
+    bundle = m.tex('bundle', T + ('bundle_dry' if dry else 'bundle'))
     # Four tall posts and a low shelf to tie the frame together.
     for x in (0.5, 14):
         for z in (0.5, 14):
@@ -164,7 +165,7 @@ def drying_loft(bundles):
     for x in order:
         m.box((x - 0.6, 12.4, 7.4), (x + 0.6, 13.2, 8.6), twine)
         m.cross(x, 4.5, 12.5, 8, 5, bundle)
-    return m.write('drying_loft' if bundles == 3 else f'drying_loft_{bundles}')
+    return m.write(('drying_loft' if bundles == 3 else f'drying_loft_{bundles}') + ('_dry' if dry else ''))
 
 
 # ---------------------------------------------------------------- pressing bench
@@ -248,9 +249,9 @@ def storage_crate():
 
 
 # ---------------------------------------------------------------- centrifuge
-def centrifuge():
+def centrifuge(working=False):
     m = Model(T + 'brass')
-    brass, band, iron, lid, gauge, copper = (m.tex('brass', T + 'brass'), m.tex('band', T + 'brass_band'), m.tex('iron', T + 'iron'),
+    brass, band, iron, lid, gauge, copper = (m.tex('brass', T + 'brass'), m.tex('band', T + ('brass_band_spin' if working else 'brass_band')), m.tex('iron', T + 'iron'),
                                              m.tex('lid', T + 'centrifuge_lid'), m.tex('gauge', T + 'gauge'), m.tex('copper', T + 'copper'))
     # An iron base ring and four splayed legs.
     m.octagon(8, 0, 1.2, 8, 13, iron)
@@ -273,16 +274,16 @@ def centrifuge():
     m.box((7.2, 2, 7.2), (8.8, 4.2, 8.8), copper)
     m.box((7.2, 2, 8.8), (8.8, 3.6, 14.5), copper)
     m.box((6.9, 1, 13), (9.1, 3.6, 14.8), copper)
-    return m.write('centrifuge')
+    return m.write('centrifuge_working' if working else 'centrifuge')
 
 
 # ---------------------------------------------------------------- still
-def still():
+def still(working=False):
     m = Model(T + 'copper')
-    copper, iron, fire, band, glass, walnut = (m.tex('copper', T + 'copper'), m.tex('iron', T + 'iron'), m.tex('fire', T + 'firebox'),
+    copper, iron, fire, band, glass, walnut = (m.tex('copper', T + 'copper'), m.tex('iron', T + 'iron'), m.tex('fire', T + ('firebox_lit' if working else 'firebox_cold')),
                                                m.tex('band', T + 'brass_band'), m.tex('glass', T + 'glass'), m.tex('walnut', T + 'walnut'))
     # The firebox: an iron octagon with the grate glowing on every side.
-    m.octagon(6.5, 0, 3, 8, 11, fire, top=iron)
+    m.octagon(6.5, 0, 3, 8, 11, fire, top=iron, shade=not working)
     # The pot: an onion of stacked octagons, a band at the waist, and a narrow neck.
     for y0, y1, w in ((3, 5, 9.5), (5, 8.5, 11.5), (8.5, 11, 11), (11, 13, 9), (13, 14.5, 6.5), (14.5, 18, 4)):
         m.octagon(6.5, y0, y1, 8, w, copper)
@@ -298,7 +299,7 @@ def still():
     m.box((11.6, 1.5, 7.4), (14.5, 2.7, 8.6), copper)
     m.box((9.5, 0, 6.5), (12, 4.5, 9.5), glass)
     m.box((10.2, 4.5, 7.2), (11.3, 5.6, 8.8), walnut)
-    return m.write('still')
+    return m.write('still_working' if working else 'still')
 
 
 # ---------------------------------------------------------------- cutting bench
@@ -387,8 +388,9 @@ def counting_house():
 
 if __name__ == '__main__':
     written = []
-    for s in range(5): written.append(forcing_frame(s))
+    for s in range(5): written += [forcing_frame(s), forcing_frame(s, lit=False)]
     for b in range(4): written.append(drying_loft(b))
-    written += [pressing_bench(), sealing_press(), storage_crate(), centrifuge(), still(),
-                cutting_bench(), grafting_bench(), counting_house()]
+    for b in range(1, 4): written.append(drying_loft(b, dry=True))
+    written += [pressing_bench(), sealing_press(), storage_crate(), centrifuge(), centrifuge(working=True),
+                still(), still(working=True), cutting_bench(), grafting_bench(), counting_house()]
     print('wrote:', ', '.join(written))

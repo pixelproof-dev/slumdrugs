@@ -1,15 +1,27 @@
 {
   "variants": {
-    "bundles=0": {
+    "bundles=0,dry=true": {
       "model": "slumdrugs:block/drying_loft_0"
     },
-    "bundles=1": {
+    "bundles=0,dry=false": {
+      "model": "slumdrugs:block/drying_loft_0"
+    },
+    "bundles=1,dry=true": {
+      "model": "slumdrugs:block/drying_loft_1_dry"
+    },
+    "bundles=1,dry=false": {
       "model": "slumdrugs:block/drying_loft_1"
     },
-    "bundles=2": {
+    "bundles=2,dry=true": {
+      "model": "slumdrugs:block/drying_loft_2_dry"
+    },
+    "bundles=2,dry=false": {
       "model": "slumdrugs:block/drying_loft_2"
     },
-    "bundles=3": {
+    "bundles=3,dry=true": {
+      "model": "slumdrugs:block/drying_loft_dry"
+    },
+    "bundles=3,dry=false": {
       "model": "slumdrugs:block/drying_loft"
     }
   }

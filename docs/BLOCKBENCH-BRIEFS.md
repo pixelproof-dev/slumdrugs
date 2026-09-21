@@ -61,6 +61,12 @@ Each is described by its silhouette, the one thing you recognise it by, and its 
 Extents past the block are allowed by the format and used sparingly for height and for parts
 that should hang over the edge.
 
+Four of them have a second look for a second state, generated from the same function with a
+flag: the frame's lantern dark (`forcing_frame_stage*_dark`), the loft's bundles dried brown
+(`drying_loft_*_dry`), the still's firebox lit (`still_working`, with an animated
+`firebox_lit` strip) and the centrifuge's band spinning (`centrifuge_working`, with an
+animated `brass_band_spin` strip). The blockstate files pick between them.
+
 **`forcing_frame_stage0..4`.** A brass-framed glasshouse on a walnut bed: four brass posts, glass
 walls, a gabled glass roof with a brass ridge, and a lit lantern hung inside under the ridge. The
 crop is the only thing that changes between stages: nothing at stage 0, one crossed plant from

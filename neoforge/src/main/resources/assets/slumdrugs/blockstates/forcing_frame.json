@@ -1,19 +1,34 @@
 {
   "variants": {
-    "stage=0": {
+    "lit=true,stage=0": {
       "model": "slumdrugs:block/forcing_frame_stage0"
     },
-    "stage=1": {
+    "lit=false,stage=0": {
+      "model": "slumdrugs:block/forcing_frame_stage0_dark"
+    },
+    "lit=true,stage=1": {
       "model": "slumdrugs:block/forcing_frame_stage1"
     },
-    "stage=2": {
+    "lit=false,stage=1": {
+      "model": "slumdrugs:block/forcing_frame_stage1_dark"
+    },
+    "lit=true,stage=2": {
       "model": "slumdrugs:block/forcing_frame_stage2"
     },
-    "stage=3": {
+    "lit=false,stage=2": {
+      "model": "slumdrugs:block/forcing_frame_stage2_dark"
+    },
+    "lit=true,stage=3": {
       "model": "slumdrugs:block/forcing_frame_stage3"
     },
-    "stage=4": {
+    "lit=false,stage=3": {
+      "model": "slumdrugs:block/forcing_frame_stage3_dark"
+    },
+    "lit=true,stage=4": {
       "model": "slumdrugs:block/forcing_frame_stage4"
+    },
+    "lit=false,stage=4": {
+      "model": "slumdrugs:block/forcing_frame_stage4_dark"
     }
   }
 }

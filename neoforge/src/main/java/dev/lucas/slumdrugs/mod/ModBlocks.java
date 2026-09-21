@@ -20,8 +20,10 @@ public final class ModBlocks {
                 .sound(SoundType.WOOD);
     }
 
+    /** The frame's lantern lights the room while a crop is comfortable in it. */
     public static final DeferredBlock<ForcingFrameBlock> FORCING_FRAME =
-            BLOCKS.registerBlock("forcing_frame", ForcingFrameBlock::new, ModBlocks::wooden);
+            BLOCKS.registerBlock("forcing_frame", ForcingFrameBlock::new, () -> wooden()
+                    .lightLevel(state -> state.getValue(ForcingFrameBlock.LIT) ? 9 : 0));
     public static final DeferredBlock<DryingLoftBlock> DRYING_LOFT =
             BLOCKS.registerBlock("drying_loft", DryingLoftBlock::new, ModBlocks::wooden);
     public static final DeferredBlock<PressingBenchBlock> PRESSING_BENCH =
@@ -48,12 +50,13 @@ public final class ModBlocks {
     public static final DeferredBlock<CountingHouseBlock> COUNTING_HOUSE =
             BLOCKS.registerBlock("counting_house", CountingHouseBlock::new, ModBlocks::wooden);
 
-    /** The still is machinery too: copper over a firebox. */
+    /** The still is machinery too: copper over a firebox, which glows while it runs. */
     public static final DeferredBlock<StillBlock> STILL =
             BLOCKS.registerBlock("still", StillBlock::new, () -> BlockBehaviour.Properties.of()
                     .mapColor(MapColor.COLOR_ORANGE)
                     .strength(3.5f)
-                    .sound(SoundType.COPPER));
+                    .sound(SoundType.COPPER)
+                    .lightLevel(state -> state.getValue(RefineryBlock.WORKING) ? 8 : 0));
 
     static {
         // Block items live in the item registry and in the creative tab, in this order. The

@@ -52,6 +52,17 @@ public final class DryingLoftBlockEntity extends BlockEntity {
         return false;
     }
 
+    /** Whether something hangs and all of it is dried: the moment the bundles turn brown. */
+    public boolean allReady(Level level) {
+        boolean any = false;
+        for (int rail = 0; rail < RAILS; rail++) {
+            if (bundles.get(rail).isEmpty()) continue;
+            if (!ready(level, rail)) return false;
+            any = true;
+        }
+        return any;
+    }
+
     /** 0-1 for the bundle furthest from done, which is the one worth waiting for. */
     public double leastProgress(Level level) {
         double least = 1;

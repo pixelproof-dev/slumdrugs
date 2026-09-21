@@ -1,7 +1,10 @@
 {
   "variants": {
-    "": {
+    "working=false": {
       "model": "slumdrugs:block/still"
+    },
+    "working=true": {
+      "model": "slumdrugs:block/still_working"
     }
   }
 }

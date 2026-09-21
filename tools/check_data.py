@@ -98,7 +98,16 @@ def vanilla():
               if n.startswith('assets/minecraft/models/') and n.endswith('.json')}
     tags = {n[len('data/minecraft/tags/item/'):-5] for n in names
             if n.startswith('data/minecraft/tags/item/') and n.endswith('.json')}
-    return {'items': items | blocks, 'textures': textures, 'models': models, 'item_tags': tags}
+    # Sound event ids are not in the jar (sounds.json is a downloaded asset); the subtitle
+    # keys are, and every vanilla event that has one is listed under them.
+    sounds = {k[len('subtitles.'):] for k in lang if k.startswith('subtitles.')}
+    src_jar = jars[0].with_name(jars[0].name.replace('.jar', '-sources.jar'))
+    if src_jar.exists():
+        import io
+        with zipfile.ZipFile(src_jar) as sz:
+            if 'net/minecraft/sounds/SoundEvents.java' in sz.namelist():
+                sounds = set(re.findall(r'"([a-z_]+(?:\.[a-z_0-9]+)+)"', sz.read('net/minecraft/sounds/SoundEvents.java').decode()))
+    return {'items': items | blocks, 'textures': textures, 'models': models, 'item_tags': tags, 'sound_events': sounds}
 
 
 def check_id(ref, kind, ours, van, where):
@@ -299,12 +308,79 @@ def check_advancements(items, blocks, van):
                 problem(f'{where}: reward recipe {rid} missing')
 
 
+def png_size(path):
+    d = path.read_bytes()
+    if d[:8] != b'\x89PNG\r\n\x1a\n':
+        return None
+    import struct
+    return struct.unpack('>II', d[16:24])
+
+
+def check_textures():
+    """A texture taller than it is wide is an animation strip and needs its .mcmeta, and the
+    other way round: a .mcmeta beside a square texture animates nothing."""
+    for p in sorted((ASSETS / 'textures').rglob('*.png')):
+        size = png_size(p)
+        where = str(p.relative_to(ASSETS))
+        if size is None:
+            problem(f'{where}: not a PNG'); continue
+        w, h = size
+        meta = p.with_name(p.name + '.mcmeta')
+        if h > w:
+            if h % w != 0:
+                problem(f'{where}: {w}x{h} is not a whole number of frames')
+            if not meta.exists():
+                problem(f'{where}: animation strip without a .mcmeta')
+            elif load(meta) is not None and 'animation' not in load(meta):
+                problem(f'{where}.mcmeta: no animation section')
+        elif meta.exists():
+            problem(f'{where}: .mcmeta beside a square texture')
+
+
+def check_sounds(src, van):
+    """Every sound the code registers is in sounds.json, every entry there is registered, and
+    a vanilla event it points at exists."""
+    p = ASSETS / 'sounds.json'
+    registered_sounds = set(re.findall(r'sound\("([a-z_.]+)"\)', src))
+    if not p.exists():
+        if registered_sounds:
+            problem('sounds.json missing while ModSounds registers events')
+        return
+    d = load(p)
+    if d is None:
+        return
+    for name in sorted(registered_sounds - set(d)):
+        problem(f'sounds.json: registered sound {name} has no entry')
+    for name in sorted(set(d) - registered_sounds):
+        problem(f'sounds.json: {name} is not registered in ModSounds')
+    van_events = van['sound_events'] if van else None
+    for name, entry in d.items():
+        for s in entry.get('sounds', []):
+            ref = s.get('name', s) if isinstance(s, dict) else s
+            kind = s.get('type', 'file') if isinstance(s, dict) else 'file'
+            ns, path = (ref.split(':', 1) if ':' in ref else ('minecraft', ref))
+            if kind == 'event':
+                if ns == 'minecraft' and van_events is not None and path not in van_events:
+                    problem(f'sounds.json: {name} points at unknown vanilla event {ref}')
+                elif ns == NS and path not in d:
+                    problem(f'sounds.json: {name} points at unknown event {ref}')
+            elif ns == NS and not (ASSETS / 'sounds' / f'{path}.ogg').exists():
+                problem(f'sounds.json: {name} names missing file sounds/{path}.ogg')
+        sub = entry.get('subtitle')
+        if sub:
+            en = load(ASSETS / 'lang/en_us.json') or {}
+            if sub not in en:
+                problem(f'sounds.json: subtitle {sub} not in en_us.json')
+
+
 def main():
     src = java_text()
     items, blocks = registered()
     van = vanilla()
     check_lang(items, blocks, src)
     check_models(items, blocks, van)
+    check_textures()
+    check_sounds(src, van)
     check_recipes(items, van)
     check_loot(items, blocks, van)
     check_advancements(items, blocks, van)

@@ -1,0 +1,192 @@
+{
+  "station.frame.plant": {
+    "category": "block",
+    "subtitle": "subtitles.slumdrugs.frame_plant",
+    "sounds": [
+      {
+        "name": "minecraft:item.crop.plant",
+        "type": "event"
+      }
+    ]
+  },
+  "station.frame.harvest": {
+    "category": "block",
+    "subtitle": "subtitles.slumdrugs.frame_harvest",
+    "sounds": [
+      {
+        "name": "minecraft:block.wool.break",
+        "type": "event"
+      }
+    ]
+  },
+  "station.loft.hang": {
+    "category": "block",
+    "subtitle": "subtitles.slumdrugs.loft_hang",
+    "sounds": [
+      {
+        "name": "minecraft:block.wool.place",
+        "type": "event"
+      }
+    ]
+  },
+  "station.loft.take": {
+    "category": "block",
+    "subtitle": "subtitles.slumdrugs.loft_take",
+    "sounds": [
+      {
+        "name": "minecraft:block.wool.break",
+        "type": "event"
+      }
+    ]
+  },
+  "station.press.load": {
+    "category": "block",
+    "subtitle": "subtitles.slumdrugs.press_load",
+    "sounds": [
+      {
+        "name": "minecraft:block.wool.place",
+        "type": "event"
+      }
+    ]
+  },
+  "station.press.turn": {
+    "category": "block",
+    "subtitle": "subtitles.slumdrugs.press_turn",
+    "sounds": [
+      {
+        "name": "minecraft:block.iron_trapdoor.close",
+        "type": "event"
+      }
+    ]
+  },
+  "station.press.done": {
+    "category": "block",
+    "subtitle": "subtitles.slumdrugs.press_done",
+    "sounds": [
+      {
+        "name": "minecraft:block.iron_trapdoor.open",
+        "type": "event"
+      }
+    ]
+  },
+  "station.seal.load": {
+    "category": "block",
+    "subtitle": "subtitles.slumdrugs.seal_load",
+    "sounds": [
+      {
+        "name": "minecraft:block.wool.place",
+        "type": "event"
+      }
+    ]
+  },
+  "station.seal.wax": {
+    "category": "block",
+    "subtitle": "subtitles.slumdrugs.seal_wax",
+    "sounds": [
+      {
+        "name": "minecraft:block.honey_block.place",
+        "type": "event"
+      }
+    ]
+  },
+  "station.seal.stamp": {
+    "category": "block",
+    "subtitle": "subtitles.slumdrugs.seal_stamp",
+    "sounds": [
+      {
+        "name": "minecraft:block.anvil.land",
+        "type": "event"
+      }
+    ]
+  },
+  "station.centrifuge.spin": {
+    "category": "block",
+    "subtitle": "subtitles.slumdrugs.centrifuge_spin",
+    "sounds": [
+      {
+        "name": "minecraft:block.grindstone.use",
+        "type": "event"
+      }
+    ]
+  },
+  "station.still.bubble": {
+    "category": "block",
+    "subtitle": "subtitles.slumdrugs.still_bubble",
+    "sounds": [
+      {
+        "name": "minecraft:block.brewing_stand.brew",
+        "type": "event"
+      }
+    ]
+  },
+  "station.still.fire": {
+    "category": "block",
+    "subtitle": "subtitles.slumdrugs.still_fire",
+    "sounds": [
+      {
+        "name": "minecraft:block.campfire.crackle",
+        "type": "event"
+      }
+    ]
+  },
+  "station.cutting.load": {
+    "category": "block",
+    "subtitle": "subtitles.slumdrugs.cutting_load",
+    "sounds": [
+      {
+        "name": "minecraft:block.wool.place",
+        "type": "event"
+      }
+    ]
+  },
+  "station.cutting.filler": {
+    "category": "block",
+    "subtitle": "subtitles.slumdrugs.cutting_filler",
+    "sounds": [
+      {
+        "name": "minecraft:block.sand.place",
+        "type": "event"
+      }
+    ]
+  },
+  "station.cutting.chop": {
+    "category": "block",
+    "subtitle": "subtitles.slumdrugs.cutting_chop",
+    "sounds": [
+      {
+        "name": "minecraft:block.grindstone.use",
+        "type": "event"
+      }
+    ]
+  },
+  "station.grafting.pot": {
+    "category": "block",
+    "subtitle": "subtitles.slumdrugs.grafting_pot",
+    "sounds": [
+      {
+        "name": "minecraft:item.crop.plant",
+        "type": "event"
+      }
+    ]
+  },
+  "station.grafting.snip": {
+    "category": "block",
+    "subtitle": "subtitles.slumdrugs.grafting_snip",
+    "sounds": [
+      {
+        "name": "minecraft:item.shears.snip",
+        "type": "event"
+      }
+    ]
+  },
+  "station.counting.stamp": {
+    "category": "block",
+    "subtitle": "subtitles.slumdrugs.counting_stamp",
+    "sounds": [
+      {
+        "name": "minecraft:block.chain.place",
+        "type": "event"
+      }
+    ]
+  }
+}

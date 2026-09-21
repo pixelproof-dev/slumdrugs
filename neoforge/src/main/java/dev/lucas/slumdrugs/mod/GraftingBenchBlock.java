@@ -2,7 +2,6 @@ package dev.lucas.slumdrugs.mod;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -40,7 +39,7 @@ public final class GraftingBenchBlock extends BaseEntityBlock {
             return InteractionResult.SUCCESS;
         }
         stack.consume(1, player);
-        level.playSound(null, pos, SoundEvents.CROP_PLANTED, SoundSource.BLOCKS, 0.8f, 1.0f);
+        level.playSound(null, pos, ModSounds.GRAFTING_POT.get(), SoundSource.BLOCKS, 0.8f, 1.0f);
         return InteractionResult.SUCCESS;
     }
 
@@ -61,7 +60,7 @@ public final class GraftingBenchBlock extends BaseEntityBlock {
         }
         ItemStack child = bench.graft(level.getRandom());
         if (!child.isEmpty()) popResource(level, pos, child);
-        level.playSound(null, pos, SoundEvents.SHEARS_SNIP, SoundSource.BLOCKS, 0.8f, 1.1f);
+        level.playSound(null, pos, ModSounds.GRAFTING_SNIP.get(), SoundSource.BLOCKS, 0.8f, 1.1f);
         return InteractionResult.SUCCESS;
     }
 }

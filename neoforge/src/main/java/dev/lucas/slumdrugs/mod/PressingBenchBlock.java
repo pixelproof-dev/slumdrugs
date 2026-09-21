@@ -2,7 +2,6 @@ package dev.lucas.slumdrugs.mod;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -40,7 +39,7 @@ public final class PressingBenchBlock extends BaseEntityBlock {
             return InteractionResult.SUCCESS;
         }
         stack.consume(loaded, player);
-        level.playSound(null, pos, SoundEvents.WOOL_PLACE, SoundSource.BLOCKS, 0.8f, 0.9f);
+        level.playSound(null, pos, ModSounds.PRESS_LOAD.get(), SoundSource.BLOCKS, 0.8f, 0.9f);
         return InteractionResult.SUCCESS;
     }
 
@@ -60,13 +59,13 @@ public final class PressingBenchBlock extends BaseEntityBlock {
 
         if (bench.done()) {
             for (ItemStack out : bench.press()) popResource(level, pos, out);
-            level.playSound(null, pos, SoundEvents.IRON_TRAPDOOR_CLOSE, SoundSource.BLOCKS, 0.7f, 0.7f);
+            level.playSound(null, pos, ModSounds.PRESS_TURN.get(), SoundSource.BLOCKS, 0.7f, 0.7f);
             return InteractionResult.SUCCESS;
         }
 
         ProductItem.actionBar(player, Component.translatable("message.slumdrugs.press_stroke",
                 bench.strokes(), bench.strokesNeeded()));
-        level.playSound(null, pos, SoundEvents.IRON_TRAPDOOR_OPEN, SoundSource.BLOCKS, 0.5f, 1.2f);
+        level.playSound(null, pos, ModSounds.PRESS_DONE.get(), SoundSource.BLOCKS, 0.5f, 1.2f);
         return InteractionResult.SUCCESS;
     }
 }

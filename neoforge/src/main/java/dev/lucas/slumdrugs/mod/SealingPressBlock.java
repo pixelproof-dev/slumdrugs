@@ -3,7 +3,6 @@ package dev.lucas.slumdrugs.mod;
 import dev.lucas.slumdrugs.sim.drug.Sealing;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -44,7 +43,7 @@ public final class SealingPressBlock extends BaseEntityBlock {
             return InteractionResult.SUCCESS;
         }
         stack.consume(taken, player);
-        level.playSound(null, pos, wax ? SoundEvents.HONEY_BLOCK_PLACE : SoundEvents.WOOL_PLACE,
+        level.playSound(null, pos, wax ? ModSounds.SEAL_WAX.get() : ModSounds.SEAL_LOAD.get(),
                 SoundSource.BLOCKS, 0.8f, 1.0f);
         return InteractionResult.SUCCESS;
     }
@@ -74,7 +73,7 @@ public final class SealingPressBlock extends BaseEntityBlock {
         ItemStack parcel = press.seal(player.getName().getString());
         if (parcel.isEmpty()) return InteractionResult.SUCCESS;
         popResource(level, pos, parcel);
-        level.playSound(null, pos, SoundEvents.ANVIL_LAND, SoundSource.BLOCKS, 0.25f, 1.6f);
+        level.playSound(null, pos, ModSounds.SEAL_STAMP.get(), SoundSource.BLOCKS, 0.25f, 1.6f);
         return InteractionResult.SUCCESS;
     }
 }

@@ -10,6 +10,7 @@ import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -83,16 +84,25 @@ public abstract class RefineryBlockEntity extends BaseContainerBlockEntity {
                 totalTicks = 0;
                 setChanged();
             }
+            show(level, false);
             return;
         }
 
         if (totalTicks == 0) totalTicks = method().seconds(powered()) * 20;
+        show(level, true);
         if (++progressTicks < totalTicks) return;
 
         finish();
         progressTicks = 0;
         totalTicks = 0;
         setChanged();
+    }
+
+    /** Keeps the block's working state in step with the run, so the machine shows it. */
+    private void show(Level level, boolean working) {
+        BlockState state = getBlockState();
+        if (!state.hasProperty(RefineryBlock.WORKING) || state.getValue(RefineryBlock.WORKING) == working) return;
+        level.setBlock(worldPosition, state.setValue(RefineryBlock.WORKING, working), Block.UPDATE_CLIENTS);
     }
 
     /** Refines every loaded vessel, spends one reagent and one fuel if it was used. */
