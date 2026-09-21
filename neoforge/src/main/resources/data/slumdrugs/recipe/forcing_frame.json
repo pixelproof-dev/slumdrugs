@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "G": "minecraft:glass_pane",
+    "P": "#minecraft:planks",
+    "D": "minecraft:dirt"
+  },
+  "pattern": [
+    "GGG",
+    "P P",
+    "PDP"
+  ],
+  "result": {
+    "id": "slumdrugs:forcing_frame"
+  }
+}

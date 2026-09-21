@@ -14,3 +14,12 @@ val simChecks by tasks.registering(JavaExec::class) {
 tasks.named("check") { dependsOn(simChecks) }
 // The checks are a plain main(), not JUnit; stop Gradle failing on an empty test suite.
 tasks.withType<Test>().configureEach { failOnNoDiscoveredTests.set(false) }
+
+val playthrough by tasks.registering(JavaExec::class) {
+    description = "Plays a week on the rules and checks the curve stays inside the design's envelope."
+    group = "verification"
+    dependsOn(tasks.named("testClasses"))
+    classpath = sourceSets["test"].runtimeClasspath
+    mainClass.set("dev.lucas.slumdrugs.sim.Playthrough")
+}
+tasks.named("check") { dependsOn(playthrough) }

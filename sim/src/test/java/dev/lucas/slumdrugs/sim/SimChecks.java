@@ -1,13 +1,24 @@
 package dev.lucas.slumdrugs.sim;
 
 import dev.lucas.slumdrugs.sim.drug.Cultivation;
+import dev.lucas.slumdrugs.sim.drug.Cutting;
+import dev.lucas.slumdrugs.sim.drug.Drying;
 import dev.lucas.slumdrugs.sim.drug.Quality;
 import dev.lucas.slumdrugs.sim.drug.Refining;
+import dev.lucas.slumdrugs.sim.drug.Sealing;
+import dev.lucas.slumdrugs.sim.drug.Strain;
 import dev.lucas.slumdrugs.sim.drug.UnitTransfer;
+import dev.lucas.slumdrugs.sim.economy.Coin;
 import dev.lucas.slumdrugs.sim.economy.MarketState;
+import dev.lucas.slumdrugs.sim.npc.Loyalty;
 import dev.lucas.slumdrugs.sim.npc.Npc;
+import dev.lucas.slumdrugs.sim.npc.Standing;
+import dev.lucas.slumdrugs.sim.npc.Turf;
+import dev.lucas.slumdrugs.sim.npc.Hire;
 import dev.lucas.slumdrugs.sim.player.Condition;
+import dev.lucas.slumdrugs.sim.player.Progression;
 import dev.lucas.slumdrugs.sim.player.Recovery;
+import dev.lucas.slumdrugs.sim.player.Suspicion;
 import dev.lucas.slumdrugs.sim.station.GrowboxState;
 import dev.lucas.slumdrugs.sim.world.RoomFlood;
 import dev.lucas.slumdrugs.sim.world.PlotSearch;
@@ -40,12 +51,26 @@ public final class SimChecks {
         growbox();
         recovery();
         condition();
+        withdrawalTimers();
+        remedy();
+        suspicion();
+        climate();
+        progression();
         unitTransfer();
         quality();
         cultivation();
         refining();
+        cutting();
+        strains();
+        drying();
+        sealing();
         market();
+        coin();
+        standing();
+        loyalty();
         npcs();
+        turf();
+        hire();
         System.out.println("PASS: " + checks + " simulation assertions.");
     }
 
@@ -211,6 +236,83 @@ public final class SimChecks {
         check(rejected, "rest must not slow recovery");
     }
 
+    // ---------------------------------------------------------------- withdrawal timers
+
+    private static void withdrawalTimers() {
+        long minute = 60000L;
+        var settings = Condition.Settings.defaults();
+
+        // Below the threshold there is nothing to count down to.
+        var light = new Condition(0, 0, 30);
+        check(light.minutesUntilWithdrawal(minute, settings) == -1, "no withdrawal clock without dependence");
+        check(light.withdrawalMinutesLeft(settings) == 0, "nothing left of a withdrawal that cannot start");
+
+        // Above it, the clock runs from the last use down to the delay, and stops at zero.
+        var heavy = new Condition(0, 0, 60);
+        heavy.lastUse = 10 * minute;
+        close(heavy.minutesUntilWithdrawal(10 * minute, settings), settings.withdrawalDelayMillis() / (double) minute,
+                "the whole delay remains right after using");
+        close(heavy.minutesUntilWithdrawal(20 * minute, settings), settings.withdrawalDelayMillis() / (double) minute - 10,
+                "ten minutes on, ten fewer remain");
+        check(heavy.minutesUntilWithdrawal(1000 * minute, settings) == 0, "the clock stops at zero");
+        check(heavy.withdrawing(1000 * minute, settings), "and withdrawal has begun by then");
+
+        // What is left is the distance back to the threshold at the plain decay rate.
+        close(heavy.withdrawalMinutesLeft(settings), 20 / settings.dependenceDecayPerMinute(),
+                "twenty points over the threshold at the plain rate");
+        check(new Condition(0, 0, 100).withdrawalMinutesLeft(settings) > heavy.withdrawalMinutesLeft(settings),
+                "deeper dependence takes longer");
+    }
+
+    // ---------------------------------------------------------------- progression
+
+    private static void progression() {
+        var p = new Progression();
+        check(p.tier() == Progression.Tier.HAND_TO_MOUTH, "everyone starts hand to mouth");
+        check(p.gate().next() == Progression.Tier.BACKROOM && p.gate().unitsNeeded() == Progression.BACKROOM_UNITS,
+                "the first gate is units sold");
+
+        // Coin alone does not open the backroom; units do.
+        p.sold(0, 1000);
+        check(p.tier() == Progression.Tier.HAND_TO_MOUTH, "coin without sales opens nothing");
+        p.sold(Progression.BACKROOM_UNITS - 1, 0);
+        check(p.tier() == Progression.Tier.HAND_TO_MOUTH, "one unit short is short");
+        p.sold(1, 0);
+        check(p.tier() == Progression.Tier.WORKSHOP, "with the coin already banked, the units open both doors");
+
+        // The usual order: units first, then coin.
+        var q = new Progression(Progression.BACKROOM_UNITS, 0);
+        check(q.tier() == Progression.Tier.BACKROOM, "twenty units is the backroom");
+        check(q.gate().coinNeeded() == Progression.WORKSHOP_COIN && q.gate().unitsNeeded() == 0,
+                "the second gate is coin");
+        q.sold(0, Progression.WORKSHOP_COIN);
+        check(q.tier() == Progression.Tier.WORKSHOP, "sixty coin is the workshop");
+        check(q.reached(Progression.Tier.BACKROOM) && !q.reached(Progression.Tier.APOTHECARY),
+                "reached counts every tier below");
+
+        // The ladder ends where the systems it needs end, and says so.
+        var gate = q.gate();
+        check(!gate.reachable() && gate.next() == Progression.Tier.APOTHECARY, "the apothecary is not reachable yet");
+        q.sold(100000, 100000);
+        check(q.tier() == Progression.REACHABLE, "no amount of trade passes the reachable tier");
+
+        // Sales never count backwards, and the labels read.
+        var r = new Progression(5, 5);
+        r.sold(-3, -3);
+        check(r.unitsSold == 5 && r.coinEarned == 5, "a refund is not a sale undone");
+        check(new Progression(-1, -1).unitsSold == 0, "counters never start negative");
+        check(Progression.Tier.KINGPIN.next() == Progression.Tier.KINGPIN, "the top has no next");
+        for (var t : Progression.Tier.values()) check(!t.label.isBlank(), "every tier has a name");
+
+        // Gates are settings; the defaults are the constants.
+        var easy = new Progression.Settings(5, 10);
+        var e = new Progression(5, 10);
+        check(e.tier(easy) == Progression.Tier.WORKSHOP && e.tier() == Progression.Tier.HAND_TO_MOUTH, "settings move the gates");
+        check(e.gate(easy).next() == Progression.Tier.APOTHECARY && e.gate().unitsNeeded() == Progression.BACKROOM_UNITS - 5, "and the gate reads them");
+        check(new Progression.Settings(-1, -1).backroomUnits() == 0, "no negative gates");
+        check(Progression.Settings.defaults().workshopCoin() == Progression.WORKSHOP_COIN, "the defaults are the constants");
+    }
+
     // ---------------------------------------------------------------- unit transfer
 
     private static void unitTransfer() {
@@ -337,6 +439,179 @@ public final class SimChecks {
         check(rejected, "soil is required");
     }
 
+    // ---------------------------------------------------------------- climate
+
+    private static void climate() {
+        var band = new Cultivation.Band(0.5, 0.8, 0.2, 0.6);
+
+        // Inside the band on both axes is perfect; a null band, or one that likes everything, too.
+        close(Cultivation.climateFit(0.6, 0.4, band), 1, "inside the band is a perfect fit");
+        close(Cultivation.climateFit(0.5, 0.2, band), 1, "the band's edges are inside it");
+        close(Cultivation.climateFit(0, 1, Cultivation.Band.any()), 1, "an untuned substance likes everything");
+        close(Cultivation.climateFit(0, 1, null), 1, "no band is no penalty");
+
+        // Outside, fit falls with distance and bottoms out at the floor.
+        double near = Cultivation.climateFit(0.4, 0.4, band);
+        double far = Cultivation.climateFit(0.0, 0.4, band);
+        check(near < 1 && near > far, "further outside is a worse fit");
+        close(far, Cultivation.CLIMATE_FLOOR, "far outside is the floor, not death");
+        close(Cultivation.climateFit(0, 1, band), Cultivation.CLIMATE_FLOOR, "wrong on both axes is still the floor");
+        for (double w = 0; w <= 1.0001; w += 0.05)
+            for (double d = 0; d <= 1.0001; d += 0.05) {
+                double fit = Cultivation.climateFit(w, d, band);
+                check(fit >= Cultivation.CLIMATE_FLOOR && fit <= 1, "climate fit stays in range");
+            }
+
+        // Both axes cost the same, and the band tolerates a reversed pair by fixing it.
+        close(Cultivation.climateFit(0.3, 0.4, band), Cultivation.climateFit(0.6, 0.8, band),
+                "warmth and damp are weighed alike");
+        var flipped = new Cultivation.Band(0.8, 0.5, 0.6, 0.2);
+        check(flipped.warmthHigh() >= flipped.warmthLow() && flipped.dampHigh() >= flipped.dampLow(),
+                "a reversed band is straightened");
+
+        // Climate feeds the same environment input the frame already had.
+        var good = new Cultivation.Inputs(50, Cultivation.Soil.TILLED, 0, 0, 1);
+        var poor = new Cultivation.Inputs(50, Cultivation.Soil.TILLED, 0, 0, Cultivation.CLIMATE_FLOOR);
+        check(Cultivation.quality(good) > Cultivation.quality(poor), "a bad climate costs quality");
+    }
+
+    // ---------------------------------------------------------------- remedy
+
+    private static void remedy() {
+        long minute = 60000L;
+        var settings = Condition.Settings.defaults();
+        var c = new Condition(0, 40, 70);
+        c.lastUse = 0;
+        long now = settings.withdrawalDelayMillis() + minute;
+        check(c.withdrawing(now, settings), "deep dependence, long clean: withdrawing");
+
+        // A draught takes a little off and holds withdrawal away for its duration.
+        check(c.remedy(now), "the first draught works");
+        close(c.dependence, 70 - Condition.REMEDY_DEPENDENCE, "a draught takes a little dependence off");
+        close(c.tolerance, 40 - Condition.REMEDY_TOLERANCE, "and a little tolerance");
+        check(!c.withdrawing(now, settings), "withdrawal is held off");
+        check(c.withdrawalSeverity(now + Condition.REMEDY_MILLIS - 1, settings) == 0, "right up to the end");
+        check(c.withdrawing(now + Condition.REMEDY_MILLIS, settings), "and comes back when it wears off");
+
+        // It cannot be chained.
+        check(!c.remedy(now + minute), "a second draught while the first works is refused");
+        close(c.dependence, 70 - Condition.REMEDY_DEPENDENCE, "and takes nothing off");
+        check(c.remedy(now + Condition.REMEDY_MILLIS), "once it wears off, another works");
+
+        // It never goes below zero, and craving is not held off: only the hard state is.
+        var light = new Condition(0, 1, 2);
+        light.remedy(now);
+        check(light.dependence == 0 && light.tolerance == 0, "a draught cannot go below zero");
+        var craver = new Condition(0, 0, 30);
+        craver.lastUse = 0;
+        craver.remedy(now);
+        check(craver.craving(now, settings), "a draught does not quiet a craving");
+
+        // Restoring carries the timer.
+        var restored = Condition.of(0, 0, 50, 0, 0, now + minute);
+        check(restored.soothed(now) && !restored.soothed(now + 2 * minute), "the soothed timer survives a restore");
+        // A treatment cuts deeper, holds longer, and is refused while anything is working.
+        var patient = new Condition(0, 40, 70);
+        check(patient.treat(now, 20, 10 * minute), "a treatment is taken");
+        check(patient.dependence == 50 && patient.tolerance == 30, "a treatment takes twenty off dependence and half that off tolerance");
+        check(patient.soothed(now + 10 * minute - 1) && !patient.soothed(now + 10 * minute), "and holds withdrawal off for its time");
+        check(!patient.treat(now + minute, 20, 10 * minute) && !patient.remedy(now + minute), "nothing stacks on a treatment");
+
+        // A clean streak lowers the ceiling for good, once per streak, never below the floor.
+        var clean = new Condition(0, 90, 20);
+        clean.lastUse = 1;
+        check(!clean.cleanStreak(minute, 60 * minute), "a streak takes its time");
+        check(clean.cleanStreak(61 * minute, 60 * minute), "and then pays");
+        check(clean.toleranceCeiling == 90 && clean.tolerance == 90, "the ceiling comes down and tolerance with it");
+        check(!clean.cleanStreak(200 * minute, 60 * minute), "one streak pays once");
+        clean.use(20, 50, 50, 0, 200 * minute);
+        check(clean.tolerance == 90, "tolerance cannot climb past the ceiling");
+        for (int i = 0; i < 20; i++) { clean.lastUse = i * 1000L + 1; clean.cleanStreak(1_000_000L * (i + 2), 60 * minute); }
+        check(clean.toleranceCeiling == Condition.CEILING_FLOOR, "the ceiling stops at the floor");
+        check(new Condition(0, 0, 0).cleanStreak(1000 * minute, minute) == false, "nobody who never used has a streak");
+        var ceilinged = Condition.of(0, 95, 0, 0, 0, 0, 80, 5);
+        check(ceilinged.toleranceCeiling == 80 && ceilinged.tolerance == 80 && ceilinged.streakRewardedAt == 5, "a restored ceiling clamps what it must");
+
+        var strong = new Condition(0, 40, 70);
+        strong.remedy(now, 20, 10, minute);
+        check(strong.dependence == 50 && strong.tolerance == 30 && strong.soothed(now + minute - 1) && !strong.soothed(now + minute),
+                "a draught's numbers are settings");
+    }
+
+    // ---------------------------------------------------------------- suspicion
+
+    private static void suspicion() {
+        long minute = 60000L;
+        var s = new Suspicion();
+        check(s.level() == Suspicion.Level.CLEAR && s.untilRaid(0) == -1, "nobody starts under suspicion");
+
+        // Sealed goods draw more than loose ones.
+        var loose = new Suspicion();
+        var sealed = new Suspicion();
+        loose.sold(8, false);
+        sealed.sold(8, true);
+        check(sealed.value > loose.value, "a seal is evidence");
+        close(loose.value, 8 * Suspicion.PER_LOOSE_UNIT, "loose units at the loose rate");
+
+        // Quiet time fades it, never below zero.
+        loose.decay(4);
+        close(loose.value, 8 * Suspicion.PER_LOOSE_UNIT - 4 * Suspicion.DECAY_PER_MINUTE, "quiet minutes fade it");
+        loose.decay(1000);
+        check(loose.value == 0, "fading stops at zero");
+
+        // The levels climb in order and top out.
+        for (int i = 0; i < 200; i++) s.sold(1, false);
+        check(s.value == 100 && s.level() == Suspicion.Level.RAID, "suspicion tops out at a raid");
+        check(Suspicion.Level.of(Suspicion.WATCHED_AT) == Suspicion.Level.WATCHED
+                && Suspicion.Level.of(Suspicion.WATCHED_AT - 0.01) == Suspicion.Level.NOTICED, "levels sit on their thresholds");
+
+        // A raid is called once, warned ahead, and lands on time.
+        check(s.shouldCallRaid(), "at the top the bell rings");
+        s.callRaid(10 * minute);
+        check(!s.shouldCallRaid(), "it rings once");
+        check(s.untilRaid(10 * minute) == Suspicion.RAID_WARNING_MILLIS, "the whole warning remains when called");
+        check(!s.raidDue(10 * minute + Suspicion.RAID_WARNING_MILLIS - 1), "not a moment early");
+        check(s.raidDue(10 * minute + Suspicion.RAID_WARNING_MILLIS), "and lands on time");
+        s.raided();
+        check(s.value == Suspicion.AFTER_RAID && s.raidAt == 0 && s.level() == Suspicion.Level.NOTICED,
+                "after a raid the Watch remembers but stands down");
+
+        // Laying low before it lands calls it off.
+        var lying = new Suspicion(85, 0);
+        lying.callRaid(0);
+        check(!lying.raidLapsed(), "a called raid holds while suspicion is high");
+        lying.decay(100);
+        check(lying.raidLapsed(), "and lapses once the player has laid low");
+        lying.cancelRaid();
+        check(lying.raidAt == 0 && lying.untilRaid(0) == -1, "a cancelled raid is gone");
+        check(new Suspicion(-5, -5).value == 0, "restored values are clamped");
+
+        // Settings move every number, and the defaults are the constants.
+        var strict = new Suspicion.Settings(10, 20, 30, 40, 2, 3, 1, 60000L, 15);
+        var t = new Suspicion();
+        t.sold(10, false, strict);
+        check(t.value == 20 && t.level(strict) == Suspicion.Level.WATCHED && t.level() == Suspicion.Level.NOTICED,
+                "settings change the rate and the thresholds");
+        t.sold(10, false, strict);
+        check(t.shouldCallRaid(strict) && !t.shouldCallRaid(), "a strict town calls the raid sooner");
+        t.callRaid(0, strict);
+        check(t.untilRaid(0) == 60000L, "and rings a shorter bell");
+        t.raided(strict);
+        check(t.value == 15, "and stands down to its own mark");
+        check(Suspicion.Settings.defaults().levelOf(Suspicion.RAID_AT) == Suspicion.Level.RAID, "the defaults are the constants");
+        boolean bad = false;
+        try { new Suspicion.Settings(50, 40, 30, 20, 1, 1, 1, 0, 0); } catch (IllegalArgumentException expected) { bad = true; }
+        check(bad, "thresholds must climb");
+
+        // A bribe takes a little off and is remembered.
+        var bribed = new Suspicion(50, 0);
+        close(bribed.bribed(5 * 12, 1, 15), 5, "five shillings, five points");
+        close(bribed.bribed(100 * 12, 1, 15), 15, "no bribe buys more than the cap");
+        check(bribed.bribes == 2 && bribed.value == 30, "every bribe is counted");
+        close(new Suspicion(3, 0).bribed(12 * 12, 1, 15), 3, "a bribe cannot take suspicion below zero");
+        check(new Suspicion(1, 1, -3).bribes == 0, "restored bribes are clamped");
+    }
+
     // ---------------------------------------------------------------- refining
 
     private static void refining() {
@@ -403,6 +678,224 @@ public final class SimChecks {
         rejected = false;
         try { Refining.run(null, batch, 0, 0); } catch (IllegalArgumentException expected) { rejected = true; }
         check(rejected, "a run needs a method");
+
+        // A hand press is worked in strokes that add up to the method's run.
+        check(Refining.Method.PRESS.strokes() == 5, "the pressing bench takes five pulls");
+        check(Refining.Method.PRESS.strokes(10) == 2 && Refining.Method.PRESS.strokes(0) == 20, "a stroke's worth is a setting, never zero");
+        for (var method : Refining.Method.values()) {
+            check(method.strokes() * Refining.HAND_STROKE_SECONDS >= method.seconds(false),
+                    "the strokes cover the run: " + method);
+            check((method.strokes() - 1) * Refining.HAND_STROKE_SECONDS < method.seconds(false),
+                    "no stroke is wasted: " + method);
+        }
+    }
+
+    // ---------------------------------------------------------------- strains
+
+    private static void strains() {
+        double[] mid = {0.5, 0.5, 0.5, 0.5};
+        double[] high = {1, 1, 1, 1};
+        double[] low = {0, 0, 0, 0};
+
+        // An average line does average things.
+        check(Strain.AVERAGE.isAverage(), "the average is average");
+        close(Strain.AVERAGE.potencyFactor(), 1.0, "average potency changes nothing");
+        close(Strain.AVERAGE.vigourFactor(), 1.0, "average vigour changes nothing");
+        close(Strain.AVERAGE.subtletyFactor(), 1.0, "average subtlety changes nothing");
+        close(new Strain(100, 0, 0, 0).potencyFactor(), 1.3, "full potency is a third more");
+        close(new Strain(0, 100, 0, 0).vigourFactor(), 1.2, "full vigour is a fifth more");
+        close(new Strain(0, 0, 0, 100).subtletyFactor(), 0.6, "full subtlety hides most of a sale");
+        close(new Strain(0, 0, 0, 0).subtletyFactor(), 1.4, "no subtlety shouts");
+        close(new Strain(0, 0, 0, 0).climateFloor(), Cultivation.CLIMATE_FLOOR, "no hardiness is the usual floor");
+        close(new Strain(0, 0, 100, 0).climateFloor(), Math.min(1, Cultivation.CLIMATE_FLOOR * 2), "full hardiness doubles the floor");
+        check(Cultivation.climateFit(0, 1, new Cultivation.Band(0.5, 0.8, 0.2, 0.6), new Strain(0, 0, 100, 0).climateFloor())
+                > Cultivation.climateFit(0, 1, new Cultivation.Band(0.5, 0.8, 0.2, 0.6)), "a hardy line minds a bad climate less");
+        check(new Strain(200, -5, 50, 50).potency() == 100 && new Strain(200, -5, 50, 50).vigour() == 0, "traits are clamped");
+
+        // A cross lands on the mean with middling rolls and within the spread otherwise.
+        var a = new Strain(80, 20, 60, 40);
+        var b = new Strain(40, 60, 60, 80);
+        var child = Strain.cross(a, b, mid);
+        check(child.equals(new Strain(60, 40, 60, 60)), "middling rolls give the parents' mean");
+        var lucky = Strain.cross(a, b, high);
+        var unlucky = Strain.cross(a, b, low);
+        check(lucky.potency() == 60 + Strain.CROSS_SPREAD && unlucky.potency() == 60 - Strain.CROSS_SPREAD, "the spread is the spread");
+        check(Strain.cross(null, null, mid).isAverage(), "no parents is the average");
+        check(Strain.cross(new Strain(100, 100, 100, 100), new Strain(100, 100, 100, 100), high).potency() == 100, "a cross never leaves the scale");
+
+        // Drift is smaller than a cross's spread, and centred.
+        var still = a.drift(mid);
+        check(still.potency() == a.potency() && still.vigour() == a.vigour() && still.hardiness() == a.hardiness()
+                && still.subtlety() == a.subtlety() && still.stable() == 1, "middling rolls drift nowhere, and count a generation");
+        check(a.drift(high).potency() == 80 + Strain.DRIFT && a.drift(low).potency() == 80 - Strain.DRIFT, "drift is the drift");
+        check(Strain.DRIFT < Strain.CROSS_SPREAD, "a harvest holds a line steadier than a cross does");
+
+        boolean rejected = false;
+        try { Strain.cross(a, b, new double[]{0.5}); } catch (IllegalArgumentException expected) { rejected = true; }
+        check(rejected, "a cross wants four rolls");
+
+        // A line held within tolerance for enough generations can be named, once.
+        var line = new Strain(70, 50, 50, 50);
+        check(line.stable() == 0 && !line.named() && !line.canName(), "a fresh line has no generations and no name");
+        for (int g = 1; g <= Strain.STABLE_GENERATIONS; g++) {
+            line = line.drift(mid);
+            check(line.stable() == g, "a steady generation counts: " + g);
+        }
+        check(line.canName(), "five steady generations can be named");
+        var named = line.withName("  Ashfall Gold ");
+        check(named.named() && named.name().equals("Ashfall Gold") && !named.canName(), "a name is trimmed and given once");
+        close(named.reputationFactor(), Strain.NAMED_REPUTATION, "a name is worth something");
+        close(line.reputationFactor(), 1.0, "no name, no reputation");
+        check(named.drift(mid).name().equals("Ashfall Gold") && named.drift(mid).stable() == Strain.STABLE_GENERATIONS + 1,
+                "the name and the count carry to the next generation");
+
+        // Stability is measured from where the line started, so a random walk can lose it.
+        var walk = new Strain(70, 50, 50, 50, 4, "");
+        var once = walk.drift(high);
+        check(once.stable() == 5 && once.potency() == 73 && once.origin().potency() == 70, "three points out is still the line, anchored where it began");
+        var twice = once.drift(high);
+        check(twice.stable() == 0 && twice.potency() == 76 && twice.origin().potency() == 76 && twice.anchor() == 0,
+                "six points out is a new line, its own anchor");
+        var namedWalk = named.drift(high).drift(high);
+        check(!namedWalk.named(), "a named line that wanders past tolerance loses the name");
+        check(named.drift(high).drift(low).named(), "and one that wanders back keeps it");
+        check(!Strain.cross(named, named, mid).named() && Strain.cross(named, named, mid).stable() == 0
+                && Strain.cross(named, named, mid).anchor() == 0, "a cross is a new line");
+        var packed = new Strain(100, 0, 63, 1, 1, "", Strain.pack(100, 0, 63, 1));
+        check(packed.origin().equals(new Strain(100, 0, 63, 1)), "the anchor packs and unpacks every trait");
+        check(new Strain(50, 50, 50, 50).sameLine(new Strain(55, 45, 50, 50)) && !new Strain(50, 50, 50, 50).sameLine(new Strain(56, 50, 50, 50)),
+                "the same line is within tolerance on every trait");
+        check(new Strain(1, 1, 1, 1, -3, null).stable() == 0 && new Strain(1, 1, 1, 1, 0, null).name().isEmpty(), "restored lines are tidied");
+    }
+
+    // ---------------------------------------------------------------- cutting
+
+    private static void cutting() {
+        // No filler changes nothing but the accounting.
+        var plain = Cutting.cut(60, 8, 0, 0);
+        check(plain.units() == 8 && plain.quality() == 60 && plain.cutRatio() == 0, "no filler, no change");
+
+        // Filler adds units, dilutes quality and costs a little more for the handling.
+        var half = Cutting.cut(60, 8, 8, 0);
+        check(half.units() == 16, "equal parts doubles the batch");
+        check(half.quality() == 30 - Cutting.HANDLING_LOSS, "and halves the quality, less the handling");
+        close(half.cutRatio(), 0.5, "equal parts is half filler");
+
+        // It will not take more than equal parts.
+        var greedy = Cutting.cut(60, 8, 100, 0);
+        check(greedy.units() == 16 && Cutting.maxFiller(8) == 8, "filler stops at equal parts");
+
+        // Cutting cut goods stacks the ratio.
+        var twice = Cutting.cut(half.quality(), half.units(), half.units(), half.cutRatio());
+        close(twice.cutRatio(), 0.75, "cutting a half-cut batch by half leaves a quarter pure");
+        check(twice.quality() < half.quality(), "and worse again");
+
+        // The overdose line comes down with the cut, never below the penalty's floor.
+        close(Cutting.overdoseThreshold(100, 0), 100, "pure goods keep the whole line");
+        close(Cutting.overdoseThreshold(100, 1), 100 * (1 - Cutting.OVERDOSE_PENALTY), "fully cut brings it down by the penalty");
+        var c = new Condition(50, 0, 0);
+        check(!c.wouldOverdose(30, 50) && c.wouldOverdose(30, 50, 1), "a dose that was safe pure is not safe cut");
+
+        for (int q = 0; q <= 100; q += 10)
+            for (int units = 1; units <= 32; units += 3)
+                for (int filler = 0; filler <= 40; filler += 5) {
+                    var r = Cutting.cut(q, units, filler, 0);
+                    check(r.units() >= units && r.units() <= 2 * units, "cut units stay between the input and double");
+                    check(r.quality() >= 0 && r.quality() <= q, "cut quality never rises");
+                    check(r.cutRatio() >= 0 && r.cutRatio() < 1, "a batch is never all filler");
+                }
+        boolean rejected = false;
+        try { Cutting.cut(50, 0, 1, 0); } catch (IllegalArgumentException expected) { rejected = true; }
+        check(rejected, "an empty batch cannot be cut");
+    }
+
+    // ---------------------------------------------------------------- drying
+
+    private static void drying() {
+        int t = Drying.SECONDS;
+
+        // Progress is a plain fraction of the drying time and stops at one.
+        close(Drying.progress(0, t), 0, "nothing hung, nothing dried");
+        close(Drying.progress(t / 2.0, t), 0.5, "half the time is half dried");
+        close(Drying.progress(t * 10, t), 1, "progress never passes done");
+        check(!Drying.ready(t - 1, t), "a second early is not ready");
+        check(Drying.ready(t, t), "on time is ready");
+        close(Drying.progress(5, 0), 1, "a zero drying time is instantly done");
+
+        // Taken down early it is what it was; taken on time it is a little better.
+        check(Drying.quality(50, 10, t) == 50, "an unready bundle keeps its input quality");
+        check(Drying.quality(50, t, t) == 50 + Drying.BONUS, "a timely bundle earns the bonus");
+        check(Drying.quality(50, t + Drying.GRACE_SECONDS, t) == 50 + Drying.BONUS,
+                "the grace window keeps the bonus");
+        check(Drying.quality(100, t, t) == 100, "the bonus does not leave the scale");
+
+        // Neglect costs, slowly, and never everything.
+        int justOver = Drying.quality(50, t + Drying.GRACE_SECONDS + t / 3.0 + 1, t);
+        check(justOver == 50 + Drying.BONUS - 1, "the first third over grace costs a point");
+        check(Drying.quality(50, t * 1000, t) == 50 + Drying.BONUS - Drying.MAX_LOSS,
+                "over-drying bottoms out");
+        check(Drying.quality(5, t * 1000, t) == 0, "a poor bundle can dry to nothing, not below");
+        for (double hung = 0; hung <= t * 20; hung += t / 7.0) {
+            int q = Drying.quality(60, hung, t);
+            check(q >= 0 && q <= 100, "dried quality stays on the scale");
+            if (hung >= t) check(q <= Drying.quality(60, Math.max(t, hung - t / 7.0), t),
+                    "a dried bundle never improves by waiting");
+        }
+    }
+
+    // ---------------------------------------------------------------- sealing
+
+    private static void sealing() {
+        int n = Sealing.UNITS_PER_PARCEL;
+        check(Sealing.parcels(0) == 0 && Sealing.loose(0) == 0, "nothing seals into nothing");
+        check(Sealing.parcels(n - 1) == 0 && Sealing.loose(n - 1) == n - 1, "short of a parcel stays loose");
+        check(Sealing.parcels(n) == 1 && Sealing.loose(n) == 0, "exactly one parcel");
+        check(Sealing.parcels(n * 3 + 2) == 3 && Sealing.loose(n * 3 + 2) == 2, "parcels and change");
+        for (int units = 0; units <= 200; units++)
+            check(Sealing.parcels(units) * n + Sealing.loose(units) == units, "parcels and loose account for the units");
+        check(Sealing.parcelsFor(n * 4, 2) == 2, "wax limits how many parcels are sealed");
+        check(Sealing.parcelsFor(n * 2, 10) == 2, "spare wax does not seal air");
+        check(Sealing.parcelsFor(-5, -5) == 0, "negative stock seals nothing");
+
+        // A parcel is the wholesale unit that the plugin's transfer maths already handles.
+        var plan = UnitTransfer.plan(3, n, n + 1);
+        check(plan.remainingPackages() == 1 && plan.looseChange() == n - 1, "opening a parcel returns change");
+    }
+
+    // ---------------------------------------------------------------- coin
+
+    private static void coin() {
+        // Twelve pence to the shilling, twenty shillings to the sovereign.
+        check(Coin.SHILLING == 12 && Coin.SOVEREIGN == 240, "the denominations are the design's");
+        var s = Coin.split(3 * Coin.SOVEREIGN + 4 * Coin.SHILLING + 6);
+        check(s.sovereigns() == 3 && s.shillings() == 4 && s.pennies() == 6, "a sum splits largest first");
+        check(s.pence() == 3 * Coin.SOVEREIGN + 4 * Coin.SHILLING + 6, "and adds back up");
+        check(Coin.split(0).pence() == 0 && Coin.split(-5).pence() == 0, "nothing and less than nothing are nothing");
+        for (long p = 0; p < 3000; p += 7) {
+            var sp = Coin.split(p);
+            check(sp.pence() == p, "every sum round-trips");
+            check(sp.shillings() < 20 && sp.pennies() < 12, "no split carries a coin it could trade up");
+        }
+
+        // The base scale: ten points is about two shillings.
+        close(Coin.baseUnitPence(10), 24, "a ten-point base is two shillings");
+        check(Coin.baseUnitPence(-1) == 0, "no negative prices");
+
+        // Stamping costs a tenth, rounded against the player, and never everything.
+        check(Coin.stampFee(100) == 10 && Coin.stampFee(101) == 11, "the fee rounds up");
+        check(Coin.stamped(100) == 90, "ninety of a hundred come back stamped");
+        check(Coin.stamped(1) == 1, "a penny stamps to a penny");
+        check(Coin.stamped(0) == 0, "nothing stamps to nothing");
+        for (long p = 1; p < 2000; p++)
+            check(Coin.stamped(p) >= 1 && Coin.stamped(p) <= p, "stamping keeps most and loses some");
+
+        // The words.
+        check(Coin.format(0).equals("0d"), "nothing reads as nought pence");
+        check(Coin.format(6).equals("6d") && Coin.format(12).equals("1s") && Coin.format(18).equals("1s 6d"), "small sums read");
+        check(Coin.format(2 * Coin.SOVEREIGN + 3).equals("2 sov 3d"), "sovereigns read with their change");
+        check(Coin.STARTING_PURSE == 10 * Coin.SHILLING, "the starting purse is ten shillings");
+        close(Coin.baseUnitPence(10, 1.2), 12, "the scale is a setting");
+        check(Coin.stamped(100, 0.5) == 50 && Coin.stampFee(100, 2) == 100, "the cut is a setting, capped at everything");
     }
 
     // ---------------------------------------------------------------- market
@@ -449,6 +942,76 @@ public final class SimChecks {
     }
 
     // ---------------------------------------------------------------- npcs
+
+    private static void standing() {
+        var map = new java.util.HashMap<String, Double>();
+        check(Standing.of(map, "ashfall") == 0 && Standing.of(map, null) == 0, "nobody starts with a standing");
+
+        // A hit costs, and the opposed crew gains exactly what was lost.
+        Standing.apply(map, "ashfall", Standing.HIT);
+        close(Standing.of(map, "ashfall"), Standing.HIT, "a hit costs the hit");
+        close(Standing.of(map, "choir"), -Standing.HIT, "and the Choir is glad of it");
+        check(Standing.of(map, "tidewater") == 0 && Standing.of(map, "quarry") == 0, "the other pair is untouched");
+
+        // A kill costs more; tribute buys back, a shilling a point, capped.
+        Standing.apply(map, "ashfall", Standing.KILL);
+        close(Standing.of(map, "ashfall"), Standing.HIT + Standing.KILL, "a kill costs the kill");
+        close(Standing.tribute(5 * 12), 5, "five shillings, five points");
+        close(Standing.tribute(100 * 12), Standing.TRIBUTE_CAP, "no tribute buys more than the cap");
+        check(Standing.tribute(-12) == 0, "no negative tribute");
+        close(Standing.tribute(100 * 12, 25), 25, "a higher cap lets a bigger tribute count");
+
+        // Clamped at both ends, and war has a line.
+        Standing.apply(map, "quarry", -1000);
+        check(Standing.of(map, "quarry") == Standing.MIN && Standing.of(map, "tidewater") == Standing.MAX, "standing is clamped both ways");
+        check(Standing.atWar(Standing.WAR_AT) && !Standing.atWar(Standing.WAR_AT + 1), "war starts at the line");
+
+        // A crew the design does not know moves alone, and a blank crew moves nothing.
+        Standing.apply(map, "dockside", 10);
+        check(Standing.of(map, "dockside") == 10 && map.size() == 5, "an unknown crew has no opposite");
+        Standing.apply(map, "", 10);
+        Standing.apply(map, null, 10);
+        check(map.size() == 5, "no crew, no change");
+
+        // Every crew has an opposite and the pairing is mutual.
+        for (var c : Standing.Crew.values()) {
+            check(c.opposed().opposed() == c, "opposition is mutual: " + c);
+            check(Standing.Crew.byId(c.id) == c, "every crew is found by id: " + c);
+        }
+        check(Standing.Crew.byId("nobody") == null, "an unknown id is nobody");
+
+        // And standing is what rests a crew member's mood.
+        check(Npc.restingAggression(Npc.Role.BRUISER, -100, 0) > Npc.restingAggression(Npc.Role.BRUISER, 100, 0),
+                "a crew that hates you rests angrier");
+    }
+
+    private static void loyalty() {
+        // Floors are personal and stay in the band.
+        for (int seed = -500; seed < 500; seed += 7) {
+            int floor = Loyalty.floor(seed);
+            check(floor >= Loyalty.FLOOR_MIN && floor <= Loyalty.FLOOR_MAX, "a floor is in the band");
+            check(Loyalty.floor(seed) == floor, "a floor is fixed per seed");
+        }
+
+        // Good goods raise it, premium more; below the floor costs; cut costs most.
+        close(Loyalty.afterSale(50, 50, 40, false), 50 + Loyalty.GOOD_SALE, "a fair sale is a good sale");
+        close(Loyalty.afterSale(50, 90, 40, false), 50 + Loyalty.GOOD_SALE + Loyalty.PREMIUM_BONUS, "premium goods earn more");
+        close(Loyalty.afterSale(50, 30, 40, false), 50 + Loyalty.BELOW_FLOOR, "below the floor costs");
+        close(Loyalty.afterSale(50, 90, 40, true), 50 + Loyalty.CUT_GOODS, "cut goods cost most, however good they were");
+        check(Loyalty.afterSale(100, 90, 40, false) == 100 && Loyalty.afterSale(0, 10, 40, true) == 0, "loyalty stays on the scale");
+
+        // What it buys: a better price, a bigger hand, and at the bottom nothing at all.
+        check(Loyalty.priceFactor(100) > Loyalty.priceFactor(50) && Loyalty.priceFactor(50) > Loyalty.priceFactor(0), "friends pay better");
+        close(Loyalty.priceFactor(50), 1.0, "indifference pays the list price");
+        check(Loyalty.hand(Loyalty.STANDING_ORDER, 4) == 8 && Loyalty.hand(Loyalty.STANDING_ORDER - 1, 4) == 4, "a standing order is a double hand");
+        check(Loyalty.lost(Loyalty.LOST) && !Loyalty.lost(Loyalty.LOST + 1), "a customer is lost at the line");
+
+        // Left alone, a regular settles back toward indifference.
+        check(Loyalty.settle(80) == 79 && Loyalty.settle(20) == 21 && Loyalty.settle(50) == 50, "loyalty settles a point at a time");
+        double v = 100;
+        for (int i = 0; i < 200; i++) v = Loyalty.settle(v);
+        check(v == Loyalty.START, "and comes to rest at the start");
+    }
 
     private static void npcs() {
         // Roles that cannot turn on you never do, whatever their aggression says.
@@ -664,5 +1227,82 @@ public final class SimChecks {
         check(PlotSearch.within(0, 0, -1, -1, 1, 1, 0), "a column inside the box is inside");
         check(!PlotSearch.within(5, 0, -1, -1, 1, 1, 0), "a column outside is outside");
         check(PlotSearch.within(5, 0, -1, -1, 1, 1, 4), "a margin widens the box");
+    }
+
+    private static void turf() {
+        String me = Turf.PLAYER_PREFIX + "me", other = Turf.PLAYER_PREFIX + "other";
+        check(Turf.isPlayer(me) && !Turf.isCrew(me), "a prefixed holder is a player");
+        check(Turf.isCrew("ashfall") && !Turf.isPlayer("ashfall"), "a bare id is a crew");
+        check(!Turf.isCrew("") && !Turf.isPlayer("") && !Turf.isCrew(null), "nobody is neither");
+
+        // The ladder decides how many corners a player may hold.
+        check(Turf.maxHeld(Progression.Tier.HAND_TO_MOUTH) == 0, "hand to mouth holds nothing");
+        check(Turf.maxHeld(Progression.Tier.BACKROOM) == 1, "the backroom holds one corner");
+        check(Turf.maxHeld(Progression.Tier.WORKSHOP) == 3, "the workshop holds three");
+        check(Turf.maxHeld(Progression.Tier.KINGPIN) == 5 && Turf.maxHeld(null) == 0, "beyond, five; no tier, none");
+
+        // Verdicts, one per reason, in the order the rule checks them.
+        check(Turf.claim("", me, 0, 0, Progression.Tier.HAND_TO_MOUTH) == Turf.Verdict.TIER_TOO_LOW, "no corners before the backroom");
+        check(Turf.claim("", me, 0, 0, Progression.Tier.BACKROOM) == Turf.Verdict.OK, "a free corner is anyone's for the price");
+        check(Turf.claim(me, me, 0, 1, Progression.Tier.BACKROOM) == Turf.Verdict.YOURS_ALREADY, "you cannot take your own corner");
+        check(Turf.claim("", me, 0, 1, Progression.Tier.BACKROOM) == Turf.Verdict.TOO_MANY, "the backroom's one corner is the limit");
+        check(Turf.claim("", me, 0, 1, Progression.Tier.WORKSHOP) == Turf.Verdict.OK, "the workshop has room for more");
+        check(Turf.claim(other, me, 100, 0, Progression.Tier.WORKSHOP) == Turf.Verdict.ANOTHER_PLAYER, "another player's corner is not taken here");
+        check(Turf.claim("ashfall", me, Turf.CLAIM_STANDING - 1, 0, Progression.Tier.WORKSHOP) == Turf.Verdict.CREW_REFUSES, "a crew that does not like you enough refuses");
+        check(Turf.claim("ashfall", me, Turf.CLAIM_STANDING, 0, Progression.Tier.WORKSHOP) == Turf.Verdict.OK, "a crew that likes you enough lets a corner go");
+        check(Turf.claim(null, me, 0, 0, Progression.Tier.WORKSHOP) == Turf.Verdict.OK, "a null holder is nobody");
+        for (int standing = -100; standing <= 100; standing += 5)
+            check((Turf.claim("choir", me, standing, 0, Progression.Tier.WORKSHOP) == Turf.Verdict.OK) == (standing >= Turf.CLAIM_STANDING),
+                    "the claim line is exactly the claim standing");
+
+        // What a corner is worth, and what it costs the crew's goodwill on it.
+        check(Turf.priceFactor(true) > 1 && Turf.priceFactor(false) == 1, "your own corner pays more, others pay the usual");
+        check(Turf.suspicionFactor(true) < 1 && Turf.suspicionFactor(false) == 1, "your own corner looks away a little");
+        close(Turf.standingOn(50, true), 50 - Turf.RESENTMENT, "a crew resents you on a corner it lost to you");
+        close(Turf.standingOn(50, false), 50, "and not elsewhere");
+        close(Turf.standingOn(-95, true), Standing.MIN, "resentment stays on the scale");
+        check(Turf.CLAIM_COST > 0 && Turf.CLAIM_COST < Turf.CLAIM_STANDING, "taking a corner costs some liking, not all of it");
+        check(Turf.depth("ashfall", "ashfall") == 1, "a member on their own crew's corner is deep in it");
+        check(Turf.depth("choir", "ashfall") == 0 && Turf.depth("", "ashfall") == 0 && Turf.depth(me, "ashfall") == 0,
+                "and not on anyone else's, or nobody's");
+        check(Turf.depth("ashfall", "") == 0 && Turf.depth("", null) == 0, "no crew, no depth");
+    }
+
+    private static void hire() {
+        check(!Hire.canHire(Progression.Tier.HAND_TO_MOUTH) && !Hire.canHire(Progression.Tier.BACKROOM), "no hands before the workshop");
+        check(Hire.canHire(Progression.Tier.WORKSHOP) && Hire.canHire(Progression.Tier.KINGPIN) && !Hire.canHire(null), "a workshop can hire");
+        check(Hire.wageDue(-1, 0) && Hire.wageDue(3, 4) && !Hire.wageDue(4, 4), "a wage is due once per new day");
+        check(Hire.HIRE_PENCE == Coin.SOVEREIGN && Hire.WAGE_PENCE == 2 * Coin.SHILLING, "a sovereign to start, two shillings a day");
+
+        // Smallest coin first, and the change is kept.
+        long[] values = {Coin.SOVEREIGN, Coin.SHILLING, Coin.PENNY};
+        int[] taken = Hire.take(Hire.WAGE_PENCE, values, new int[]{1, 5, 30});
+        check(taken != null && taken[0] == 0 && taken[1] == 0 && taken[2] == 24, "pennies go first when there are enough");
+        taken = Hire.take(Hire.WAGE_PENCE, values, new int[]{1, 5, 10});
+        check(taken != null && taken[0] == 0 && taken[1] == 2 && taken[2] == 10, "then shillings, rounded up, on top of the pennies");
+        taken = Hire.take(Hire.WAGE_PENCE, values, new int[]{1, 0, 0});
+        check(taken != null && taken[0] == 1, "a sovereign alone is taken whole: the hand keeps the change");
+        check(Hire.take(Hire.WAGE_PENCE, values, new int[]{0, 1, 11}) == null, "twenty-three pence is not a wage");
+        check(Hire.take(Hire.WAGE_PENCE, new long[0], new int[0]) == null, "an empty crate pays nobody");
+        int[] none = Hire.take(0, values, new int[]{1, 1, 1});
+        check(none != null && none[0] + none[1] + none[2] == 0, "no wage takes no coin");
+        boolean threw = false;
+        try { Hire.take(1, new long[]{1}, new int[]{1, 1}); } catch (IllegalArgumentException e) { threw = true; }
+        check(threw, "mismatched coins are refused");
+        // Whatever is offered, what is taken is worth at least the wage and never more than one coin over it.
+        for (int sov = 0; sov <= 2; sov++)
+            for (int sh = 0; sh <= 4; sh++)
+                for (int d = 0; d <= 30; d += 3) {
+                    int[] t = Hire.take(Hire.WAGE_PENCE, values, new int[]{sov, sh, d});
+                    long offered = sov * Coin.SOVEREIGN + sh * Coin.SHILLING + d;
+                    if (offered < Hire.WAGE_PENCE) { check(t == null, "short coin pays nothing"); continue; }
+                    check(t != null, "enough coin always pays");
+                    long got = t[0] * Coin.SOVEREIGN + t[1] * Coin.SHILLING + t[2];
+                    check(got >= Hire.WAGE_PENCE, "the wage is covered");
+                    check(t[0] <= sov && t[1] <= sh && t[2] <= d, "nothing is taken that was not there");
+                    long overBy = got - Hire.WAGE_PENCE;
+                    long biggest = t[0] > 0 ? Coin.SOVEREIGN : t[1] > 0 ? Coin.SHILLING : Coin.PENNY;
+                    check(overBy < biggest, "the change kept is less than the largest coin taken");
+                }
     }
 }

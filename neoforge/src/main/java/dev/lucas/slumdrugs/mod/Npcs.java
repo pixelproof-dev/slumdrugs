@@ -36,8 +36,15 @@ public final class Npcs {
             case RESIDENT -> VillagerProfession.NITWIT;
             case BRUISER -> VillagerProfession.TOOLSMITH;
             case LIEUTENANT -> VillagerProfession.MASON;
+            case HAND -> VillagerProfession.LEATHERWORKER;
             case CUSTOMER -> VillagerProfession.NONE;
         };
+    }
+
+    /** Changes the trade a villager wears when their role changes: a resident taken on, a hand let go. */
+    public static void dress(ServerLevel level, Villager villager, Npc.Role role) {
+        villager.setVillagerData(villager.getVillagerData().withProfession(level.registryAccess(), profession(role)));
+        NpcTrades.fill(villager, role);
     }
 
     public static String randomName(ServerLevel level) {

@@ -20,11 +20,20 @@ import net.minecraft.world.level.Level;
  */
 public final class ProductItem extends Item {
 
-    private final String drug;
+    /** How much harder essence hits than product. The design's figure. */
+    public static final double ESSENCE_DOSE = 1.8;
 
-    public ProductItem(Properties properties, String drug) {
+    private final String drug;
+    private final String stage;
+    private final double doseFactor;
+
+    public ProductItem(Properties properties, String drug) { this(properties, drug, "product_", 1.0); }
+
+    public ProductItem(Properties properties, String drug, String stage, double doseFactor) {
         super(properties);
         this.drug = drug;
+        this.stage = stage;
+        this.doseFactor = doseFactor;
     }
 
     public String drug() { return drug; }
@@ -43,32 +52,35 @@ public final class ProductItem extends Item {
         var profile = Substances.profile(drug);
         Condition condition = player.getData(ModAttachments.CONDITION.get());
         long now = level.getGameTime() * 50L;
-        condition.advance(condition.lastUse, now, Condition.Settings.defaults());
+        condition.advance(condition.lastUse, now, Tuning.condition());
 
         int quality = ModComponents.qualityOf(stack);
+        double dose = profile.dose() * doseFactor * ModComponents.strainOf(stack).potencyFactor();
 
         // Too much on top of too much: the dose still lands, and it hurts rather than helps.
-        boolean overdose = condition.wouldOverdose(profile.dose(), quality);
-        double landed = condition.use(profile.dose(), quality,
-                profile.toleranceGain(), profile.dependenceGain(), now);
+        boolean overdose = condition.wouldOverdose(dose, quality, ModComponents.cutOf(stack));
+        // Tonic mode: fatigue builds, nothing else does.
+        double landed = condition.use(dose, quality,
+                profile.toleranceGain(), Tonic.on() ? 0 : profile.dependenceGain(), now);
 
         if (overdose) {
             player.hurt(level.damageSources().magic(), 6.0f);
             player.addEffect(new MobEffectInstance(MobEffects.NAUSEA, 300, 0));
             player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 600, 1));
-            actionBar(player, Component.translatable("message.slumdrugs.overdose")
+            actionBar(player, Component.translatable(Tonic.key("message.slumdrugs.overdose"))
                     .withStyle(style -> style.withColor(0xD05050)));
         } else {
-            double strength = landed / Math.max(1, profile.dose());
+            double strength = landed / Math.max(1, dose);
             Substances.instances(profile, strength).forEach(player::addEffect);
-            actionBar(player, Component.translatable("message.slumdrugs.used",
-                    Component.translatable("item.slumdrugs.product_" + drug),
+            actionBar(player, Component.translatable(Tonic.key("message.slumdrugs.used"),
+                    Component.translatable("item.slumdrugs." + stage + drug),
                     (int) Math.round(condition.intoxication)));
         }
 
         level.playSound(null, player.blockPosition(), SoundEvents.GENERIC_DRINK.value(),
                 SoundSource.PLAYERS, 0.6f, 1.1f);
         stack.consume(1, player);
+        player.syncData(ModAttachments.CONDITION.get());
         return InteractionResult.SUCCESS;
     }
 }

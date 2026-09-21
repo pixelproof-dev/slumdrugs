@@ -1,0 +1,29 @@
+{
+  "parent": "slumdrugs:tier/guild",
+  "display": {
+    "icon": {
+      "id": "slumdrugs:coin_sovereign"
+    },
+    "title": {
+      "translate": "advancements.slumdrugs.tier.kingpin.title"
+    },
+    "description": {
+      "translate": "advancements.slumdrugs.tier.kingpin.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "reached": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "reached"
+    ]
+  ],
+  "sends_telemetry_event": false
+}

@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "G": "minecraft:gold_ingot",
+    "B": "minecraft:book",
+    "P": "#minecraft:planks",
+    "I": "minecraft:iron_ingot"
+  },
+  "pattern": [
+    "GBI",
+    "PPP",
+    "P P"
+  ],
+  "result": {
+    "id": "slumdrugs:counting_house"
+  }
+}

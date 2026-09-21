@@ -7,8 +7,14 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import dev.lucas.slumdrugs.sim.drug.Cultivation;
 import dev.lucas.slumdrugs.sim.drug.Refining;
+import dev.lucas.slumdrugs.sim.drug.Strain;
+import dev.lucas.slumdrugs.sim.economy.Coin;
 import dev.lucas.slumdrugs.sim.npc.Npc;
+import dev.lucas.slumdrugs.sim.npc.Standing;
+import dev.lucas.slumdrugs.sim.npc.Turf;
 import dev.lucas.slumdrugs.sim.player.Condition;
+import dev.lucas.slumdrugs.sim.player.Progression;
+import dev.lucas.slumdrugs.sim.player.Suspicion;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
@@ -55,7 +61,14 @@ public final class SlumCommands {
                 .then(npc())
                 .then(frame())
                 .then(refine())
-                .then(structure());
+                .then(structure())
+                .then(progress())
+                .then(market())
+                .then(suspicion())
+                .then(coin())
+                .then(strain())
+                .then(standing())
+                .then(turf());
         event.getDispatcher().register(root);
         event.getDispatcher().register(Commands.literal("slumdrugs").redirect(event.getDispatcher().register(root)));
     }
@@ -136,7 +149,7 @@ public final class SlumCommands {
     }
 
     private static int conditionGet(CommandContext<CommandSourceStack> ctx, Collection<ServerPlayer> targets) {
-        var settings = Condition.Settings.defaults();
+        var settings = Tuning.condition();
         for (ServerPlayer player : targets) {
             Condition c = player.getData(ModAttachments.CONDITION.get());
             long now = player.level().getGameTime() * 50L;
@@ -164,6 +177,7 @@ public final class SlumCommands {
                     return 0;
                 }
             }
+            player.syncData(ModAttachments.CONDITION.get());
         }
         reply(ctx, "Set " + field + " on " + targets.size() + " player(s)");
         return targets.size();
@@ -175,6 +189,7 @@ public final class SlumCommands {
             c.intoxication = 0;
             c.tolerance = 0;
             c.dependence = 0;
+            player.syncData(ModAttachments.CONDITION.get());
         }
         reply(ctx, "Cleared " + targets.size() + " player(s)");
         return targets.size();
@@ -255,11 +270,14 @@ public final class SlumCommands {
         }
         for (Villager villager : found) {
             NpcData data = Npcs.data(villager);
-            reply(ctx, String.format("%s — %s%s, aggression %.0f (%s)",
+            reply(ctx, String.format("%s — %s%s, aggression %.0f (%s)%s",
                     villager.getName().getString(),
                     data.role().name().toLowerCase(java.util.Locale.ROOT),
                     data.crew().isEmpty() ? "" : "/" + data.crew(),
-                    data.aggression(), data.stance().name().toLowerCase(java.util.Locale.ROOT)));
+                    data.aggression(), data.stance().name().toLowerCase(java.util.Locale.ROOT),
+                    data.role() == Npc.Role.CUSTOMER
+                            ? String.format(", wants %s over %d, loyalty %.0f", NpcTrades.preferred(villager),
+                                    NpcTrades.floor(villager), data.loyalty()) : ""));
         }
         return found.size();
     }
@@ -335,6 +353,11 @@ public final class SlumCommands {
         reply(ctx, String.format("Frame at %s — %s, %.0f%% grown, %.0fs water, soil %s, compost %d",
                 pos.toShortString(), state.drug, state.progress * 100, state.waterSeconds,
                 inputs.soil().name().toLowerCase(java.util.Locale.ROOT), frame.fertiliserCharges()));
+        reply(ctx, String.format("  warmth %.2f, damp %.2f, environment fit %.2f",
+                frame.warmth(level, pos), frame.damp(level, pos), inputs.environmentFit()));
+        var line = frame.strain();
+        reply(ctx, String.format("  line: potency %d, vigour %d, hardiness %d, subtlety %d",
+                line.potency(), line.vigour(), line.hardiness(), line.subtlety()));
         reply(ctx, String.format("  would yield %d units at quality %d",
                 Cultivation.units(ForcingFrameBlockEntity.BASE_YIELD, inputs, Cultivation.quality(inputs)),
                 Cultivation.quality(inputs)));
@@ -378,7 +401,7 @@ public final class SlumCommands {
                 .then(Commands.literal("place")
                         .then(Commands.argument("piece", StringArgumentType.word())
                                 .suggests((ctx, builder) ->
-                                        SharedSuggestionProvider.suggest(List.of("trader_house"), builder))
+                                        SharedSuggestionProvider.suggest(StructurePlacer.PIECES.keySet(), builder))
                                 .executes(ctx -> placeStructure(ctx, net.minecraft.world.level.block.Rotation.NONE))
                                 .then(Commands.argument("rotation", StringArgumentType.word())
                                         .suggests((ctx, builder) -> SharedSuggestionProvider.suggest(
@@ -412,17 +435,18 @@ public final class SlumCommands {
     private static int placeStructure(CommandContext<CommandSourceStack> ctx,
                                       net.minecraft.world.level.block.Rotation rotation) {
         String name = StringArgumentType.getString(ctx, "piece");
-        if (!name.equals("trader_house")) {
+        StructurePlacer.Piece piece = StructurePlacer.PIECES.get(name);
+        if (piece == null) {
             ctx.getSource().sendFailure(Component.literal("No such piece: " + name));
             return 0;
         }
         var result = StructurePlacer.place(ctx.getSource().getLevel(),
-                BlockPos.containing(ctx.getSource().getPosition()),
-                StructurePlacer.TRADER_HOUSE, rotation);
+                BlockPos.containing(ctx.getSource().getPosition()), piece, rotation);
 
         if (result instanceof StructurePlacer.Result.Placed placed) {
             reply(ctx, "Placed " + name + " at " + placed.origin().toShortString()
-                    + " (" + placed.size().getX() + "x" + placed.size().getY() + "x" + placed.size().getZ() + ")");
+                    + " (" + placed.size().getX() + "x" + placed.size().getY() + "x" + placed.size().getZ() + ")"
+                    + (placed.people() > 0 ? ", " + placed.people() + " people moved in" : ""));
             return 1;
         }
         if (result instanceof StructurePlacer.Result.Missing missing) {
@@ -466,6 +490,309 @@ public final class SlumCommands {
                 method.name().toLowerCase(java.util.Locale.ROOT), units, quality,
                 result.units(), result.quality(), result.wasteUnits(), result.compostQuality(),
                 method.seconds(false)));
+        return 1;
+    }
+
+    // ------------------------------------------------------------------ progress
+
+    /** Where a player stands on the ladder, and a way to move them for testing. */
+    private static LiteralArgumentBuilder<CommandSourceStack> progress() {
+        return Commands.literal("progress")
+                .then(Commands.literal("get")
+                        .executes(ctx -> progressGet(ctx, List.of(ctx.getSource().getPlayerOrException())))
+                        .then(Commands.argument("targets", EntityArgument.players())
+                                .requires(Commands.hasPermission(OP))
+                                .executes(ctx -> progressGet(ctx, EntityArgument.getPlayers(ctx, "targets")))))
+                .then(Commands.literal("set").requires(Commands.hasPermission(OP))
+                        .then(Commands.argument("field", StringArgumentType.word())
+                                .suggests((ctx, builder) -> SharedSuggestionProvider.suggest(List.of("units", "coin"), builder))
+                                .then(Commands.argument("value", IntegerArgumentType.integer(0))
+                                        .executes(ctx -> progressSet(ctx, List.of(ctx.getSource().getPlayerOrException())))
+                                        .then(Commands.argument("targets", EntityArgument.players())
+                                                .executes(ctx -> progressSet(ctx, EntityArgument.getPlayers(ctx, "targets")))))))
+                .then(Commands.literal("reset").requires(Commands.hasPermission(OP))
+                        .executes(ctx -> progressReset(ctx, List.of(ctx.getSource().getPlayerOrException())))
+                        .then(Commands.argument("targets", EntityArgument.players())
+                                .executes(ctx -> progressReset(ctx, EntityArgument.getPlayers(ctx, "targets")))));
+    }
+
+    private static int progressGet(CommandContext<CommandSourceStack> ctx, Collection<ServerPlayer> targets) {
+        for (ServerPlayer player : targets) {
+            Progression p = player.getData(ModAttachments.PROGRESSION.get());
+            var gate = p.gate(Tuning.progression());
+            String next = !gate.reachable() ? "the ladder ends here for now"
+                    : gate.unitsNeeded() > 0 ? gate.unitsNeeded() + " more units to " + gate.next().label
+                    : gate.coinNeeded() + " more coin to " + gate.next().label;
+            reply(ctx, String.format("%s — %s: %d units sold, %d coin earned; %s",
+                    player.getName().getString(), p.tier(Tuning.progression()).label, p.unitsSold, p.coinEarned + "s", next));
+        }
+        return targets.size();
+    }
+
+    private static int progressSet(CommandContext<CommandSourceStack> ctx, Collection<ServerPlayer> targets) {
+        String field = StringArgumentType.getString(ctx, "field");
+        int value = IntegerArgumentType.getInteger(ctx, "value");
+        if (!field.equals("units") && !field.equals("coin")) {
+            ctx.getSource().sendFailure(Component.literal("No such field: " + field));
+            return 0;
+        }
+        for (ServerPlayer player : targets) {
+            Progression p = player.getData(ModAttachments.PROGRESSION.get());
+            if (field.equals("units")) p.unitsSold = value; else p.coinEarned = value;
+            player.syncData(ModAttachments.PROGRESSION.get());
+        }
+        reply(ctx, "Set " + field + " to " + value + " on " + targets.size() + " player(s)");
+        return targets.size();
+    }
+
+    private static int progressReset(CommandContext<CommandSourceStack> ctx, Collection<ServerPlayer> targets) {
+        for (ServerPlayer player : targets) {
+            Progression p = player.getData(ModAttachments.PROGRESSION.get());
+            p.unitsSold = 0;
+            p.coinEarned = 0;
+            player.syncData(ModAttachments.PROGRESSION.get());
+        }
+        reply(ctx, "Reset " + targets.size() + " player(s) to hand to mouth");
+        return targets.size();
+    }
+
+    // ------------------------------------------------------------------ market
+
+    /** The level's demand pools, and a way to move them for testing. */
+    private static LiteralArgumentBuilder<CommandSourceStack> market() {
+        return Commands.literal("market")
+                .then(Commands.literal("get").executes(SlumCommands::marketGet))
+                .then(Commands.literal("set").requires(Commands.hasPermission(OP))
+                        .then(Commands.argument("substance", StringArgumentType.word())
+                                .suggests((ctx, builder) -> SharedSuggestionProvider.suggest(ModItems.SUBSTANCES, builder))
+                                .then(Commands.argument("demand", DoubleArgumentType.doubleArg(0))
+                                        .executes(SlumCommands::marketSet))));
+    }
+
+    private static int marketGet(CommandContext<CommandSourceStack> ctx) {
+        ServerLevel level = ctx.getSource().getLevel();
+        var market = Market.of(level);
+        for (String drug : ModItems.SUBSTANCES)
+            reply(ctx, String.format("%s — demand %.0f of %.0f, price x%.2f, broker pays %s/unit",
+                    drug, market.demand(drug), market.settings().demandMax(), market.demandFactor(drug),
+                    Coin.format(Market.standardPence(level, drug, 1, 1.2))));
+        return 1;
+    }
+
+    private static int marketSet(CommandContext<CommandSourceStack> ctx) {
+        String drug = StringArgumentType.getString(ctx, "substance");
+        if (!ModItems.SUBSTANCES.contains(drug)) {
+            ctx.getSource().sendFailure(Component.literal("No such substance: " + drug));
+            return 0;
+        }
+        ServerLevel level = ctx.getSource().getLevel();
+        var market = Market.of(level);
+        double wanted = DoubleArgumentType.getDouble(ctx, "demand");
+        var snapshot = new java.util.HashMap<>(market.snapshot());
+        snapshot.put(drug, wanted);
+        market.restore(snapshot);
+        level.setData(ModAttachments.MARKET.get(), market);
+        reply(ctx, String.format("%s demand set to %.0f", drug, market.demand(drug)));
+        return 1;
+    }
+
+    // ------------------------------------------------------------------ suspicion
+
+    private static LiteralArgumentBuilder<CommandSourceStack> suspicion() {
+        return Commands.literal("suspicion")
+                .then(Commands.literal("get")
+                        .executes(ctx -> suspicionGet(ctx, List.of(ctx.getSource().getPlayerOrException())))
+                        .then(Commands.argument("targets", EntityArgument.players())
+                                .requires(Commands.hasPermission(OP))
+                                .executes(ctx -> suspicionGet(ctx, EntityArgument.getPlayers(ctx, "targets")))))
+                .then(Commands.literal("set").requires(Commands.hasPermission(OP))
+                        .then(Commands.argument("value", DoubleArgumentType.doubleArg(0, 100))
+                                .executes(ctx -> suspicionSet(ctx, List.of(ctx.getSource().getPlayerOrException())))
+                                .then(Commands.argument("targets", EntityArgument.players())
+                                        .executes(ctx -> suspicionSet(ctx, EntityArgument.getPlayers(ctx, "targets"))))));
+    }
+
+    private static int suspicionGet(CommandContext<CommandSourceStack> ctx, Collection<ServerPlayer> targets) {
+        for (ServerPlayer player : targets) {
+            Suspicion s = Watch.of(player);
+            long until = s.untilRaid(player.level().getGameTime() * 50L);
+            reply(ctx, String.format("%s — suspicion %.0f (%s)%s", player.getName().getString(), s.value,
+                    s.level(Tuning.suspicion()).name().toLowerCase(java.util.Locale.ROOT),
+                    until < 0 ? "" : ", raid in " + (until / 1000) + "s"));
+        }
+        return targets.size();
+    }
+
+    private static int suspicionSet(CommandContext<CommandSourceStack> ctx, Collection<ServerPlayer> targets) {
+        double value = DoubleArgumentType.getDouble(ctx, "value");
+        for (ServerPlayer player : targets) {
+            Suspicion s = Watch.of(player);
+            s.value = value;
+            if (value < Tuning.suspicion().huntedAt()) s.cancelRaid();
+            player.syncData(ModAttachments.SUSPICION.get());
+        }
+        reply(ctx, "Set suspicion to " + value + " on " + targets.size() + " player(s)");
+        return targets.size();
+    }
+
+    // ------------------------------------------------------------------ coin
+
+    /** A purse of a given value, loose or stamped, as the fewest coins. */
+    private static LiteralArgumentBuilder<CommandSourceStack> coin() {
+        return Commands.literal("coin").requires(Commands.hasPermission(OP))
+                .then(Commands.argument("pence", IntegerArgumentType.integer(1))
+                        .executes(ctx -> giveCoin(ctx, false))
+                        .then(Commands.literal("stamped").executes(ctx -> giveCoin(ctx, true))));
+    }
+
+    private static int giveCoin(CommandContext<CommandSourceStack> ctx, boolean stamped) {
+        ServerPlayer player = ctx.getSource().getPlayer();
+        if (player == null) {
+            ctx.getSource().sendFailure(Component.literal("This one needs a player"));
+            return 0;
+        }
+        int pence = IntegerArgumentType.getInteger(ctx, "pence");
+        Purse.pay(player, pence, stamped);
+        reply(ctx, "Gave " + Coin.format(pence) + (stamped ? " stamped" : " loose"));
+        return 1;
+    }
+
+    // ------------------------------------------------------------------ strain
+
+    /** Sets one trait of the line on whatever is held, for breeding tests. */
+    private static LiteralArgumentBuilder<CommandSourceStack> strain() {
+        return Commands.literal("strain").requires(Commands.hasPermission(OP))
+                .then(Commands.argument("trait", StringArgumentType.word())
+                        .suggests((ctx, builder) -> SharedSuggestionProvider.suggest(
+                                List.of("potency", "vigour", "hardiness", "subtlety"), builder))
+                        .then(Commands.argument("value", IntegerArgumentType.integer(0, 100))
+                                .executes(SlumCommands::strainSet)));
+    }
+
+    private static int strainSet(CommandContext<CommandSourceStack> ctx) {
+        ServerPlayer player = ctx.getSource().getPlayer();
+        if (player == null) {
+            ctx.getSource().sendFailure(Component.literal("This one needs a player"));
+            return 0;
+        }
+        ItemStack held = player.getMainHandItem();
+        if (held.isEmpty()) {
+            ctx.getSource().sendFailure(Component.literal("Hold something"));
+            return 0;
+        }
+        String trait = StringArgumentType.getString(ctx, "trait");
+        int value = IntegerArgumentType.getInteger(ctx, "value");
+        Strain s = ModComponents.strainOf(held);
+        Strain changed = switch (trait) {
+            case "potency" -> new Strain(value, s.vigour(), s.hardiness(), s.subtlety());
+            case "vigour" -> new Strain(s.potency(), value, s.hardiness(), s.subtlety());
+            case "hardiness" -> new Strain(s.potency(), s.vigour(), value, s.subtlety());
+            case "subtlety" -> new Strain(s.potency(), s.vigour(), s.hardiness(), value);
+            default -> null;
+        };
+        if (changed == null) {
+            ctx.getSource().sendFailure(Component.literal("No such trait: " + trait));
+            return 0;
+        }
+        ModComponents.withStrain(held, changed);
+        reply(ctx, String.format("Line: potency %d, vigour %d, hardiness %d, subtlety %d",
+                changed.potency(), changed.vigour(), changed.hardiness(), changed.subtlety()));
+        return 1;
+    }
+
+    // ------------------------------------------------------------------ standing
+
+    private static LiteralArgumentBuilder<CommandSourceStack> standing() {
+        return Commands.literal("standing")
+                .then(Commands.literal("get").executes(ctx -> standingGet(ctx, ctx.getSource().getPlayerOrException())))
+                .then(Commands.literal("set").requires(Commands.hasPermission(OP))
+                        .then(Commands.argument("crew", StringArgumentType.word())
+                                .suggests((ctx, builder) -> SharedSuggestionProvider.suggest(
+                                        java.util.Arrays.stream(Standing.Crew.values()).map(c -> c.id).toList(), builder))
+                                .then(Commands.argument("value", DoubleArgumentType.doubleArg(Standing.MIN, Standing.MAX))
+                                        .executes(ctx -> standingSet(ctx, ctx.getSource().getPlayerOrException())))));
+    }
+
+    private static int standingGet(CommandContext<CommandSourceStack> ctx, ServerPlayer player) {
+        var all = Crews.of(player).all();
+        if (all.isEmpty()) {
+            reply(ctx, "No crew knows you yet");
+            return 1;
+        }
+        all.entrySet().stream().sorted(java.util.Map.Entry.comparingByKey()).forEach(e ->
+                reply(ctx, String.format("%s — %.0f%s", e.getKey(), e.getValue(), Standing.atWar(e.getValue()) ? " (war)" : "")));
+        return 1;
+    }
+
+    private static int standingSet(CommandContext<CommandSourceStack> ctx, ServerPlayer player) {
+        String crew = StringArgumentType.getString(ctx, "crew");
+        double value = DoubleArgumentType.getDouble(ctx, "value");
+        Standings standings = Crews.of(player);
+        standings.set(crew, value);
+        player.setData(ModAttachments.STANDINGS.get(), standings);
+        reply(ctx, "Standing with " + crew + " set to " + value);
+        return 1;
+    }
+
+    // ------------------------------------------------------------------ turf
+
+    private static LiteralArgumentBuilder<CommandSourceStack> turf() {
+        return Commands.literal("turf")
+                .then(Commands.literal("here").executes(ctx -> turfHere(ctx, ctx.getSource().getPlayerOrException())))
+                .then(Commands.literal("claim").executes(ctx -> turfClaim(ctx, ctx.getSource().getPlayerOrException())))
+                .then(Commands.literal("release").executes(ctx -> turfRelease(ctx, ctx.getSource().getPlayerOrException())))
+                .then(Commands.literal("list").executes(ctx -> turfList(ctx, ctx.getSource().getPlayerOrException())))
+                .then(Commands.literal("give").requires(Commands.hasPermission(OP))
+                        .then(Commands.argument("crew", StringArgumentType.word())
+                                .suggests((ctx, builder) -> SharedSuggestionProvider.suggest(
+                                        java.util.Arrays.stream(Standing.Crew.values()).map(c -> c.id).toList(), builder))
+                                .executes(ctx -> turfGive(ctx, ctx.getSource().getPlayerOrException(), StringArgumentType.getString(ctx, "crew")))))
+                .then(Commands.literal("clear").requires(Commands.hasPermission(OP))
+                        .executes(ctx -> turfGive(ctx, ctx.getSource().getPlayerOrException(), "")));
+    }
+
+    private static int turfHere(CommandContext<CommandSourceStack> ctx, ServerPlayer player) {
+        ctx.getSource().sendSuccess(() -> Turfs.describe(player.level(), player, player.blockPosition()), false);
+        return 1;
+    }
+
+    private static int turfClaim(CommandContext<CommandSourceStack> ctx, ServerPlayer player) {
+        var verdict = Turfs.claim(player.level(), player);
+        String key = verdict == null ? "turf_need_sovereign" : switch (verdict) {
+            case OK -> "turf_claimed";
+            case YOURS_ALREADY -> "turf_yours_already";
+            case ANOTHER_PLAYER -> "turf_another";
+            case CREW_REFUSES -> "turf_crew_refuses";
+            case TOO_MANY -> "turf_too_many";
+            case TIER_TOO_LOW -> "turf_tier_low";
+        };
+        var message = Component.translatable("message.slumdrugs." + key, Coin.format(Turf.CLAIM_PENCE), Turf.CLAIM_STANDING);
+        if (verdict == Turf.Verdict.OK) ctx.getSource().sendSuccess(() -> message, false);
+        else ctx.getSource().sendFailure(message);
+        return verdict == Turf.Verdict.OK ? 1 : 0;
+    }
+
+    private static int turfRelease(CommandContext<CommandSourceStack> ctx, ServerPlayer player) {
+        boolean released = Turfs.release(player.level(), player);
+        var message = Component.translatable(released ? "message.slumdrugs.turf_released" : "message.slumdrugs.turf_not_yours");
+        if (released) ctx.getSource().sendSuccess(() -> message, false); else ctx.getSource().sendFailure(message);
+        return released ? 1 : 0;
+    }
+
+    private static int turfList(CommandContext<CommandSourceStack> ctx, ServerPlayer player) {
+        var cells = Turfs.of(player.level()).cellsOf(Turfs.id(player));
+        int max = Turf.maxHeld(player.getData(ModAttachments.PROGRESSION.get()).tier(Tuning.progression()));
+        ctx.getSource().sendSuccess(() -> Component.translatable("message.slumdrugs.turf_held", cells.size(), max), false);
+        for (long key : cells) {
+            int x = Turfs.chunkX(key), z = Turfs.chunkZ(key);
+            reply(ctx, "  " + x + ", " + z + "  (blocks " + (x << 4) + ", " + (z << 4) + ")");
+        }
+        return 1;
+    }
+
+    private static int turfGive(CommandContext<CommandSourceStack> ctx, ServerPlayer player, String crew) {
+        Turfs.assign(player.level(), player.blockPosition(), crew);
+        reply(ctx, crew.isBlank() ? "This corner is nobody's now" : "This corner is " + Crews.label(crew) + "'s now");
         return 1;
     }
 

@@ -26,7 +26,9 @@ public final class Npc {
         /** Crew muscle. */
         BRUISER(true),
         /** Crew leadership: their mood spreads to the people around them. */
-        LIEUTENANT(true);
+        LIEUTENANT(true),
+        /** A hired hand: works a station for the player who pays them, and quits when they stop. */
+        HAND(false);
 
         /** Whether this role carries aggression at all. A healer never turns on you. */
         public final boolean hostileCapable;

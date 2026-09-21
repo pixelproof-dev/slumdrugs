@@ -1,0 +1,35 @@
+{
+  "parent": "slumdrugs:root",
+  "display": {
+    "icon": {
+      "id": "slumdrugs:forcing_frame"
+    },
+    "title": {
+      "translate": "advancements.slumdrugs.station.forcing_frame.title"
+    },
+    "description": {
+      "translate": "advancements.slumdrugs.station.forcing_frame.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "placed": {
+      "trigger": "minecraft:placed_block",
+      "conditions": {
+        "location": {
+          "type": "minecraft:match_block",
+          "blocks": "slumdrugs:forcing_frame"
+        }
+      }
+    }
+  },
+  "requirements": [
+    [
+      "placed"
+    ]
+  ],
+  "sends_telemetry_event": false
+}

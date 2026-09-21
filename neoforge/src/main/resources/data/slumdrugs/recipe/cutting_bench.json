@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "I": "minecraft:iron_ingot",
+    "P": "#minecraft:planks",
+    "S": "minecraft:sugar"
+  },
+  "pattern": [
+    "IS ",
+    "PPP",
+    "P P"
+  ],
+  "result": {
+    "id": "slumdrugs:cutting_bench"
+  }
+}

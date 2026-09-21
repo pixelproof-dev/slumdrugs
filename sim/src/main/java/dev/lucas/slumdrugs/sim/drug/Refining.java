@@ -36,7 +36,18 @@ public final class Refining {
 
         /** Power halves the time. It buys throughput, never a better product. */
         public int seconds(boolean powered) { return powered ? Math.max(1, seconds / 2) : seconds; }
+
+        /** Strokes of a hand press that add up to one unpowered run. */
+        public int strokes() { return strokes(HAND_STROKE_SECONDS); }
+
+        public int strokes(int strokeSeconds) {
+            int stroke = Math.max(1, strokeSeconds);
+            return Math.max(1, (seconds + stroke - 1) / stroke);
+        }
     }
+
+    /** Work one pull on a hand press is worth, in seconds of the method's run time. */
+    public static final int HAND_STROKE_SECONDS = 4;
 
     /** What goes in: a stack of one substance at one quality. */
     public record Batch(int inputQuality, int units) {

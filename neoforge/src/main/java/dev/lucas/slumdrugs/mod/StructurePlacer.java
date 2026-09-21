@@ -1,30 +1,46 @@
 package dev.lucas.slumdrugs.mod;
 
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import dev.lucas.slumdrugs.sim.npc.Npc;
 import dev.lucas.slumdrugs.sim.world.StructureFit;
+import net.minecraft.commands.arguments.blocks.BlockStateParser;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.Rotation;
+import net.minecraft.world.level.block.entity.JigsawBlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 
+import java.util.LinkedHashMap;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 
 /**
- * Places a saved building so that its ground floor lands on the terrain, cellar and all.
+ * Places a saved building so that its ground floor lands on the terrain, cellar and all, and
+ * then brings its people: a jigsaw block in the piece whose target is
+ * {@code slumdrugs:npc/<role>} or {@code slumdrugs:npc/<role>/<crew>} becomes a villager of
+ * ours standing where it was, and the jigsaw becomes its final state. That works for a piece
+ * written by {@code tools/build_structures.py} and for one saved from a structure block with
+ * a jigsaw placed by hand, alike.
  *
- * <p>The problem this solves: a structure block saves upward from its own position, so a
+ * <p>The problem the offset solves: a structure block saves upward from its own position, so a
  * building with a cellar has its origin on the cellar floor. Dropping that at the surface —
  * which is what heightmap projection in the jigsaw JSON does — leaves the cellar above ground
  * and the house hanging over it. The fix is a single number the {@code .nbt} cannot carry:
  * how far up from the origin the ground floor sits.
  *
- * <p>The arithmetic lives in {@link StructureFit} and is verified without a game. This class
- * is the adapter: it reads the terrain, refuses what it should not build on, and writes.
+ * <p>Where the piece actually goes is arithmetic, so it lives in {@link StructureFit} and is
+ * verified without a game. This class is the adapter: it reads the terrain, writes, and spawns.
  */
 public final class StructurePlacer {
 
@@ -35,36 +51,50 @@ public final class StructurePlacer {
         }
     }
 
+    private static Piece piece(String name, int groundOffset) {
+        return new Piece(Identifier.fromNamespaceAndPath(SlumDrugsMod.ID, name), groundOffset);
+    }
+
     /**
      * The trader's house: timber frame over a stone footing, brick chimney, nine blocks from
-     * the cellar floor up to the first free level above its ground surface.
+     * the cellar floor up to and including the ground floor. Hand-built, no markers yet.
      */
-    public static final Piece TRADER_HOUSE =
-            new Piece(Identifier.fromNamespaceAndPath(SlumDrugsMod.ID, "trader_house"), 9);
+    public static final Piece TRADER_HOUSE = piece("trader_house", 9);
+
+    /** A resident's house, generated: footing at 0, the floor layer at 1, a resident inside and a regular at the door. */
+    public static final Piece RESIDENT_HOUSE = piece("resident_house", 2);
+
+    /** Every piece by its short name, in the order the command lists them. */
+    public static final Map<String, Piece> PIECES = new LinkedHashMap<>();
+
+    static {
+        PIECES.put("trader_house", TRADER_HOUSE);
+        PIECES.put("resident_house", RESIDENT_HOUSE);
+    }
 
     private StructurePlacer() {}
 
     /** The result of an attempt, so a caller can say something useful rather than just fail. */
     public sealed interface Result {
-        record Placed(BlockPos origin, Vec3i size) implements Result {}
+        record Placed(BlockPos origin, Vec3i size, int people) implements Result {}
         record Missing(Identifier id) implements Result {}
         record Refused(String reason) implements Result {}
     }
 
     /**
-     * Places {@code piece} centred on {@code where}, sunk so its ground floor meets the surface.
+     * Places {@code piece} centred on {@code where}, sunk so its ground floor meets the surface,
+     * and spawns whoever its markers call for.
      *
      * @param where  the column to build in; only its X and Z are used
      * @param rotation which way the front faces
      */
     public static Result place(ServerLevel level, BlockPos where, Piece piece, Rotation rotation) {
-        // getHeight answers minY for a chunk that is not loaded, which reads back as a cellar
-        // below the world rather than as the real reason. Say the real reason.
-        if (!level.hasChunkAt(where.getX(), where.getZ()))
-            return new Result.Refused("That column is not loaded — stand nearer, or force-load it");
+        // An unloaded chunk has no surface to read: the heightmap would answer with the bottom
+        // of the world and the piece would be refused for a cellar it does not have.
+        if (!level.isLoaded(where)) return new Result.Refused("That chunk is not loaded");
 
-        // WORLD_SURFACE, not WORLD_SURFACE_WG: the _WG maps are worldgen-only, so on a live
-        // chunk 26.3 primes one on demand, logs an error, and then never updates it again.
+        // WORLD_SURFACE, not the _WG one: that heightmap exists only while a chunk is being
+        // generated, and asking a loaded chunk for it logs an error and answers from nothing.
         int firstFree = level.getHeight(Heightmap.Types.WORLD_SURFACE, where.getX(), where.getZ());
         return placeAt(level, where.getX(), where.getZ(), firstFree, piece, rotation);
     }
@@ -84,10 +114,9 @@ public final class StructurePlacer {
 
         StructureTemplate template = found.get();
         Vec3i raw = template.getSize();
-        BlockPos where = new BlockPos(columnX, firstFree, columnZ);
 
         StructureFit.Fit fit = StructureFit.centredOn(
-                where.getX(), where.getZ(), firstFree,
+                columnX, columnZ, firstFree,
                 new StructureFit.Size(raw.getX(), raw.getY(), raw.getZ()),
                 piece.groundOffset(), turn(rotation),
                 level.getMinY(), level.getMaxY());
@@ -110,9 +139,45 @@ public final class StructurePlacer {
                 level.getRandom(), Block.UPDATE_CLIENTS);
         if (!placed) return new Result.Refused("The game refused the placement");
 
+        int people = people(level, template.getBoundingBox(settings, writeFrom));
         return new Result.Placed(
                 new BlockPos(ok.cornerX(), ok.cornerY(), ok.cornerZ()),
-                new Vec3i(ok.footprint().x(), ok.footprint().y(), ok.footprint().z()));
+                new Vec3i(ok.footprint().x(), ok.footprint().y(), ok.footprint().z()),
+                people);
+    }
+
+    /** Turns every marker in the box into the person it names. Returns how many. */
+    static int people(ServerLevel level, BoundingBox box) {
+        int spawned = 0;
+        for (BlockPos pos : BlockPos.betweenClosed(box.minX(), box.minY(), box.minZ(), box.maxX(), box.maxY(), box.maxZ())) {
+            if (!(level.getBlockEntity(pos) instanceof JigsawBlockEntity jigsaw)) continue;
+            Identifier target = jigsaw.getTarget();
+            if (!target.getNamespace().equals(SlumDrugsMod.ID) || !target.getPath().startsWith("npc/")) continue;
+
+            String[] parts = target.getPath().substring("npc/".length()).split("/", 2);
+            Npc.Role role;
+            try {
+                role = Npc.Role.valueOf(parts[0].toUpperCase(Locale.ROOT));
+            } catch (IllegalArgumentException unknown) {
+                continue;
+            }
+            String crew = parts.length > 1 ? parts[1] : "";
+            BlockState after = finalState(level, jigsaw.getFinalState());
+            BlockPos here = pos.immutable();
+            level.setBlock(here, after, Block.UPDATE_CLIENTS);
+            if (Npcs.spawn(level, here, role, crew, Npcs.randomName(level)) != null) spawned++;
+        }
+        return spawned;
+    }
+
+    /** The block a marker leaves behind, as the jigsaw's final state names it; air if that does not parse. */
+    private static BlockState finalState(ServerLevel level, String state) {
+        if (state == null || state.isBlank()) return Blocks.AIR.defaultBlockState();
+        try {
+            return BlockStateParser.parseForBlock(level.holderLookup(Registries.BLOCK), state, true).blockState();
+        } catch (CommandSyntaxException bad) {
+            return Blocks.AIR.defaultBlockState();
+        }
     }
 
     private static StructureFit.Turn turn(Rotation rotation) {

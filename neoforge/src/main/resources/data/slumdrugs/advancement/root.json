@@ -1,0 +1,35 @@
+{
+  "display": {
+    "icon": {
+      "id": "slumdrugs:journal"
+    },
+    "title": {
+      "translate": "advancements.slumdrugs.root.title"
+    },
+    "description": {
+      "translate": "advancements.slumdrugs.root.description"
+    },
+    "frame": "task",
+    "show_toast": false,
+    "announce_to_chat": false,
+    "hidden": false,
+    "background": "minecraft:block/spruce_planks"
+  },
+  "criteria": {
+    "reached": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "reached"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "slumdrugs:forcing_frame",
+      "slumdrugs:drying_loft"
+    ]
+  },
+  "sends_telemetry_event": false
+}

@@ -1,0 +1,34 @@
+{
+  "parent": "slumdrugs:root",
+  "display": {
+    "icon": {
+      "id": "slumdrugs:coin_shilling"
+    },
+    "title": {
+      "translate": "advancements.slumdrugs.tier.backroom.title"
+    },
+    "description": {
+      "translate": "advancements.slumdrugs.tier.backroom.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "reached": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "reached"
+    ]
+  ],
+  "sends_telemetry_event": false,
+  "rewards": {
+    "recipes": [
+      "slumdrugs:counting_house"
+    ]
+  }
+}

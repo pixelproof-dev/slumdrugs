@@ -1,0 +1,35 @@
+{
+  "parent": "slumdrugs:tier/backroom",
+  "display": {
+    "icon": {
+      "id": "slumdrugs:counting_house"
+    },
+    "title": {
+      "translate": "advancements.slumdrugs.station.counting_house.title"
+    },
+    "description": {
+      "translate": "advancements.slumdrugs.station.counting_house.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "placed": {
+      "trigger": "minecraft:placed_block",
+      "conditions": {
+        "location": {
+          "type": "minecraft:match_block",
+          "blocks": "slumdrugs:counting_house"
+        }
+      }
+    }
+  },
+  "requirements": [
+    [
+      "placed"
+    ]
+  ],
+  "sends_telemetry_event": false
+}

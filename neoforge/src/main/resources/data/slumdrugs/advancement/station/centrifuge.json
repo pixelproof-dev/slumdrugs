@@ -1,0 +1,35 @@
+{
+  "parent": "slumdrugs:tier/workshop",
+  "display": {
+    "icon": {
+      "id": "slumdrugs:centrifuge"
+    },
+    "title": {
+      "translate": "advancements.slumdrugs.station.centrifuge.title"
+    },
+    "description": {
+      "translate": "advancements.slumdrugs.station.centrifuge.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "placed": {
+      "trigger": "minecraft:placed_block",
+      "conditions": {
+        "location": {
+          "type": "minecraft:match_block",
+          "blocks": "slumdrugs:centrifuge"
+        }
+      }
+    }
+  },
+  "requirements": [
+    [
+      "placed"
+    ]
+  ],
+  "sends_telemetry_event": false
+}
