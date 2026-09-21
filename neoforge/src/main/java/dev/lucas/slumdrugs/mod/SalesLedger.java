@@ -40,7 +40,8 @@ public final class SalesLedger {
             level.setData(ModAttachments.MARKET.get(), market);
         }
         record(player, units, pence);
-        Watch.noticed(player, units, ModItems.drugOf("package_", offer.getItemCostA().itemStack()) != null);
+        Watch.noticed(player, units, ModItems.drugOf("package_", offer.getItemCostA().itemStack()) != null,
+                ModComponents.strainOf(offer.getItemCostA().itemStack()).subtletyFactor());
     }
 
     /** Counts a sale, however it was made, in whole shillings, and tells the player when it moved them up. */

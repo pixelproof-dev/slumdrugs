@@ -100,5 +100,11 @@
   "message.slumdrugs.exchanged": "%s Smaragde gewechselt in %s, gestempelt.",
   "message.slumdrugs.stamped": "%s gestempelt: %s zurück, das Kontor behält %s.",
   "message.slumdrugs.already_stamped": "Diese Münze ist schon gestempelt.",
-  "message.slumdrugs.no_smaller_coin": "Kleiner als ein Penny gibt es nichts."
+  "message.slumdrugs.no_smaller_coin": "Kleiner als ein Penny gibt es nichts.",
+  "block.slumdrugs.grafting_bench": "Veredelungsbank",
+  "message.slumdrugs.graft_full": "Beide Töpfe sind belegt; kreuzen oder zurücknehmen.",
+  "message.slumdrugs.graft_mismatch": "Beide Eltern müssen dieselbe Pflanze sein.",
+  "message.slumdrugs.graft_one_parent": "Eine Kreuzung braucht zwei Eltern.",
+  "tooltip.slumdrugs.strain": "Linie — Wirkstärke %s, Wuchs %s, Härte %s, Unauffälligkeit %s",
+  "tooltip.slumdrugs.potency": "Wirkstärke %s"
 }

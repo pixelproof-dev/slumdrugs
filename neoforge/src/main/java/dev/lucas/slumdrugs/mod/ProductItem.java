@@ -46,10 +46,11 @@ public final class ProductItem extends Item {
         condition.advance(condition.lastUse, now, Condition.Settings.defaults());
 
         int quality = ModComponents.qualityOf(stack);
+        double dose = profile.dose() * ModComponents.strainOf(stack).potencyFactor();
 
         // Too much on top of too much: the dose still lands, and it hurts rather than helps.
-        boolean overdose = condition.wouldOverdose(profile.dose(), quality, ModComponents.cutOf(stack));
-        double landed = condition.use(profile.dose(), quality,
+        boolean overdose = condition.wouldOverdose(dose, quality, ModComponents.cutOf(stack));
+        double landed = condition.use(dose, quality,
                 profile.toleranceGain(), profile.dependenceGain(), now);
 
         if (overdose) {
@@ -59,7 +60,7 @@ public final class ProductItem extends Item {
             actionBar(player, Component.translatable("message.slumdrugs.overdose")
                     .withStyle(style -> style.withColor(0xD05050)));
         } else {
-            double strength = landed / Math.max(1, profile.dose());
+            double strength = landed / Math.max(1, dose);
             Substances.instances(profile, strength).forEach(player::addEffect);
             actionBar(player, Component.translatable("message.slumdrugs.used",
                     Component.translatable("item.slumdrugs.product_" + drug),

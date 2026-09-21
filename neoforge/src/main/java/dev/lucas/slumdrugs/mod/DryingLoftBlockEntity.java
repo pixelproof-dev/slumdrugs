@@ -90,10 +90,10 @@ public final class DryingLoftBlockEntity extends BlockEntity {
         ItemStack out;
         String drug = ModItems.drugOf("raw_", bundle);
         if (drug != null && Drying.ready(hung, Drying.SECONDS)) {
-            out = ModComponents.withQuality(
+            out = ModComponents.inherit(bundle, ModComponents.withQuality(
                     new ItemStack(ModItems.get("dried_" + drug).get(), bundle.getCount()),
                     Drying.quality(ModComponents.qualityOf(bundle), hung, Drying.SECONDS),
-                    bundle.get(ModComponents.GROWER.get()));
+                    bundle.get(ModComponents.GROWER.get())));
         } else {
             out = bundle.copy();
         }

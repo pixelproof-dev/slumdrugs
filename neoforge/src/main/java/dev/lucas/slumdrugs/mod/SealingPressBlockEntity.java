@@ -73,6 +73,7 @@ public final class SealingPressBlockEntity extends BlockEntity {
                 new ItemStack(ModItems.get("package_" + drug).get(), 1),
                 ModComponents.qualityOf(stock), stock.get(ModComponents.GROWER.get()));
         parcel.set(ModComponents.SEAL.get(), sealer);
+        ModComponents.inherit(stock, parcel);
         ModComponents.withCut(parcel, ModComponents.cutOf(stock));
 
         stock.shrink(Sealing.UNITS_PER_PARCEL);

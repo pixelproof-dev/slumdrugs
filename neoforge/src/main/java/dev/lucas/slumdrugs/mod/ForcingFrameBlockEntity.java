@@ -1,6 +1,7 @@
 package dev.lucas.slumdrugs.mod;
 
 import dev.lucas.slumdrugs.sim.drug.Cultivation;
+import dev.lucas.slumdrugs.sim.drug.Strain;
 import dev.lucas.slumdrugs.sim.station.GrowboxState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.Blocks;
@@ -30,6 +31,7 @@ public final class ForcingFrameBlockEntity extends BlockEntity {
 
     private final GrowboxState state = new GrowboxState(0);
     private int seedQuality = 50;
+    private Strain strain = Strain.AVERAGE;
     private int fertiliserCharges;
     private int fertiliserQuality;
 
@@ -97,7 +99,7 @@ public final class ForcingFrameBlockEntity extends BlockEntity {
     public double environmentFit(Level level, BlockPos pos) {
         double light = state.lamp ? 1.0 : 0.6;
         Cultivation.Band band = state.drug == null ? Cultivation.Band.any() : Substances.profile(state.drug).band();
-        return light * Cultivation.climateFit(warmth(level, pos), damp(level, pos), band);
+        return light * Cultivation.climateFit(warmth(level, pos), damp(level, pos), band, strain.climateFloor());
     }
 
     public Cultivation.Inputs inputs(Level level, BlockPos pos) {
@@ -116,8 +118,11 @@ public final class ForcingFrameBlockEntity extends BlockEntity {
         return true;
     }
 
-    public void plant(Level level, String drug, String grower, int seedQuality) {
+    public Strain strain() { return strain; }
+
+    public void plant(Level level, String drug, String grower, int seedQuality, Strain strain) {
         this.seedQuality = Math.max(0, Math.min(100, seedQuality));
+        this.strain = strain == null ? Strain.AVERAGE : strain;
         fertiliserCharges = 0;
         fertiliserQuality = 0;
         state.drug = drug;
@@ -134,10 +139,12 @@ public final class ForcingFrameBlockEntity extends BlockEntity {
     /** What was growing, or null if the frame is empty. */
     public String crop() { return state.drug; }
 
-    /** Resolves the planting and clears the frame. The caller drops what comes back. */
+    /** Resolves the planting and clears the frame. The caller drops what comes back. A vigorous line yields more. */
     public Cultivation.Harvest harvest(Level level, BlockPos pos) {
-        Cultivation.Harvest harvest = Cultivation.harvest(BASE_YIELD, inputs(level, pos),
+        Cultivation.Harvest grown = Cultivation.harvest(BASE_YIELD, inputs(level, pos),
                 level.getRandom().nextDouble());
+        Cultivation.Harvest harvest = new Cultivation.Harvest(grown.quality(),
+                Math.max(1, (int) Math.round(grown.units() * strain.vigourFactor())), grown.seeds(), grown.seedQuality());
         state.clear();
         fertiliserCharges = 0;
         fertiliserQuality = 0;
@@ -148,7 +155,8 @@ public final class ForcingFrameBlockEntity extends BlockEntity {
     /** Advances growth and keeps the visible stage in step. Server side, once a second. */
     public void serverTick(Level level, BlockPos pos, BlockState blockState) {
         int before = state.stage();
-        state.advance(clock(level), GROWTH_SECONDS);
+        // A vigorous line grows faster: the same progress over fewer seconds.
+        state.advance(clock(level), GROWTH_SECONDS / strain.vigourFactor());
         setChanged();
         int after = state.stage();
         if (after != before && blockState.getValue(ForcingFrameBlock.STAGE) != after)
@@ -169,6 +177,10 @@ public final class ForcingFrameBlockEntity extends BlockEntity {
         output.putBoolean("lamp", state.lamp);
         output.putLong("updated", state.updatedAt);
         output.putInt("seed_quality", seedQuality);
+        output.putInt("potency", strain.potency());
+        output.putInt("vigour", strain.vigour());
+        output.putInt("hardiness", strain.hardiness());
+        output.putInt("subtlety", strain.subtlety());
         output.putInt("fertiliser_charges", fertiliserCharges);
         output.putInt("fertiliser_quality", fertiliserQuality);
     }
@@ -184,6 +196,8 @@ public final class ForcingFrameBlockEntity extends BlockEntity {
         state.lamp = input.getBooleanOr("lamp", true);
         state.updatedAt = input.getLongOr("updated", 0);
         seedQuality = input.getIntOr("seed_quality", 50);
+        strain = new Strain(input.getIntOr("potency", 50), input.getIntOr("vigour", 50),
+                input.getIntOr("hardiness", 50), input.getIntOr("subtlety", 50));
         fertiliserCharges = input.getIntOr("fertiliser_charges", 0);
         fertiliserQuality = input.getIntOr("fertiliser_quality", 0);
         state.fertilizer = fertiliserCharges;

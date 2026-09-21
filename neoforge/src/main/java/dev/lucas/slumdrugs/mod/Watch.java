@@ -37,11 +37,11 @@ public final class Watch {
         return player.getData(ModAttachments.SUSPICION.get());
     }
 
-    /** A sale has been seen. Called by whoever made it. */
-    public static void noticed(ServerPlayer player, int units, boolean sealed) {
+    /** A sale has been seen. Called by whoever made it; a subtle line is seen less. */
+    public static void noticed(ServerPlayer player, int units, boolean sealed, double subtlety) {
         Suspicion suspicion = of(player);
         Suspicion.Level before = suspicion.level();
-        suspicion.sold(units, sealed);
+        suspicion.sold((int) Math.round(units * Math.max(0, subtlety)), sealed);
         player.syncData(ModAttachments.SUSPICION.get());
         Suspicion.Level after = suspicion.level();
         if (after != before && after.ordinal() > before.ordinal() && after != Suspicion.Level.RAID)

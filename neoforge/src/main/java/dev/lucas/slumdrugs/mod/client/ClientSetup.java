@@ -7,6 +7,7 @@ import dev.lucas.slumdrugs.mod.Purse;
 import dev.lucas.slumdrugs.mod.SlumDrugsMod;
 import dev.lucas.slumdrugs.sim.drug.Quality;
 import dev.lucas.slumdrugs.sim.drug.Sealing;
+import dev.lucas.slumdrugs.sim.drug.Strain;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -58,6 +59,15 @@ public final class ClientSetup {
             lines.add(Component.translatable("tooltip.slumdrugs.quality", quality,
                     Component.translatable("tooltip.slumdrugs.grade." + Quality.Grade.of(quality).name().toLowerCase(java.util.Locale.ROOT)))
                     .withStyle(ChatFormatting.GRAY));
+
+        Strain strain = stack.get(ModComponents.STRAIN.get());
+        if (strain != null) {
+            if (ModItems.drugOf("seed_", stack) != null)
+                lines.add(Component.translatable("tooltip.slumdrugs.strain", strain.potency(), strain.vigour(),
+                        strain.hardiness(), strain.subtlety()).withStyle(ChatFormatting.DARK_GREEN));
+            else
+                lines.add(Component.translatable("tooltip.slumdrugs.potency", strain.potency()).withStyle(ChatFormatting.DARK_GREEN));
+        }
 
         double cut = ModComponents.cutOf(stack);
         if (cut > 0)

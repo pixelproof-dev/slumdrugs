@@ -30,6 +30,11 @@ public final class Market {
         return Math.max(1, Math.round(units * perUnit * markup));
     }
 
+    /** The same for a particular stack, whose line's potency is part of what it is worth. */
+    public static long pence(ServerLevel level, String drug, net.minecraft.world.item.ItemStack stack, int units, double markup) {
+        return pence(level, drug, ModComponents.qualityOf(stack), units, markup * ModComponents.strainOf(stack).potencyFactor());
+    }
+
     /** The merchant screen's fixed price: standard quality, today's demand. */
     public static long standardPence(ServerLevel level, String drug, int units, double markup) {
         return pence(level, drug, 50, units, markup);

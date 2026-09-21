@@ -62,8 +62,7 @@ public final class StreetSales {
             return;
         }
 
-        int quality = ModComponents.qualityOf(held);
-        long pence = Market.pence(level, wants, quality, units, MARKUP);
+        long pence = Market.pence(level, wants, held, units, MARKUP);
 
         held.consume(units, player);
         market.consume(wants, units);
@@ -72,7 +71,7 @@ public final class StreetSales {
         Purse.pay(player, pence, false);
         SalesLedger.record(player, units, pence);
         // Sick customers talk: cut goods are noticed as if there were twice as many of them.
-        Watch.noticed(player, ModComponents.cutOf(held) > 0 ? units * 2 : units, false);
+        Watch.noticed(player, ModComponents.cutOf(held) > 0 ? units * 2 : units, false, ModComponents.strainOf(held).subtletyFactor());
 
         ProductItem.actionBar(player, Component.translatable("message.slumdrugs.street_sale",
                 villager.getName(), Coin.format(pence), units, Component.translatable("item.slumdrugs.product_" + wants)));

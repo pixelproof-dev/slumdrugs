@@ -100,5 +100,11 @@
   "message.slumdrugs.exchanged": "%s emeralds exchanged for %s, stamped.",
   "message.slumdrugs.stamped": "%s stamped: %s back, the house keeps %s.",
   "message.slumdrugs.already_stamped": "That coin is already stamped.",
-  "message.slumdrugs.no_smaller_coin": "There is nothing smaller than a penny."
+  "message.slumdrugs.no_smaller_coin": "There is nothing smaller than a penny.",
+  "block.slumdrugs.grafting_bench": "Grafting Bench",
+  "message.slumdrugs.graft_full": "Both pots are taken; make the cross or take them back.",
+  "message.slumdrugs.graft_mismatch": "The two parents must be the same plant.",
+  "message.slumdrugs.graft_one_parent": "A cross needs two parents.",
+  "tooltip.slumdrugs.strain": "Line — potency %s, vigour %s, hardiness %s, subtlety %s",
+  "tooltip.slumdrugs.potency": "Potency %s"
 }

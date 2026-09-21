@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "F": "minecraft:flower_pot",
+    "S": "minecraft:shears",
+    "P": "#minecraft:planks"
+  },
+  "pattern": [
+    "FSF",
+    "PPP",
+    "P P"
+  ],
+  "result": {
+    "id": "slumdrugs:grafting_bench"
+  }
+}

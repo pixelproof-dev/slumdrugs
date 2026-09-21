@@ -41,6 +41,9 @@ public final class ModBlocks {
     public static final DeferredBlock<CuttingBenchBlock> CUTTING_BENCH =
             BLOCKS.registerBlock("cutting_bench", CuttingBenchBlock::new, ModBlocks::wooden);
 
+    public static final DeferredBlock<GraftingBenchBlock> GRAFTING_BENCH =
+            BLOCKS.registerBlock("grafting_bench", GraftingBenchBlock::new, ModBlocks::wooden);
+
     /** A desk, not a machine: it holds nothing, so it is a plain block. */
     public static final DeferredBlock<CountingHouseBlock> COUNTING_HOUSE =
             BLOCKS.registerBlock("counting_house", CountingHouseBlock::new, ModBlocks::wooden);
@@ -69,6 +72,8 @@ public final class ModBlocks {
         // The design's counting house is an institution in the settlement. Until settlements
         // exist a player builds the desk, from the backroom on.
         ModItems.blockItem("counting_house", COUNTING_HOUSE, Progression.Tier.BACKROOM);
+        // Grafting is Apothecary work in the design; the Workshop has it until that tier opens.
+        ModItems.blockItem("grafting_bench", GRAFTING_BENCH, Progression.Tier.WORKSHOP);
     }
 
     private ModBlocks() {}

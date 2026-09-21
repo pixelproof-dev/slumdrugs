@@ -1,6 +1,10 @@
 package dev.lucas.slumdrugs.mod;
 
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import dev.lucas.slumdrugs.sim.drug.Strain;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -37,6 +41,27 @@ public final class ModComponents {
                     .networkSynchronized(ByteBufCodecs.STRING_UTF8)
                     .build());
 
+    private static final Codec<Strain> STRAIN_CODEC = RecordCodecBuilder.create(instance -> instance.group(
+            Codec.intRange(0, 100).fieldOf("potency").forGetter(Strain::potency),
+            Codec.intRange(0, 100).fieldOf("vigour").forGetter(Strain::vigour),
+            Codec.intRange(0, 100).fieldOf("hardiness").forGetter(Strain::hardiness),
+            Codec.intRange(0, 100).fieldOf("subtlety").forGetter(Strain::subtlety)
+    ).apply(instance, Strain::new));
+
+    private static final StreamCodec<RegistryFriendlyByteBuf, Strain> STRAIN_STREAM = StreamCodec.composite(
+            ByteBufCodecs.VAR_INT, Strain::potency,
+            ByteBufCodecs.VAR_INT, Strain::vigour,
+            ByteBufCodecs.VAR_INT, Strain::hardiness,
+            ByteBufCodecs.VAR_INT, Strain::subtlety,
+            Strain::new);
+
+    /** The line a seed belongs to, carried down the whole chain. Absent means the average line. */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Strain>> STRAIN =
+            TYPES.register("strain", () -> DataComponentType.<Strain>builder()
+                    .persistent(STRAIN_CODEC)
+                    .networkSynchronized(STRAIN_STREAM)
+                    .build());
+
     /** Present and true on coin the counting house has stamped. Absent on loose coin. */
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<Boolean>> STAMPED =
             TYPES.register("stamped", () -> DataComponentType.<Boolean>builder()
@@ -52,6 +77,25 @@ public final class ModComponents {
                     .build());
 
     private ModComponents() {}
+
+    /** The line a stack belongs to, or the average line for anything unbred. */
+    public static Strain strainOf(net.minecraft.world.item.ItemStack stack) {
+        return stack.getOrDefault(STRAIN.get(), Strain.AVERAGE);
+    }
+
+    /** Marks a stack with a line; the average line leaves no mark, so plain goods stay plain. */
+    public static net.minecraft.world.item.ItemStack withStrain(net.minecraft.world.item.ItemStack stack, Strain strain) {
+        if (strain == null || strain.isAverage()) stack.remove(STRAIN.get());
+        else stack.set(STRAIN.get(), strain);
+        return stack;
+    }
+
+    /** Carries the line from one stage of the chain to the next. */
+    public static net.minecraft.world.item.ItemStack inherit(net.minecraft.world.item.ItemStack from, net.minecraft.world.item.ItemStack to) {
+        Strain strain = from.get(STRAIN.get());
+        if (strain != null) to.set(STRAIN.get(), strain);
+        return to;
+    }
 
     /** Share of a stack that is filler, zero for honest goods. */
     public static double cutOf(net.minecraft.world.item.ItemStack stack) {

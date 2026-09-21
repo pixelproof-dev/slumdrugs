@@ -1,5 +1,6 @@
 package dev.lucas.slumdrugs.mod;
 
+import dev.lucas.slumdrugs.sim.drug.Strain;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -72,7 +73,7 @@ public final class ForcingFrameBlock extends BaseEntityBlock {
         if (drug == null) return InteractionResult.TRY_WITH_EMPTY_HAND;
         if (level.isClientSide()) return InteractionResult.SUCCESS;
 
-        frame.plant(level, drug, player.getName().getString(), ModComponents.qualityOf(stack));
+        frame.plant(level, drug, player.getName().getString(), ModComponents.qualityOf(stack), ModComponents.strainOf(stack));
         level.setBlock(pos, state.setValue(STAGE, frame.state().stage()), 2);
         stack.consume(1, player);
         return InteractionResult.SUCCESS;
@@ -87,14 +88,18 @@ public final class ForcingFrameBlock extends BaseEntityBlock {
 
         String drug = frame.crop();
         String grower = frame.state().grower;
+        Strain line = frame.strain();
         var harvest = frame.harvest(level, pos);
 
-        popResource(level, pos, ModComponents.withQuality(
+        // The harvest carries the line as it was; the seed it returns has drifted a little.
+        popResource(level, pos, ModComponents.withStrain(ModComponents.withQuality(
                 new ItemStack(ModItems.get("raw_" + drug).get(), harvest.units()),
-                harvest.quality(), grower));
-        popResource(level, pos, ModComponents.withQuality(
+                harvest.quality(), grower), line));
+        var random = level.getRandom();
+        double[] rolls = {random.nextDouble(), random.nextDouble(), random.nextDouble(), random.nextDouble()};
+        popResource(level, pos, ModComponents.withStrain(ModComponents.withQuality(
                 new ItemStack(ModItems.get("seed_" + drug).get(), harvest.seeds()),
-                harvest.seedQuality(), grower));
+                harvest.seedQuality(), grower), line.drift(rolls)));
 
         level.setBlock(pos, state.setValue(STAGE, 0), 2);
         return InteractionResult.SUCCESS;

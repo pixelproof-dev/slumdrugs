@@ -107,7 +107,7 @@ public abstract class RefineryBlockEntity extends BaseContainerBlockEntity {
 
             ItemStack product = new ItemStack(ModItems.get("product_" + drug).get(), result.units());
             String grower = input.get(ModComponents.GROWER.get());
-            items.set(slot, ModComponents.withQuality(product, result.quality(), grower));
+            items.set(slot, ModComponents.inherit(input, ModComponents.withQuality(product, result.quality(), grower)));
             didWork = true;
         }
         if (!didWork) return;

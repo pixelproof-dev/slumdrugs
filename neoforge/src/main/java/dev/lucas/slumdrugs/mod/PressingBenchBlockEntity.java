@@ -82,8 +82,8 @@ public final class PressingBenchBlockEntity extends BlockEntity {
         String grower = batch.get(ModComponents.GROWER.get());
 
         var out = new java.util.ArrayList<ItemStack>(2);
-        out.add(ModComponents.withQuality(
-                new ItemStack(ModItems.get("product_" + drug).get(), result.units()), result.quality(), grower));
+        out.add(ModComponents.inherit(batch, ModComponents.withQuality(
+                new ItemStack(ModItems.get("product_" + drug).get(), result.units()), result.quality(), grower)));
         if (result.wasteUnits() > 0)
             out.add(ModComponents.withQuality(
                     new ItemStack(ModItems.get("fertilizer").get(), result.wasteUnits()), result.compostQuality(), grower));

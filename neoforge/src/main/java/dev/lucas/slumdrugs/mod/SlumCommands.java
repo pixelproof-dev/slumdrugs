@@ -7,6 +7,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import dev.lucas.slumdrugs.sim.drug.Cultivation;
 import dev.lucas.slumdrugs.sim.drug.Refining;
+import dev.lucas.slumdrugs.sim.drug.Strain;
 import dev.lucas.slumdrugs.sim.economy.Coin;
 import dev.lucas.slumdrugs.sim.npc.Npc;
 import dev.lucas.slumdrugs.sim.player.Condition;
@@ -62,7 +63,8 @@ public final class SlumCommands {
                 .then(progress())
                 .then(market())
                 .then(suspicion())
-                .then(coin());
+                .then(coin())
+                .then(strain());
         event.getDispatcher().register(root);
         event.getDispatcher().register(Commands.literal("slumdrugs").redirect(event.getDispatcher().register(root)));
     }
@@ -346,6 +348,9 @@ public final class SlumCommands {
                 inputs.soil().name().toLowerCase(java.util.Locale.ROOT), frame.fertiliserCharges()));
         reply(ctx, String.format("  warmth %.2f, damp %.2f, environment fit %.2f",
                 frame.warmth(level, pos), frame.damp(level, pos), inputs.environmentFit()));
+        var line = frame.strain();
+        reply(ctx, String.format("  line: potency %d, vigour %d, hardiness %d, subtlety %d",
+                line.potency(), line.vigour(), line.hardiness(), line.subtlety()));
         reply(ctx, String.format("  would yield %d units at quality %d",
                 Cultivation.units(ForcingFrameBlockEntity.BASE_YIELD, inputs, Cultivation.quality(inputs)),
                 Cultivation.quality(inputs)));
@@ -628,6 +633,49 @@ public final class SlumCommands {
         int pence = IntegerArgumentType.getInteger(ctx, "pence");
         Purse.pay(player, pence, stamped);
         reply(ctx, "Gave " + Coin.format(pence) + (stamped ? " stamped" : " loose"));
+        return 1;
+    }
+
+    // ------------------------------------------------------------------ strain
+
+    /** Sets one trait of the line on whatever is held, for breeding tests. */
+    private static LiteralArgumentBuilder<CommandSourceStack> strain() {
+        return Commands.literal("strain").requires(Commands.hasPermission(OP))
+                .then(Commands.argument("trait", StringArgumentType.word())
+                        .suggests((ctx, builder) -> SharedSuggestionProvider.suggest(
+                                List.of("potency", "vigour", "hardiness", "subtlety"), builder))
+                        .then(Commands.argument("value", IntegerArgumentType.integer(0, 100))
+                                .executes(SlumCommands::strainSet)));
+    }
+
+    private static int strainSet(CommandContext<CommandSourceStack> ctx) {
+        ServerPlayer player = ctx.getSource().getPlayer();
+        if (player == null) {
+            ctx.getSource().sendFailure(Component.literal("This one needs a player"));
+            return 0;
+        }
+        ItemStack held = player.getMainHandItem();
+        if (held.isEmpty()) {
+            ctx.getSource().sendFailure(Component.literal("Hold something"));
+            return 0;
+        }
+        String trait = StringArgumentType.getString(ctx, "trait");
+        int value = IntegerArgumentType.getInteger(ctx, "value");
+        Strain s = ModComponents.strainOf(held);
+        Strain changed = switch (trait) {
+            case "potency" -> new Strain(value, s.vigour(), s.hardiness(), s.subtlety());
+            case "vigour" -> new Strain(s.potency(), value, s.hardiness(), s.subtlety());
+            case "hardiness" -> new Strain(s.potency(), s.vigour(), value, s.subtlety());
+            case "subtlety" -> new Strain(s.potency(), s.vigour(), s.hardiness(), value);
+            default -> null;
+        };
+        if (changed == null) {
+            ctx.getSource().sendFailure(Component.literal("No such trait: " + trait));
+            return 0;
+        }
+        ModComponents.withStrain(held, changed);
+        reply(ctx, String.format("Line: potency %d, vigour %d, hardiness %d, subtlety %d",
+                changed.potency(), changed.vigour(), changed.hardiness(), changed.subtlety()));
         return 1;
     }
 
