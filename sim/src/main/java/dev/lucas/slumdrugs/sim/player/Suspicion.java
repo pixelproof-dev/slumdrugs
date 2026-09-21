@@ -73,11 +73,29 @@ public final class Suspicion {
     /** When the announced raid lands, or zero when none is called. */
     public long raidAt;
 
+    /** Constables paid off so far. Each one is a liability the design's inspections will reach. */
+    public int bribes;
+
     public Suspicion() {}
 
-    public Suspicion(double value, long raidAt) {
+    public Suspicion(double value, long raidAt) { this(value, raidAt, 0); }
+
+    public Suspicion(double value, long raidAt, int bribes) {
         this.value = clamp(value);
         this.raidAt = Math.max(0, raidAt);
+        this.bribes = Math.max(0, bribes);
+    }
+
+    /**
+     * Coin into a constable's hand: a point a shilling off, up to the cap, and one more name
+     * in the book. Returns what it took off.
+     */
+    public double bribed(long pence, double perShilling, double cap) {
+        double off = Math.min(Math.max(0, cap), Math.max(0, pence) / 12.0 * Math.max(0, perShilling));
+        double before = value;
+        value = clamp(value - off);
+        bribes++;
+        return before - value;
     }
 
     private static double clamp(double v) { return Math.max(0, Math.min(100, v)); }

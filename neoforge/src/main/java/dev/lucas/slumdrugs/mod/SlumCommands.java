@@ -268,11 +268,14 @@ public final class SlumCommands {
         }
         for (Villager villager : found) {
             NpcData data = Npcs.data(villager);
-            reply(ctx, String.format("%s — %s%s, aggression %.0f (%s)",
+            reply(ctx, String.format("%s — %s%s, aggression %.0f (%s)%s",
                     villager.getName().getString(),
                     data.role().name().toLowerCase(java.util.Locale.ROOT),
                     data.crew().isEmpty() ? "" : "/" + data.crew(),
-                    data.aggression(), data.stance().name().toLowerCase(java.util.Locale.ROOT)));
+                    data.aggression(), data.stance().name().toLowerCase(java.util.Locale.ROOT),
+                    data.role() == Npc.Role.CUSTOMER
+                            ? String.format(", wants %s over %d, loyalty %.0f", NpcTrades.preferred(villager),
+                                    NpcTrades.floor(villager), data.loyalty()) : ""));
         }
         return found.size();
     }

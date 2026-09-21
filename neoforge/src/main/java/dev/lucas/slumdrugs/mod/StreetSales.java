@@ -1,6 +1,7 @@
 package dev.lucas.slumdrugs.mod;
 
 import dev.lucas.slumdrugs.sim.economy.Coin;
+import dev.lucas.slumdrugs.sim.npc.Loyalty;
 import dev.lucas.slumdrugs.sim.npc.Npc;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -33,6 +34,15 @@ public final class StreetSales {
 
     private StreetSales() {}
 
+    /** The word for how a regular feels, for the action bar. */
+    static String loyaltyWord(double loyalty) {
+        if (loyalty >= Loyalty.STANDING_ORDER) return "loyalty.slumdrugs.devoted";
+        if (loyalty >= 60) return "loyalty.slumdrugs.warm";
+        if (loyalty > 35) return "loyalty.slumdrugs.indifferent";
+        if (loyalty > Loyalty.LOST) return "loyalty.slumdrugs.cool";
+        return "loyalty.slumdrugs.lost";
+    }
+
     @SubscribeEvent
     public static void interact(PlayerInteractEvent.EntityInteract event) {
         if (event.getHand() != InteractionHand.MAIN_HAND) return;
@@ -45,24 +55,43 @@ public final class StreetSales {
         if (!(event.getLevel() instanceof ServerLevel level)) return;
 
         String wants = NpcTrades.preferred(villager);
+        NpcData data = Npcs.data(villager);
         ItemStack held = event.getItemStack();
         String offered = ModItems.drugOf("product_", held);
 
+        // A regular you have lost buys nothing, and mentions that you asked.
+        if (Loyalty.lost(data.loyalty())) {
+            ProductItem.actionBar(player, Component.translatable("message.slumdrugs.customer_lost", villager.getName())
+                    .withStyle(s -> s.withColor(0xB05050)));
+            if (offered != null) Watch.noticed(player, 1, false, 1);
+            return;
+        }
+
         if (offered == null || !offered.equals(wants)) {
             ProductItem.actionBar(player, Component.translatable("message.slumdrugs.customer_wants",
-                    villager.getName(), Component.translatable("item.slumdrugs.product_" + wants)));
+                    villager.getName(), Component.translatable("item.slumdrugs.product_" + wants),
+                    Component.translatable(loyaltyWord(data.loyalty()))));
             return;
         }
 
         var market = Market.of(level);
-        int units = Math.min(Tuning.CUSTOMER_HAND.get(), Math.min(held.getCount(), (int) market.demand(wants)));
+        int hand = Loyalty.hand(data.loyalty(), Tuning.CUSTOMER_HAND.get());
+        int units = Math.min(hand, Math.min(held.getCount(), (int) market.demand(wants)));
         if (units <= 0) {
             ProductItem.actionBar(player, Component.translatable("message.slumdrugs.street_flooded",
                     villager.getName()).withStyle(s -> s.withColor(0xB05050)));
             return;
         }
 
-        long pence = Market.pence(level, wants, held, units, Tuning.CUSTOMER_MARKUP.get());
+        int quality = ModComponents.qualityOf(held);
+        int floor = NpcTrades.floor(villager);
+        boolean cut = ModComponents.cutOf(held) > 0;
+        // Below their floor they still buy, at a grudging price; friends pay better.
+        double markup = Tuning.CUSTOMER_MARKUP.get() * Loyalty.priceFactor(data.loyalty()) * (quality < floor ? 0.7 : 1.0);
+        long pence = Market.pence(level, wants, held, units, markup);
+
+        double loyaltyAfter = Loyalty.afterSale(data.loyalty(), quality, floor, cut);
+        villager.setData(ModAttachments.NPC.get(), data.withLoyalty(loyaltyAfter));
 
         held.consume(units, player);
         market.consume(wants, units);
@@ -73,7 +102,9 @@ public final class StreetSales {
         // Sick customers talk: cut goods are noticed as if there were twice as many of them.
         Watch.noticed(player, ModComponents.cutOf(held) > 0 ? units * 2 : units, false, ModComponents.strainOf(held).subtletyFactor());
 
-        ProductItem.actionBar(player, Component.translatable("message.slumdrugs.street_sale",
+        String key = cut ? "message.slumdrugs.street_sale_cut" : quality < floor ? "message.slumdrugs.street_sale_poor"
+                : Loyalty.lost(loyaltyAfter) ? "message.slumdrugs.street_sale_last" : "message.slumdrugs.street_sale";
+        ProductItem.actionBar(player, Component.translatable(key,
                 villager.getName(), Coin.format(pence), units, Component.translatable("item.slumdrugs.product_" + wants)));
         level.playSound(null, villager.blockPosition(), SoundEvents.VILLAGER_YES, SoundSource.NEUTRAL, 0.8f, 1.0f);
     }

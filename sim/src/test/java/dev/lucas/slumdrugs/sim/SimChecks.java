@@ -10,6 +10,7 @@ import dev.lucas.slumdrugs.sim.drug.Strain;
 import dev.lucas.slumdrugs.sim.drug.UnitTransfer;
 import dev.lucas.slumdrugs.sim.economy.Coin;
 import dev.lucas.slumdrugs.sim.economy.MarketState;
+import dev.lucas.slumdrugs.sim.npc.Loyalty;
 import dev.lucas.slumdrugs.sim.npc.Npc;
 import dev.lucas.slumdrugs.sim.npc.Standing;
 import dev.lucas.slumdrugs.sim.player.Condition;
@@ -60,6 +61,7 @@ public final class SimChecks {
         market();
         coin();
         standing();
+        loyalty();
         npcs();
         System.out.println("PASS: " + checks + " simulation assertions.");
     }
@@ -570,6 +572,14 @@ public final class SimChecks {
         boolean bad = false;
         try { new Suspicion.Settings(50, 40, 30, 20, 1, 1, 1, 0, 0); } catch (IllegalArgumentException expected) { bad = true; }
         check(bad, "thresholds must climb");
+
+        // A bribe takes a little off and is remembered.
+        var bribed = new Suspicion(50, 0);
+        close(bribed.bribed(5 * 12, 1, 15), 5, "five shillings, five points");
+        close(bribed.bribed(100 * 12, 1, 15), 15, "no bribe buys more than the cap");
+        check(bribed.bribes == 2 && bribed.value == 30, "every bribe is counted");
+        close(new Suspicion(3, 0).bribed(12 * 12, 1, 15), 3, "a bribe cannot take suspicion below zero");
+        check(new Suspicion(1, 1, -3).bribes == 0, "restored bribes are clamped");
     }
 
     // ---------------------------------------------------------------- refining
@@ -908,6 +918,34 @@ public final class SimChecks {
         // And standing is what rests a crew member's mood.
         check(Npc.restingAggression(Npc.Role.BRUISER, -100, 0) > Npc.restingAggression(Npc.Role.BRUISER, 100, 0),
                 "a crew that hates you rests angrier");
+    }
+
+    private static void loyalty() {
+        // Floors are personal and stay in the band.
+        for (int seed = -500; seed < 500; seed += 7) {
+            int floor = Loyalty.floor(seed);
+            check(floor >= Loyalty.FLOOR_MIN && floor <= Loyalty.FLOOR_MAX, "a floor is in the band");
+            check(Loyalty.floor(seed) == floor, "a floor is fixed per seed");
+        }
+
+        // Good goods raise it, premium more; below the floor costs; cut costs most.
+        close(Loyalty.afterSale(50, 50, 40, false), 50 + Loyalty.GOOD_SALE, "a fair sale is a good sale");
+        close(Loyalty.afterSale(50, 90, 40, false), 50 + Loyalty.GOOD_SALE + Loyalty.PREMIUM_BONUS, "premium goods earn more");
+        close(Loyalty.afterSale(50, 30, 40, false), 50 + Loyalty.BELOW_FLOOR, "below the floor costs");
+        close(Loyalty.afterSale(50, 90, 40, true), 50 + Loyalty.CUT_GOODS, "cut goods cost most, however good they were");
+        check(Loyalty.afterSale(100, 90, 40, false) == 100 && Loyalty.afterSale(0, 10, 40, true) == 0, "loyalty stays on the scale");
+
+        // What it buys: a better price, a bigger hand, and at the bottom nothing at all.
+        check(Loyalty.priceFactor(100) > Loyalty.priceFactor(50) && Loyalty.priceFactor(50) > Loyalty.priceFactor(0), "friends pay better");
+        close(Loyalty.priceFactor(50), 1.0, "indifference pays the list price");
+        check(Loyalty.hand(Loyalty.STANDING_ORDER, 4) == 8 && Loyalty.hand(Loyalty.STANDING_ORDER - 1, 4) == 4, "a standing order is a double hand");
+        check(Loyalty.lost(Loyalty.LOST) && !Loyalty.lost(Loyalty.LOST + 1), "a customer is lost at the line");
+
+        // Left alone, a regular settles back toward indifference.
+        check(Loyalty.settle(80) == 79 && Loyalty.settle(20) == 21 && Loyalty.settle(50) == 50, "loyalty settles a point at a time");
+        double v = 100;
+        for (int i = 0; i < 200; i++) v = Loyalty.settle(v);
+        check(v == Loyalty.START, "and comes to rest at the start");
     }
 
     private static void npcs() {

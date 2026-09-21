@@ -2,6 +2,7 @@ package dev.lucas.slumdrugs.mod;
 
 import dev.lucas.slumdrugs.sim.drug.Sealing;
 import dev.lucas.slumdrugs.sim.economy.Coin;
+import dev.lucas.slumdrugs.sim.npc.Loyalty;
 import dev.lucas.slumdrugs.sim.npc.Npc;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.npc.villager.Villager;
@@ -39,6 +40,11 @@ public final class NpcTrades {
         return villager.level() instanceof ServerLevel level
                 ? Market.standardPence(level, drug, Sealing.UNITS_PER_PARCEL, markup)
                 : Market.flatPence(drug, Sealing.UNITS_PER_PARCEL, markup);
+    }
+
+    /** The quality a customer insists on. Fixed per person too. */
+    public static int floor(Villager villager) {
+        return Loyalty.floor(villager.getUUID().hashCode() >>> 3);
     }
 
     /** The one substance a customer takes. Fixed per person, so a regular stays a regular. */

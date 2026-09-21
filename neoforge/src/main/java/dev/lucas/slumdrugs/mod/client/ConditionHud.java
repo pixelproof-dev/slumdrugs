@@ -1,6 +1,8 @@
 package dev.lucas.slumdrugs.mod.client;
 
+import dev.lucas.slumdrugs.mod.Custody;
 import dev.lucas.slumdrugs.mod.ModAttachments;
+import dev.lucas.slumdrugs.sim.economy.Coin;
 import dev.lucas.slumdrugs.mod.Tonic;
 import dev.lucas.slumdrugs.mod.Tuning;
 import dev.lucas.slumdrugs.sim.player.Condition;
@@ -61,8 +63,12 @@ public final class ConditionHud implements GuiLayer {
         int y = graphics.guiHeight() - MARGIN - METER_HEIGHT - 2;
 
         // The Watch, above everything else, only once it has noticed.
+        Custody custody = player.getData(ModAttachments.CUSTODY.get());
         Suspicion.Level watchLevel = suspicion.level(watchSettings);
-        if (watchLevel.ordinal() >= Suspicion.Level.NOTICED.ordinal()) {
+        if (custody.held(now)) {
+            graphics.text(font, Component.translatable("hud.slumdrugs.cell", custody.secondsLeft(now), Coin.format(custody.bail())),
+                    x, y - 2 * font.lineHeight - 2, METER_HIGH, true);
+        } else if (watchLevel.ordinal() >= Suspicion.Level.NOTICED.ordinal()) {
             Component watch = untilRaid >= 0
                     ? Component.translatable("hud.slumdrugs.raid", (untilRaid + 999) / 1000)
                     : Component.translatable("hud.slumdrugs.suspicion_" + watchLevel.name().toLowerCase(java.util.Locale.ROOT));

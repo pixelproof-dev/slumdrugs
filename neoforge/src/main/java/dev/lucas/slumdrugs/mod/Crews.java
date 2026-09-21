@@ -95,7 +95,7 @@ public final class Crews {
         ItemStack held = event.getItemStack();
         if (!Purse.isCoin(held)) return;
         NpcData data = Npcs.data(villager);
-        if (!data.role().hostileCapable || data.crew().isBlank()) return;
+        if (!data.role().hostileCapable || data.crew().isBlank() || data.role() == Npc.Role.CONSTABLE) return;
 
         event.setCanceled(true);
         if (!(event.getEntity() instanceof ServerPlayer player)) return;

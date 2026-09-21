@@ -47,6 +47,10 @@ public final class JournalItem extends Item {
             player.sendSystemMessage(Component.translatable("journal.slumdrugs.gate_coin", gate.coinNeeded(), tierName(gate.next()))
                     .withStyle(ChatFormatting.GRAY));
 
+        var watch = Watch.of(player instanceof net.minecraft.server.level.ServerPlayer sp ? sp : null);
+        if (watch != null && watch.bribes > 0)
+            player.sendSystemMessage(Component.translatable("journal.slumdrugs.bribes", watch.bribes).withStyle(ChatFormatting.DARK_GRAY));
+
         var standings = Crews.of(player).all();
         if (!standings.isEmpty()) {
             var line = new StringBuilder();

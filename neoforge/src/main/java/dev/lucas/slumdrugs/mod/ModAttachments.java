@@ -78,12 +78,14 @@ public final class ModAttachments {
     private static final com.mojang.serialization.MapCodec<Suspicion> SUSPICION_CODEC =
             RecordCodecBuilder.mapCodec(instance -> instance.group(
                     Codec.DOUBLE.fieldOf("value").forGetter(s -> s.value),
-                    Codec.LONG.optionalFieldOf("raid_at", 0L).forGetter(s -> s.raidAt)
+                    Codec.LONG.optionalFieldOf("raid_at", 0L).forGetter(s -> s.raidAt),
+                    Codec.INT.optionalFieldOf("bribes", 0).forGetter(s -> s.bribes)
             ).apply(instance, Suspicion::new));
 
     private static final StreamCodec<RegistryFriendlyByteBuf, Suspicion> SUSPICION_STREAM = StreamCodec.composite(
             ByteBufCodecs.DOUBLE, s -> s.value,
             ByteBufCodecs.VAR_LONG, s -> s.raidAt,
+            ByteBufCodecs.VAR_INT, s -> s.bribes,
             Suspicion::new);
 
     /** How much the Watch has noticed. Kept through death: the Watch does not forget a face. */
@@ -109,6 +111,13 @@ public final class ModAttachments {
             TYPES.register("market", () -> AttachmentType.builder(
                             () -> new MarketState(Market.settings()))
                     .serialize(MARKET_CODEC)
+                    .build());
+
+    /** In the Watch's hands, or free. Not kept through death: a corpse is not in custody. */
+    public static final DeferredHolder<AttachmentType<?>, AttachmentType<Custody>> CUSTODY =
+            TYPES.register("custody", () -> AttachmentType.builder(() -> Custody.FREE)
+                    .serialize(Custody.CODEC.fieldOf("custody"))
+                    .sync((holder, to) -> holder == to, Custody.STREAM)
                     .build());
 
     /** Standing with every crew. Kept through death: the crews remember too. */

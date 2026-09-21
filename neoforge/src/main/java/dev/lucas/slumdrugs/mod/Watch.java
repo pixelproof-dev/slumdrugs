@@ -34,7 +34,7 @@ public final class Watch {
     private Watch() {}
 
     public static Suspicion of(ServerPlayer player) {
-        return player.getData(ModAttachments.SUSPICION.get());
+        return player == null ? null : player.getData(ModAttachments.SUSPICION.get());
     }
 
     /** A sale has been seen. Called by whoever made it; a subtle line is seen less. */
@@ -93,10 +93,12 @@ public final class Watch {
             inventory.setItem(slot, ItemStack.EMPTY);
         }
         suspicion.raided(s);
-        stirConstables(level, player, 60);
+        boolean constableHere = stirConstables(level, player, 60) > 0;
 
         player.sendSystemMessage(Component.translatable("message.slumdrugs.raided", taken)
                 .withStyle(style -> style.withColor(0xD05050)));
+        // With a constable on hand, the goods are not all they take.
+        if (constableHere) Gaol.take(player);
         level.playSound(null, player.blockPosition(), SoundEvents.BELL_RESONATE, SoundSource.BLOCKS, 1.5f, 0.8f);
     }
 
@@ -105,13 +107,17 @@ public final class Watch {
         return false;
     }
 
-    /** Constables in range come up to at least this much aggression: wary, or demanding. */
-    private static void stirConstables(ServerLevel level, ServerPlayer player, double floor) {
+    /** Constables in range come up to at least this much aggression: wary, or demanding. Returns how many there were. */
+    private static int stirConstables(ServerLevel level, ServerPlayer player, double floor) {
         AABB box = player.getBoundingBox().inflate(CONSTABLE_RANGE);
+        int constables = 0;
         for (Villager villager : level.getEntitiesOfClass(Villager.class, box, Npcs::isOurs)) {
             NpcData data = Npcs.data(villager);
-            if (data.role() != Npc.Role.CONSTABLE || data.aggression() >= floor) continue;
+            if (data.role() != Npc.Role.CONSTABLE) continue;
+            constables++;
+            if (data.aggression() >= floor) continue;
             villager.setData(ModAttachments.NPC.get(), data.withAggression(floor));
         }
+        return constables;
     }
 }

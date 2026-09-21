@@ -1,5 +1,6 @@
 package dev.lucas.slumdrugs.mod;
 
+import dev.lucas.slumdrugs.sim.npc.Loyalty;
 import dev.lucas.slumdrugs.sim.npc.Npc;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -47,9 +48,15 @@ public final class NpcTicker {
 
         NpcData data = Npcs.data(villager);
 
-        // Stalls reprice from the market every few minutes, when nobody is at the counter.
-        if (gameTime % REPRICE_INTERVAL == 0 && villager.getTradingPlayer() == null)
-            NpcTrades.fill(villager, data.role());
+        // Stalls reprice from the market every few minutes, when nobody is at the counter,
+        // and a regular left alone drifts back toward indifference at the same pace.
+        if (gameTime % REPRICE_INTERVAL == 0) {
+            if (villager.getTradingPlayer() == null) NpcTrades.fill(villager, data.role());
+            if (data.role() == Npc.Role.CUSTOMER) {
+                data = data.withLoyalty(Loyalty.settle(data.loyalty()));
+                villager.setData(ModAttachments.NPC.get(), data);
+            }
+        }
 
         Player nearest = level.getNearestPlayer(villager, NOTICE_RANGE);
 
@@ -106,7 +113,8 @@ public final class NpcTicker {
         if (!(event.getTarget() instanceof Villager villager) || !Npcs.isOurs(villager)) return;
         if (Npcs.data(villager).stance() == Npc.Stance.CALM) return;
         // Coin in hand is tribute, and an angry crew member is exactly who takes it.
-        if (Purse.isCoin(event.getItemStack()) && !Npcs.data(villager).crew().isBlank()) return;
+        NpcData angry = Npcs.data(villager);
+        if (Purse.isCoin(event.getItemStack()) && (!angry.crew().isBlank() || angry.role() == Npc.Role.CONSTABLE)) return;
 
         event.setCanceled(true);
         if (event.getEntity() instanceof ServerPlayer player)
