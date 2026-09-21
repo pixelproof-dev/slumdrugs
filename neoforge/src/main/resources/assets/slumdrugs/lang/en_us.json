@@ -67,5 +67,8 @@
   "journal.slumdrugs.ceiling": "The %s waits on standing and turf, which are not yet yours to earn.",
   "hud.slumdrugs.intoxication": "Intoxication %s",
   "hud.slumdrugs.until_withdrawal": "Steady for %s min",
-  "hud.slumdrugs.withdrawal": "Withdrawal %s — %s min"
+  "hud.slumdrugs.withdrawal": "Withdrawal %s — %s min",
+  "message.slumdrugs.customer_wants": "%s wants %s.",
+  "message.slumdrugs.street_flooded": "%s has had enough for now. The street is flooded.",
+  "message.slumdrugs.street_sale": "%s pays %s emeralds for %s %s."
 }

@@ -29,6 +29,7 @@ public final class NpcTicker {
     private static final double REACH = 2.5;
     private static final int DEMAND_INTERVAL = 20 * 10;
     private static final int ATTACK_INTERVAL = 20;
+    private static final int REPRICE_INTERVAL = 20 * 60 * 5;
 
     private NpcTicker() {}
 
@@ -42,6 +43,10 @@ public final class NpcTicker {
         if (gameTime % INTERVAL != 0) return;
 
         NpcData data = Npcs.data(villager);
+
+        // Stalls reprice from the market every few minutes, when nobody is at the counter.
+        if (gameTime % REPRICE_INTERVAL == 0 && villager.getTradingPlayer() == null)
+            NpcTrades.fill(villager, data.role());
 
         // Moods drift back toward where this crew's standing puts them. Crew standing is not
         // tracked yet, so neutral is the resting point for now.

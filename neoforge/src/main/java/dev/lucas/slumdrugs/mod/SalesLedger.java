@@ -3,6 +3,7 @@ package dev.lucas.slumdrugs.mod;
 import dev.lucas.slumdrugs.sim.drug.Sealing;
 import dev.lucas.slumdrugs.sim.player.Progression;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -32,6 +33,18 @@ public final class SalesLedger {
         int coin = paid.is(Items.EMERALD) ? paid.getCount() : 0;
         if (units == 0) return;
 
+        // What the broker takes, the street has seen: it comes out of demand like any sale.
+        String drug = drugIn(offer.getItemCostA());
+        if (drug != null && player.level() instanceof ServerLevel level) {
+            var market = Market.of(level);
+            market.consume(drug, units);
+            level.setData(ModAttachments.MARKET.get(), market);
+        }
+        record(player, units, coin);
+    }
+
+    /** Counts a sale, however it was made, and tells the player when it moved them up. */
+    public static void record(ServerPlayer player, int units, int coin) {
         Progression progress = player.getData(ModAttachments.PROGRESSION.get());
         Progression.Tier before = progress.tier();
         progress.sold(units, coin);
@@ -49,5 +62,10 @@ public final class SalesLedger {
         if (ModItems.drugOf("product_", stack) != null) return cost.count();
         if (ModItems.drugOf("package_", stack) != null) return cost.count() * Sealing.UNITS_PER_PARCEL;
         return 0;
+    }
+
+    private static String drugIn(ItemCost cost) {
+        String drug = ModItems.drugOf("product_", cost.itemStack());
+        return drug != null ? drug : ModItems.drugOf("package_", cost.itemStack());
     }
 }

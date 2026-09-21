@@ -2,6 +2,7 @@ package dev.lucas.slumdrugs.mod;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import dev.lucas.slumdrugs.sim.economy.MarketState;
 import dev.lucas.slumdrugs.sim.player.Condition;
 import dev.lucas.slumdrugs.sim.player.Progression;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -67,6 +68,23 @@ public final class ModAttachments {
                     .serialize(PROGRESSION_CODEC)
                     .copyOnDeath()
                     .sync((holder, to) -> holder == to, PROGRESSION_STREAM)
+                    .build());
+
+    private static final com.mojang.serialization.MapCodec<MarketState> MARKET_CODEC =
+            Codec.unboundedMap(Codec.STRING, Codec.DOUBLE).fieldOf("demand").xmap(saved -> {
+                MarketState market = new MarketState(MarketState.Settings.defaults());
+                market.restore(saved);
+                return market;
+            }, MarketState::snapshot);
+
+    /**
+     * Local demand, one per level. A settlement map would want one per settlement; until the
+     * map exists, the world is the settlement.
+     */
+    public static final DeferredHolder<AttachmentType<?>, AttachmentType<MarketState>> MARKET =
+            TYPES.register("market", () -> AttachmentType.builder(
+                            () -> new MarketState(MarketState.Settings.defaults()))
+                    .serialize(MARKET_CODEC)
                     .build());
 
     /** Not copied on death: a villager that dies is gone, and their replacement is a new person. */

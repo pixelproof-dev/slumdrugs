@@ -57,7 +57,8 @@ public final class SlumCommands {
                 .then(frame())
                 .then(refine())
                 .then(structure())
-                .then(progress());
+                .then(progress())
+                .then(market());
         event.getDispatcher().register(root);
         event.getDispatcher().register(Commands.literal("slumdrugs").redirect(event.getDispatcher().register(root)));
     }
@@ -521,6 +522,46 @@ public final class SlumCommands {
         }
         reply(ctx, "Reset " + targets.size() + " player(s) to hand to mouth");
         return targets.size();
+    }
+
+    // ------------------------------------------------------------------ market
+
+    /** The level's demand pools, and a way to move them for testing. */
+    private static LiteralArgumentBuilder<CommandSourceStack> market() {
+        return Commands.literal("market")
+                .then(Commands.literal("get").executes(SlumCommands::marketGet))
+                .then(Commands.literal("set").requires(Commands.hasPermission(OP))
+                        .then(Commands.argument("substance", StringArgumentType.word())
+                                .suggests((ctx, builder) -> SharedSuggestionProvider.suggest(ModItems.SUBSTANCES, builder))
+                                .then(Commands.argument("demand", DoubleArgumentType.doubleArg(0))
+                                        .executes(SlumCommands::marketSet))));
+    }
+
+    private static int marketGet(CommandContext<CommandSourceStack> ctx) {
+        ServerLevel level = ctx.getSource().getLevel();
+        var market = Market.of(level);
+        for (String drug : ModItems.SUBSTANCES)
+            reply(ctx, String.format("%s — demand %.0f of %.0f, price x%.2f, broker pays %d/unit",
+                    drug, market.demand(drug), market.settings().demandMax(), market.demandFactor(drug),
+                    Market.standardEmeralds(level, drug, 1, 1.2)));
+        return 1;
+    }
+
+    private static int marketSet(CommandContext<CommandSourceStack> ctx) {
+        String drug = StringArgumentType.getString(ctx, "substance");
+        if (!ModItems.SUBSTANCES.contains(drug)) {
+            ctx.getSource().sendFailure(Component.literal("No such substance: " + drug));
+            return 0;
+        }
+        ServerLevel level = ctx.getSource().getLevel();
+        var market = Market.of(level);
+        double wanted = DoubleArgumentType.getDouble(ctx, "demand");
+        var snapshot = new java.util.HashMap<>(market.snapshot());
+        snapshot.put(drug, wanted);
+        market.restore(snapshot);
+        level.setData(ModAttachments.MARKET.get(), market);
+        reply(ctx, String.format("%s demand set to %.0f", drug, market.demand(drug)));
+        return 1;
     }
 
     // ------------------------------------------------------------------ helpers
