@@ -58,6 +58,8 @@ Every rule lives in `sim` and is verified without launching a game. Anything tou
 
 ## Documentation
 
+- [Player's guide](docs/GUIDE.md) — from the first seed to the Workshop, in English; also
+  [auf Deutsch](docs/GUIDE.de.md)
 - [Mod notes](docs/MOD-NOTES.md) — build details, the command reference, and the table of
   26.3 API changes that a recalled 1.21 pattern gets wrong
 - [Game design document](docs/MOD-GDD.md) — the full design this is built against
