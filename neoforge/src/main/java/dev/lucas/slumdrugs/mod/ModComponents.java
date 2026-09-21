@@ -37,7 +37,26 @@ public final class ModComponents {
                     .networkSynchronized(ByteBufCodecs.STRING_UTF8)
                     .build());
 
+    /** 0-1, how much of a batch is filler. Absent on anything honest. */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Float>> CUT =
+            TYPES.register("cut", () -> DataComponentType.<Float>builder()
+                    .persistent(Codec.floatRange(0, 1))
+                    .networkSynchronized(ByteBufCodecs.FLOAT)
+                    .build());
+
     private ModComponents() {}
+
+    /** Share of a stack that is filler, zero for honest goods. */
+    public static double cutOf(net.minecraft.world.item.ItemStack stack) {
+        return stack.getOrDefault(CUT.get(), 0f);
+    }
+
+    /** Marks a stack as cut; a cut of zero removes the mark, so honest goods stay honest. */
+    public static net.minecraft.world.item.ItemStack withCut(net.minecraft.world.item.ItemStack stack, double cut) {
+        if (cut <= 0) stack.remove(CUT.get());
+        else stack.set(CUT.get(), (float) Math.min(1, cut));
+        return stack;
+    }
 
     /** Quality carried by a stack, or the neutral default for plain vanilla-made items. */
     public static int qualityOf(net.minecraft.world.item.ItemStack stack) {

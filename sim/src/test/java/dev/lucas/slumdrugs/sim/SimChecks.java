@@ -1,6 +1,7 @@
 package dev.lucas.slumdrugs.sim;
 
 import dev.lucas.slumdrugs.sim.drug.Cultivation;
+import dev.lucas.slumdrugs.sim.drug.Cutting;
 import dev.lucas.slumdrugs.sim.drug.Drying;
 import dev.lucas.slumdrugs.sim.drug.Quality;
 import dev.lucas.slumdrugs.sim.drug.Refining;
@@ -49,6 +50,7 @@ public final class SimChecks {
         quality();
         cultivation();
         refining();
+        cutting();
         drying();
         sealing();
         market();
@@ -610,6 +612,47 @@ public final class SimChecks {
             check((method.strokes() - 1) * Refining.HAND_STROKE_SECONDS < method.seconds(false),
                     "no stroke is wasted: " + method);
         }
+    }
+
+    // ---------------------------------------------------------------- cutting
+
+    private static void cutting() {
+        // No filler changes nothing but the accounting.
+        var plain = Cutting.cut(60, 8, 0, 0);
+        check(plain.units() == 8 && plain.quality() == 60 && plain.cutRatio() == 0, "no filler, no change");
+
+        // Filler adds units, dilutes quality and costs a little more for the handling.
+        var half = Cutting.cut(60, 8, 8, 0);
+        check(half.units() == 16, "equal parts doubles the batch");
+        check(half.quality() == 30 - Cutting.HANDLING_LOSS, "and halves the quality, less the handling");
+        close(half.cutRatio(), 0.5, "equal parts is half filler");
+
+        // It will not take more than equal parts.
+        var greedy = Cutting.cut(60, 8, 100, 0);
+        check(greedy.units() == 16 && Cutting.maxFiller(8) == 8, "filler stops at equal parts");
+
+        // Cutting cut goods stacks the ratio.
+        var twice = Cutting.cut(half.quality(), half.units(), half.units(), half.cutRatio());
+        close(twice.cutRatio(), 0.75, "cutting a half-cut batch by half leaves a quarter pure");
+        check(twice.quality() < half.quality(), "and worse again");
+
+        // The overdose line comes down with the cut, never below the penalty's floor.
+        close(Cutting.overdoseThreshold(100, 0), 100, "pure goods keep the whole line");
+        close(Cutting.overdoseThreshold(100, 1), 100 * (1 - Cutting.OVERDOSE_PENALTY), "fully cut brings it down by the penalty");
+        var c = new Condition(50, 0, 0);
+        check(!c.wouldOverdose(30, 50) && c.wouldOverdose(30, 50, 1), "a dose that was safe pure is not safe cut");
+
+        for (int q = 0; q <= 100; q += 10)
+            for (int units = 1; units <= 32; units += 3)
+                for (int filler = 0; filler <= 40; filler += 5) {
+                    var r = Cutting.cut(q, units, filler, 0);
+                    check(r.units() >= units && r.units() <= 2 * units, "cut units stay between the input and double");
+                    check(r.quality() >= 0 && r.quality() <= q, "cut quality never rises");
+                    check(r.cutRatio() >= 0 && r.cutRatio() < 1, "a batch is never all filler");
+                }
+        boolean rejected = false;
+        try { Cutting.cut(50, 0, 1, 0); } catch (IllegalArgumentException expected) { rejected = true; }
+        check(rejected, "an empty batch cannot be cut");
     }
 
     // ---------------------------------------------------------------- drying

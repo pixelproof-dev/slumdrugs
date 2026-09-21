@@ -38,5 +38,9 @@ public final class ModBlockEntities {
             TYPES.register("still", () -> new BlockEntityType<>(
                     StillBlockEntity::new, ModBlocks.STILL.get()));
 
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<CuttingBenchBlockEntity>> CUTTING_BENCH =
+            TYPES.register("cutting_bench", () -> new BlockEntityType<>(
+                    CuttingBenchBlockEntity::new, ModBlocks.CUTTING_BENCH.get()));
+
     private ModBlockEntities() {}
 }

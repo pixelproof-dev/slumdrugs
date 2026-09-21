@@ -104,7 +104,13 @@ public final class Condition {
 
     /** True when this dose pushes the player past what their body will take. */
     public boolean wouldOverdose(double dose, int quality) {
-        return intoxication + effectiveDose(dose, quality) > OVERDOSE_THRESHOLD;
+        return wouldOverdose(dose, quality, 0);
+    }
+
+    /** The same, for a dose that is partly filler: the line comes down to meet it. */
+    public boolean wouldOverdose(double dose, int quality, double cutRatio) {
+        return intoxication + effectiveDose(dose, quality)
+                > dev.lucas.slumdrugs.sim.drug.Cutting.overdoseThreshold(OVERDOSE_THRESHOLD, cutRatio);
     }
 
     /**

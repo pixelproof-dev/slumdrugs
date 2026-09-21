@@ -48,7 +48,7 @@ public final class ProductItem extends Item {
         int quality = ModComponents.qualityOf(stack);
 
         // Too much on top of too much: the dose still lands, and it hurts rather than helps.
-        boolean overdose = condition.wouldOverdose(profile.dose(), quality);
+        boolean overdose = condition.wouldOverdose(profile.dose(), quality, ModComponents.cutOf(stack));
         double landed = condition.use(profile.dose(), quality,
                 profile.toleranceGain(), profile.dependenceGain(), now);
 

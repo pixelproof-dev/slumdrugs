@@ -23,7 +23,7 @@ the platform layer, not here.
 ./gradlew check
 ```
 
-Runs `SimChecks`, a plain `main()` with no test framework, currently 86,877 assertions.
+Runs `SimChecks`, a plain `main()` with no test framework, currently 90,155 assertions.
 A failure prints the label of the rule that broke.
 
 ## Status
@@ -72,12 +72,21 @@ their quality and grower through the whole chain; the tooltip shows both.
 | Sealing press | Product on the bench, honeycomb in the pot | Empty hand pulls the lever once per parcel | A parcel of 8 units under the puller's seal. Sneak: everything back |
 | Centrifuge | Dried in the vessels, charcoal on top, coal at the side | Runs on its own; the screen shows progress | Product in the vessels, three quarters of it, stronger |
 | Still | Dried in the vessels, sugar on top, coal at the side | Runs on its own; the same screen | Product in the vessels, half of it, strongest of all |
+| Cutting bench | Product on the board, sugar or bone meal on the heap up to equal parts | Empty hand pulls the blade | More product, worse, marked with how much is filler. Sneak: everything back |
 | Storage crate | Anything | — | The chest screen, 27 slots |
 
 A parcel is used like any item to break the seal and get its 8 units back. A bundle left on
 the loft long past done slowly loses quality, and none of the stations tick except the
 centrifuge and the still; the loft and the presses only move when someone moves them. Breaking any station
-drops what it held. The rules behind them are `Drying`, `Sealing` and `Refining` in `sim`.
+drops what it held. The rules behind them are `Drying`, `Sealing`, `Refining` and `Cutting` in `sim`.
+
+Cutting is the design's moral pressure valve. A cut batch carries a `cut` component, 0-1,
+that survives sealing and opening; the tooltip shows it in red. Cut goods sell for their
+lower quality, draw suspicion as if there were twice as many of them because sick customers
+talk, and tip a user into overdose sooner: the overdose line comes down by up to forty
+percent with the cut. Customer loyalty, which the design has cutting cost most, waits on
+customers having loyalty at all. The design gates cutting at the Apothecary; that tier is not
+reachable yet, so the Workshop has it.
 
 Every station has a crafting recipe under `data/slumdrugs/recipe/`: wood, glass and string
 for the frame and the loft, iron and copper on wood for the workshop pieces. The centrifuge
@@ -139,7 +148,7 @@ are never gated.
 | --- | --- | --- |
 | Hand to mouth | start | Forcing frame, drying loft |
 | Backroom | 20 units sold | nothing yet; the design's first regulars and journal go here |
-| Workshop | 60 coin earned | Pressing bench, sealing press, storage crate, centrifuge, still |
+| Workshop | 60 coin earned | Pressing bench, sealing press, storage crate, centrifuge, still, cutting bench |
 | Apothecary and up | not reachable | needs standing, turf and influence, none of which exist |
 
 Two deliberate departures from the design document, both to be tightened when the systems

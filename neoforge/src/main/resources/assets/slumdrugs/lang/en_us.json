@@ -84,5 +84,10 @@
   "hud.slumdrugs.suspicion_watched": "Watched",
   "hud.slumdrugs.suspicion_hunted": "Hunted",
   "hud.slumdrugs.suspicion_raid": "The Watch",
-  "hud.slumdrugs.raid": "The Watch — %s s"
+  "hud.slumdrugs.raid": "The Watch — %s s",
+  "block.slumdrugs.cutting_bench": "Cutting Bench",
+  "message.slumdrugs.cut_board_full": "The board holds one kind of goods at a time.",
+  "message.slumdrugs.cut_heap_full": "The heap is as high as it goes.",
+  "message.slumdrugs.cut_no_goods": "Nothing on the board to cut.",
+  "tooltip.slumdrugs.cut": "Cut — %s%% filler"
 }

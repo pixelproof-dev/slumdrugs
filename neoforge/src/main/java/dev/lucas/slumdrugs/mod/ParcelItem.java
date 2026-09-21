@@ -35,6 +35,7 @@ public final class ParcelItem extends Item {
         ItemStack product = ModComponents.withQuality(
                 new ItemStack(ModItems.get("product_" + drug).get(), Sealing.UNITS_PER_PARCEL),
                 ModComponents.qualityOf(parcel), parcel.get(ModComponents.GROWER.get()));
+        ModComponents.withCut(product, ModComponents.cutOf(parcel));
         parcel.consume(1, player);
         if (!player.getInventory().add(product)) player.drop(product, false, Prediction.SERVER_ONLY);
 

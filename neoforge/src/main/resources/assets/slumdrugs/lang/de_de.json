@@ -84,5 +84,10 @@
   "hud.slumdrugs.suspicion_watched": "Beobachtet",
   "hud.slumdrugs.suspicion_hunted": "Gesucht",
   "hud.slumdrugs.suspicion_raid": "Die Wache",
-  "hud.slumdrugs.raid": "Die Wache — %s s"
+  "hud.slumdrugs.raid": "Die Wache — %s s",
+  "block.slumdrugs.cutting_bench": "Streckbank",
+  "message.slumdrugs.cut_board_full": "Auf das Brett passt nur eine Sorte Ware zugleich.",
+  "message.slumdrugs.cut_heap_full": "Der Haufen ist so hoch, wie er wird.",
+  "message.slumdrugs.cut_no_goods": "Nichts auf dem Brett zum Strecken.",
+  "tooltip.slumdrugs.cut": "Gestreckt — %s %% Füllstoff"
 }

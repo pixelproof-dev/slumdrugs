@@ -73,7 +73,8 @@ public final class StreetSales {
         ItemStack pay = new ItemStack(Items.EMERALD, coin);
         if (!player.getInventory().add(pay)) player.drop(pay, false, Prediction.SERVER_ONLY);
         SalesLedger.record(player, units, coin);
-        Watch.noticed(player, units, false);
+        // Sick customers talk: cut goods are noticed as if there were twice as many of them.
+        Watch.noticed(player, ModComponents.cutOf(held) > 0 ? units * 2 : units, false);
 
         ProductItem.actionBar(player, Component.translatable("message.slumdrugs.street_sale",
                 villager.getName(), coin, units, Component.translatable("item.slumdrugs.product_" + wants)));

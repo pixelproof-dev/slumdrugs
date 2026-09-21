@@ -54,6 +54,10 @@ public final class ClientSetup {
                     Component.translatable("tooltip.slumdrugs.grade." + Quality.Grade.of(quality).name().toLowerCase(java.util.Locale.ROOT)))
                     .withStyle(ChatFormatting.GRAY));
 
+        double cut = ModComponents.cutOf(stack);
+        if (cut > 0)
+            lines.add(Component.translatable("tooltip.slumdrugs.cut", (int) Math.round(cut * 100)).withStyle(ChatFormatting.RED));
+
         String grower = stack.get(ModComponents.GROWER.get());
         if (grower != null)
             lines.add(Component.translatable("tooltip.slumdrugs.grower", grower).withStyle(ChatFormatting.DARK_GRAY));

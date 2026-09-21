@@ -38,6 +38,9 @@ public final class ModBlocks {
                     .strength(3.5f)
                     .sound(SoundType.COPPER));
 
+    public static final DeferredBlock<CuttingBenchBlock> CUTTING_BENCH =
+            BLOCKS.registerBlock("cutting_bench", CuttingBenchBlock::new, ModBlocks::wooden);
+
     /** The still is machinery too: copper over a firebox. */
     public static final DeferredBlock<StillBlock> STILL =
             BLOCKS.registerBlock("still", StillBlock::new, () -> BlockBehaviour.Properties.of()
@@ -56,6 +59,9 @@ public final class ModBlocks {
         ModItems.blockItem("storage_crate", STORAGE_CRATE, Progression.Tier.WORKSHOP);
         ModItems.blockItem("centrifuge", CENTRIFUGE, Progression.Tier.WORKSHOP);
         ModItems.blockItem("still", STILL, Progression.Tier.WORKSHOP);
+        // The design puts cutting at the Apothecary; that tier is not reachable yet, so the
+        // Workshop has it, and the pressure valve is open from the first press.
+        ModItems.blockItem("cutting_bench", CUTTING_BENCH, Progression.Tier.WORKSHOP);
     }
 
     private ModBlocks() {}
