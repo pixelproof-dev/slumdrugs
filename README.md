@@ -71,6 +71,8 @@ Every rule lives in `sim` and is verified without launching a game. Anything tou
 - [Mod notes](docs/MOD-NOTES.md) — build details, the command reference, and the table of
   26.3 API changes that a recalled 1.21 pattern gets wrong
 - [Game design document](docs/MOD-GDD.md) — the full design this is built against
+- [Local session handoff](docs/HANDOFF-LOCAL.md) — what was built remotely, what only a
+  client can verify, and what the local side has to merge
 - [World generation handoff](docs/HANDOFF-WORLDGEN.md) — context for work on structures and
   settlements
 
