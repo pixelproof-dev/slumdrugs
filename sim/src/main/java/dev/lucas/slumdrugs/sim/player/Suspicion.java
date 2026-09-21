@@ -23,6 +23,31 @@ public final class Suspicion {
         }
     }
 
+    /** Every number the Watch runs on, so a server can set its own. Defaults are the design's. */
+    public record Settings(double noticedAt, double watchedAt, double huntedAt, double raidAt,
+                           double perLooseUnit, double perSealedUnit, double decayPerMinute,
+                           long raidWarningMillis, double afterRaid) {
+        public Settings {
+            if (!(noticedAt <= watchedAt && watchedAt <= huntedAt && huntedAt <= raidAt))
+                throw new IllegalArgumentException("Suspicion thresholds must climb");
+            if (perLooseUnit < 0 || perSealedUnit < 0 || decayPerMinute < 0 || raidWarningMillis < 0)
+                throw new IllegalArgumentException("Suspicion rates must not be negative");
+        }
+
+        public static Settings defaults() {
+            return new Settings(NOTICED_AT, WATCHED_AT, HUNTED_AT, RAID_AT, PER_LOOSE_UNIT, PER_SEALED_UNIT,
+                    DECAY_PER_MINUTE, RAID_WARNING_MILLIS, AFTER_RAID);
+        }
+
+        public Level levelOf(double value) {
+            if (value >= raidAt) return Level.RAID;
+            if (value >= huntedAt) return Level.HUNTED;
+            if (value >= watchedAt) return Level.WATCHED;
+            if (value >= noticedAt) return Level.NOTICED;
+            return Level.CLEAR;
+        }
+    }
+
     public static final double NOTICED_AT = 20;
     public static final double WATCHED_AT = 40;
     public static final double HUNTED_AT = 60;
@@ -58,27 +83,35 @@ public final class Suspicion {
     private static double clamp(double v) { return Math.max(0, Math.min(100, v)); }
 
     public Level level() { return Level.of(value); }
+    public Level level(Settings s) { return s.levelOf(value); }
 
     /** A sale has been seen. */
-    public void sold(int units, boolean sealed) {
-        value = clamp(value + Math.max(0, units) * (sealed ? PER_SEALED_UNIT : PER_LOOSE_UNIT));
+    public void sold(int units, boolean sealed) { sold(units, sealed, Settings.defaults()); }
+
+    public void sold(int units, boolean sealed, Settings s) {
+        value = clamp(value + Math.max(0, units) * (sealed ? s.perSealedUnit() : s.perLooseUnit()));
     }
 
     /** Quiet time. */
-    public void decay(double minutes) {
-        value = clamp(value - Math.max(0, minutes) * DECAY_PER_MINUTE);
+    public void decay(double minutes) { decay(minutes, Settings.defaults()); }
+
+    public void decay(double minutes, Settings s) {
+        value = clamp(value - Math.max(0, minutes) * s.decayPerMinute());
     }
 
     /**
      * Whether the bell should ring now: suspicion has reached the top and no raid is called
      * yet. The caller records the raid with {@link #callRaid}.
      */
-    public boolean shouldCallRaid() { return raidAt == 0 && value >= RAID_AT; }
+    public boolean shouldCallRaid() { return shouldCallRaid(Settings.defaults()); }
+    public boolean shouldCallRaid(Settings s) { return raidAt == 0 && value >= s.raidAt(); }
 
-    public void callRaid(long now) { raidAt = now + RAID_WARNING_MILLIS; }
+    public void callRaid(long now) { callRaid(now, Settings.defaults()); }
+    public void callRaid(long now, Settings s) { raidAt = now + s.raidWarningMillis(); }
 
     /** A called raid lapses if the player has laid low enough for the Watch to lose interest. */
-    public boolean raidLapsed() { return raidAt != 0 && value < HUNTED_AT; }
+    public boolean raidLapsed() { return raidLapsed(Settings.defaults()); }
+    public boolean raidLapsed(Settings s) { return raidAt != 0 && value < s.huntedAt(); }
 
     public boolean raidDue(long now) { return raidAt != 0 && now >= raidAt; }
 
@@ -86,8 +119,10 @@ public final class Suspicion {
     public long untilRaid(long now) { return raidAt == 0 ? -1 : Math.max(0, raidAt - now); }
 
     /** The Watch has been and gone. */
-    public void raided() {
-        value = Math.min(value, AFTER_RAID);
+    public void raided() { raided(Settings.defaults()); }
+
+    public void raided(Settings s) {
+        value = Math.min(value, s.afterRaid());
         raidAt = 0;
     }
 

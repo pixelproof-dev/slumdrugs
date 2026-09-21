@@ -33,6 +33,15 @@ public final class Progression {
     /** Coin earned that opens the Workshop. Standing 15 is the other half, once standing exists. */
     public static final int WORKSHOP_COIN = 60;
 
+    /** The two gates, so a server can set its own. */
+    public record Settings(int backroomUnits, int workshopCoin) {
+        public Settings {
+            backroomUnits = Math.max(0, backroomUnits);
+            workshopCoin = Math.max(0, workshopCoin);
+        }
+        public static Settings defaults() { return new Settings(BACKROOM_UNITS, WORKSHOP_COIN); }
+    }
+
     /** The highest tier the counters can reach today. */
     public static final Tier REACHABLE = Tier.WORKSHOP;
 
@@ -62,13 +71,16 @@ public final class Progression {
         coinEarned += Math.max(0, coin);
     }
 
-    public Tier tier() {
-        if (unitsSold < BACKROOM_UNITS) return Tier.HAND_TO_MOUTH;
-        if (coinEarned < WORKSHOP_COIN) return Tier.BACKROOM;
+    public Tier tier() { return tier(Settings.defaults()); }
+
+    public Tier tier(Settings s) {
+        if (unitsSold < s.backroomUnits()) return Tier.HAND_TO_MOUTH;
+        if (coinEarned < s.workshopCoin()) return Tier.BACKROOM;
         return Tier.WORKSHOP;
     }
 
-    public boolean reached(Tier tier) { return tier().ordinal() >= tier.ordinal(); }
+    public boolean reached(Tier tier) { return reached(tier, Settings.defaults()); }
+    public boolean reached(Tier tier, Settings s) { return tier(s).ordinal() >= tier.ordinal(); }
 
     /**
      * What stands between the player and the next tier: units still to sell, coin still to
@@ -76,11 +88,13 @@ public final class Progression {
      */
     public record Gate(Tier next, int unitsNeeded, int coinNeeded, boolean reachable) {}
 
-    public Gate gate() {
-        Tier now = tier();
+    public Gate gate() { return gate(Settings.defaults()); }
+
+    public Gate gate(Settings s) {
+        Tier now = tier(s);
         return switch (now) {
-            case HAND_TO_MOUTH -> new Gate(Tier.BACKROOM, BACKROOM_UNITS - unitsSold, 0, true);
-            case BACKROOM -> new Gate(Tier.WORKSHOP, 0, WORKSHOP_COIN - coinEarned, true);
+            case HAND_TO_MOUTH -> new Gate(Tier.BACKROOM, s.backroomUnits() - unitsSold, 0, true);
+            case BACKROOM -> new Gate(Tier.WORKSHOP, 0, s.workshopCoin() - coinEarned, true);
             default -> new Gate(now.next(), 0, 0, false);
         };
     }

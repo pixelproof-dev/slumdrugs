@@ -55,14 +55,14 @@ public final class StreetSales {
         }
 
         var market = Market.of(level);
-        int units = Math.min(HAND, Math.min(held.getCount(), (int) market.demand(wants)));
+        int units = Math.min(Tuning.CUSTOMER_HAND.get(), Math.min(held.getCount(), (int) market.demand(wants)));
         if (units <= 0) {
             ProductItem.actionBar(player, Component.translatable("message.slumdrugs.street_flooded",
                     villager.getName()).withStyle(s -> s.withColor(0xB05050)));
             return;
         }
 
-        long pence = Market.pence(level, wants, held, units, MARKUP);
+        long pence = Market.pence(level, wants, held, units, Tuning.CUSTOMER_MARKUP.get());
 
         held.consume(units, player);
         market.consume(wants, units);

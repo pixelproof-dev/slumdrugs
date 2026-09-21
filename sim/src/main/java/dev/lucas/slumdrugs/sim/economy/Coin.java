@@ -37,19 +37,25 @@ public final class Coin {
     }
 
     /** Pence for a unit priced at a base of {@code basePoints}, before quality and demand. */
-    public static double baseUnitPence(int basePoints) {
-        return Math.max(0, basePoints) * PENCE_PER_BASE_POINT;
+    public static double baseUnitPence(int basePoints) { return baseUnitPence(basePoints, PENCE_PER_BASE_POINT); }
+
+    public static double baseUnitPence(int basePoints, double pencePerPoint) {
+        return Math.max(0, basePoints) * Math.max(0, pencePerPoint);
     }
 
     /** What the counting house keeps of a loose sum, rounded in its favour. */
-    public static long stampFee(long pence) {
-        return (long) Math.ceil(Math.max(0, pence) * STAMP_CUT);
+    public static long stampFee(long pence) { return stampFee(pence, STAMP_CUT); }
+
+    public static long stampFee(long pence, double cut) {
+        return (long) Math.ceil(Math.max(0, pence) * Math.max(0, Math.min(1, cut)));
     }
 
     /** What comes back stamped. Never nothing for a sum that was something. */
-    public static long stamped(long pence) {
+    public static long stamped(long pence) { return stamped(pence, STAMP_CUT); }
+
+    public static long stamped(long pence, double cut) {
         if (pence <= 0) return 0;
-        return Math.max(1, pence - stampFee(pence));
+        return Math.max(1, pence - stampFee(pence, cut));
     }
 
     /** "3 sov 4s 6d", dropping the parts that are zero, "0d" for nothing. */

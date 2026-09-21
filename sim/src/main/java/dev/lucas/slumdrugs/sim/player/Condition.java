@@ -71,11 +71,13 @@ public final class Condition {
      * a while. Refused while the last one is still working, so it cannot be chained into a
      * cure; the way out is still to stop.
      */
-    public boolean remedy(long now) {
+    public boolean remedy(long now) { return remedy(now, REMEDY_DEPENDENCE, REMEDY_TOLERANCE, REMEDY_MILLIS); }
+
+    public boolean remedy(long now, double dependenceOff, double toleranceOff, long millis) {
         if (soothed(now)) return false;
-        dependence = clamp(dependence - REMEDY_DEPENDENCE);
-        tolerance = clamp(tolerance - REMEDY_TOLERANCE);
-        soothedUntil = now + REMEDY_MILLIS;
+        dependence = clamp(dependence - Math.max(0, dependenceOff));
+        tolerance = clamp(tolerance - Math.max(0, toleranceOff));
+        soothedUntil = now + Math.max(0, millis);
         return true;
     }
 

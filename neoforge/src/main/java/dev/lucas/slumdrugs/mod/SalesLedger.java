@@ -47,14 +47,16 @@ public final class SalesLedger {
     /** Counts a sale, however it was made, in whole shillings, and tells the player when it moved them up. */
     public static void record(ServerPlayer player, int units, long pence) {
         Progression progress = player.getData(ModAttachments.PROGRESSION.get());
-        Progression.Tier before = progress.tier();
+        Progression.Settings gates = Tuning.progression();
+        Progression.Tier before = progress.tier(gates);
         progress.sold(units, (int) (pence / Coin.SHILLING));
         player.syncData(ModAttachments.PROGRESSION.get());
 
-        Progression.Tier after = progress.tier();
+        Progression.Tier after = progress.tier(gates);
         if (after != before)
             player.sendSystemMessage(Component.translatable("message.slumdrugs.tier_reached", JournalItem.tierName(after))
                     .withStyle(s -> s.withColor(0xE0B040)));
+        Advancements.tiers(player, after);
     }
 
     /** Units of our goods in one side of a cost: loose product by the unit, parcels by the parcelful. */

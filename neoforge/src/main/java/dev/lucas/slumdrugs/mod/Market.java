@@ -20,13 +20,22 @@ public final class Market {
 
     private Market() {}
 
+    /** The market's tuning, or the sim's defaults before the config has loaded. */
+    public static MarketState.Settings settings() {
+        return Tuning.loaded() ? Tuning.market() : MarketState.Settings.defaults();
+    }
+
+    private static double pencePerPoint() {
+        return Tuning.loaded() ? Tuning.PENCE_PER_POINT.get() : Coin.PENCE_PER_BASE_POINT;
+    }
+
     public static MarketState of(ServerLevel level) {
         return level.getData(ModAttachments.MARKET.get());
     }
 
     /** Pence for a lot of units, at a quality, with a buyer's own markup. Never below a penny. */
     public static long pence(ServerLevel level, String drug, int quality, int units, double markup) {
-        double perUnit = of(level).unitPrice(drug, Coin.baseUnitPence(Substances.profile(drug).basePrice()), quality, 0, 0);
+        double perUnit = of(level).unitPrice(drug, Coin.baseUnitPence(Substances.profile(drug).basePrice(), pencePerPoint()), quality, 0, 0);
         return Math.max(1, Math.round(units * perUnit * markup));
     }
 
@@ -42,7 +51,7 @@ public final class Market {
 
     /** A price with no demand in it, for a level we cannot see; standard quality. */
     public static long flatPence(String drug, int units, double markup) {
-        double perUnit = Coin.baseUnitPence(Substances.profile(drug).basePrice()) * Quality.priceFactor(50);
+        double perUnit = Coin.baseUnitPence(Substances.profile(drug).basePrice(), pencePerPoint()) * Quality.priceFactor(50);
         return Math.max(1, Math.round(units * perUnit * markup));
     }
 

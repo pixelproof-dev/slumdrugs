@@ -96,7 +96,7 @@ public final class ModAttachments {
 
     private static final com.mojang.serialization.MapCodec<MarketState> MARKET_CODEC =
             Codec.unboundedMap(Codec.STRING, Codec.DOUBLE).fieldOf("demand").xmap(saved -> {
-                MarketState market = new MarketState(MarketState.Settings.defaults());
+                MarketState market = new MarketState(Market.settings());
                 market.restore(saved);
                 return market;
             }, MarketState::snapshot);
@@ -107,7 +107,7 @@ public final class ModAttachments {
      */
     public static final DeferredHolder<AttachmentType<?>, AttachmentType<MarketState>> MARKET =
             TYPES.register("market", () -> AttachmentType.builder(
-                            () -> new MarketState(MarketState.Settings.defaults()))
+                            () -> new MarketState(Market.settings()))
                     .serialize(MARKET_CODEC)
                     .build());
 

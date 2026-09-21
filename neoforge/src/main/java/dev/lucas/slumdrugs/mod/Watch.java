@@ -40,14 +40,15 @@ public final class Watch {
     /** A sale has been seen. Called by whoever made it; a subtle line is seen less. */
     public static void noticed(ServerPlayer player, int units, boolean sealed, double subtlety) {
         Suspicion suspicion = of(player);
-        Suspicion.Level before = suspicion.level();
-        suspicion.sold((int) Math.round(units * Math.max(0, subtlety)), sealed);
+        Suspicion.Settings s = Tuning.suspicion();
+        Suspicion.Level before = suspicion.level(s);
+        suspicion.sold((int) Math.round(units * Math.max(0, subtlety)), sealed, s);
         player.syncData(ModAttachments.SUSPICION.get());
-        Suspicion.Level after = suspicion.level();
+        Suspicion.Level after = suspicion.level(s);
         if (after != before && after.ordinal() > before.ordinal() && after != Suspicion.Level.RAID)
             ProductItem.actionBar(player, Component.translatable(
                     "message.slumdrugs.suspicion_" + after.name().toLowerCase(java.util.Locale.ROOT))
-                    .withStyle(s -> s.withColor(0xC0A050)));
+                    .withStyle(style -> style.withColor(0xC0A050)));
     }
 
     @SubscribeEvent
@@ -58,30 +59,31 @@ public final class Watch {
         if (gameTime % INTERVAL != 0) return;
 
         Suspicion suspicion = of(player);
+        Suspicion.Settings s = Tuning.suspicion();
         long now = gameTime * 50L;
-        suspicion.decay(INTERVAL / 20.0 / 60.0);
+        suspicion.decay(INTERVAL / 20.0 / 60.0, s);
 
-        if (suspicion.shouldCallRaid()) {
-            suspicion.callRaid(now);
+        if (suspicion.shouldCallRaid(s)) {
+            suspicion.callRaid(now, s);
             player.sendSystemMessage(Component.translatable("message.slumdrugs.raid_called")
-                    .withStyle(s -> s.withColor(0xD05050)));
+                    .withStyle(style -> style.withColor(0xD05050)));
             level.playSound(null, player.blockPosition(), SoundEvents.BELL_BLOCK, SoundSource.BLOCKS, 2.0f, 0.7f);
-        } else if (suspicion.raidLapsed()) {
+        } else if (suspicion.raidLapsed(s)) {
             suspicion.cancelRaid();
             player.sendSystemMessage(Component.translatable("message.slumdrugs.raid_lapsed")
-                    .withStyle(s -> s.withColor(0x90A090)));
+                    .withStyle(style -> style.withColor(0x90A090)));
         } else if (suspicion.raidDue(now)) {
-            raid(level, player, suspicion);
+            raid(level, player, suspicion, s);
         }
 
-        if (suspicion.level().ordinal() >= Suspicion.Level.WATCHED.ordinal() && gameTime % (INTERVAL * 10) == 0)
+        if (suspicion.level(s).ordinal() >= Suspicion.Level.WATCHED.ordinal() && gameTime % (INTERVAL * 10) == 0)
             stirConstables(level, player, 30);
 
         player.syncData(ModAttachments.SUSPICION.get());
     }
 
     /** The Watch arrives: goods off the player, constables on them, suspicion back to watched. */
-    private static void raid(ServerLevel level, ServerPlayer player, Suspicion suspicion) {
+    private static void raid(ServerLevel level, ServerPlayer player, Suspicion suspicion, Suspicion.Settings s) {
         int taken = 0;
         var inventory = player.getInventory();
         for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
@@ -90,11 +92,11 @@ public final class Watch {
             taken += stack.getCount();
             inventory.setItem(slot, ItemStack.EMPTY);
         }
-        suspicion.raided();
+        suspicion.raided(s);
         stirConstables(level, player, 60);
 
         player.sendSystemMessage(Component.translatable("message.slumdrugs.raided", taken)
-                .withStyle(s -> s.withColor(0xD05050)));
+                .withStyle(style -> style.withColor(0xD05050)));
         level.playSound(null, player.blockPosition(), SoundEvents.BELL_RESONATE, SoundSource.BLOCKS, 1.5f, 0.8f);
     }
 

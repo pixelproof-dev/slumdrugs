@@ -156,7 +156,7 @@ public final class ForcingFrameBlockEntity extends BlockEntity {
     public void serverTick(Level level, BlockPos pos, BlockState blockState) {
         int before = state.stage();
         // A vigorous line grows faster: the same progress over fewer seconds.
-        state.advance(clock(level), GROWTH_SECONDS / strain.vigourFactor());
+        state.advance(clock(level), Tuning.GROWTH_SECONDS.get() / strain.vigourFactor());
         setChanged();
         int after = state.stage();
         if (after != before && blockState.getValue(ForcingFrameBlock.STAGE) != after)

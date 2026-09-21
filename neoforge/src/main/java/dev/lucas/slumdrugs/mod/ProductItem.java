@@ -43,26 +43,27 @@ public final class ProductItem extends Item {
         var profile = Substances.profile(drug);
         Condition condition = player.getData(ModAttachments.CONDITION.get());
         long now = level.getGameTime() * 50L;
-        condition.advance(condition.lastUse, now, Condition.Settings.defaults());
+        condition.advance(condition.lastUse, now, Tuning.condition());
 
         int quality = ModComponents.qualityOf(stack);
         double dose = profile.dose() * ModComponents.strainOf(stack).potencyFactor();
 
         // Too much on top of too much: the dose still lands, and it hurts rather than helps.
         boolean overdose = condition.wouldOverdose(dose, quality, ModComponents.cutOf(stack));
+        // Tonic mode: fatigue builds, nothing else does.
         double landed = condition.use(dose, quality,
-                profile.toleranceGain(), profile.dependenceGain(), now);
+                profile.toleranceGain(), Tonic.on() ? 0 : profile.dependenceGain(), now);
 
         if (overdose) {
             player.hurt(level.damageSources().magic(), 6.0f);
             player.addEffect(new MobEffectInstance(MobEffects.NAUSEA, 300, 0));
             player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 600, 1));
-            actionBar(player, Component.translatable("message.slumdrugs.overdose")
+            actionBar(player, Component.translatable(Tonic.key("message.slumdrugs.overdose"))
                     .withStyle(style -> style.withColor(0xD05050)));
         } else {
             double strength = landed / Math.max(1, dose);
             Substances.instances(profile, strength).forEach(player::addEffect);
-            actionBar(player, Component.translatable("message.slumdrugs.used",
+            actionBar(player, Component.translatable(Tonic.key("message.slumdrugs.used"),
                     Component.translatable("item.slumdrugs.product_" + drug),
                     (int) Math.round(condition.intoxication)));
         }

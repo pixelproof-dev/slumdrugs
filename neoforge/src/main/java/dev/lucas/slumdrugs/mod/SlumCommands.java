@@ -147,7 +147,7 @@ public final class SlumCommands {
     }
 
     private static int conditionGet(CommandContext<CommandSourceStack> ctx, Collection<ServerPlayer> targets) {
-        var settings = Condition.Settings.defaults();
+        var settings = Tuning.condition();
         for (ServerPlayer player : targets) {
             Condition c = player.getData(ModAttachments.CONDITION.get());
             long now = player.level().getGameTime() * 50L;
@@ -500,12 +500,12 @@ public final class SlumCommands {
     private static int progressGet(CommandContext<CommandSourceStack> ctx, Collection<ServerPlayer> targets) {
         for (ServerPlayer player : targets) {
             Progression p = player.getData(ModAttachments.PROGRESSION.get());
-            var gate = p.gate();
+            var gate = p.gate(Tuning.progression());
             String next = !gate.reachable() ? "the ladder ends here for now"
                     : gate.unitsNeeded() > 0 ? gate.unitsNeeded() + " more units to " + gate.next().label
                     : gate.coinNeeded() + " more coin to " + gate.next().label;
             reply(ctx, String.format("%s — %s: %d units sold, %d coin earned; %s",
-                    player.getName().getString(), p.tier().label, p.unitsSold, p.coinEarned + "s", next));
+                    player.getName().getString(), p.tier(Tuning.progression()).label, p.unitsSold, p.coinEarned + "s", next));
         }
         return targets.size();
     }
@@ -598,7 +598,7 @@ public final class SlumCommands {
             Suspicion s = Watch.of(player);
             long until = s.untilRaid(player.level().getGameTime() * 50L);
             reply(ctx, String.format("%s — suspicion %.0f (%s)%s", player.getName().getString(), s.value,
-                    s.level().name().toLowerCase(java.util.Locale.ROOT),
+                    s.level(Tuning.suspicion()).name().toLowerCase(java.util.Locale.ROOT),
                     until < 0 ? "" : ", raid in " + (until / 1000) + "s"));
         }
         return targets.size();
@@ -609,7 +609,7 @@ public final class SlumCommands {
         for (ServerPlayer player : targets) {
             Suspicion s = Watch.of(player);
             s.value = value;
-            if (value < Suspicion.HUNTED_AT) s.cancelRaid();
+            if (value < Tuning.suspicion().huntedAt()) s.cancelRaid();
             player.syncData(ModAttachments.SUSPICION.get());
         }
         reply(ctx, "Set suspicion to " + value + " on " + targets.size() + " player(s)");

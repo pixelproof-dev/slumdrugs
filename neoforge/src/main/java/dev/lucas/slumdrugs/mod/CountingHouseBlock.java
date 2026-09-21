@@ -45,7 +45,7 @@ public final class CountingHouseBlock extends Block {
             return InteractionResult.SUCCESS;
         } else {
             long loose = Purse.valueOf(stack);
-            long stamped = Coin.stamped(loose);
+            long stamped = Coin.stamped(loose, Tuning.STAMP_CUT.get());
             stack.consume(stack.getCount(), player);
             Purse.pay(player, stamped, true);
             ProductItem.actionBar(player, Component.translatable("message.slumdrugs.stamped",

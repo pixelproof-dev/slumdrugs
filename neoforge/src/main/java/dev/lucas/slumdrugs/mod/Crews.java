@@ -65,7 +65,7 @@ public final class Crews {
         if (!(event.getTarget() instanceof Villager villager) || !Npcs.isOurs(villager)) return;
         NpcData data = Npcs.data(villager);
         villager.setData(ModAttachments.NPC.get(), data.withAggression(Npc.provoke(data.aggression(), HIT_PROVOCATION)));
-        if (!data.crew().isBlank()) moved(player, data.crew(), Standing.HIT);
+        if (!data.crew().isBlank()) moved(player, data.crew(), -Tuning.HIT_COST.get());
     }
 
     /** One of theirs dies by a player's hand: the crew inherits his anger, and remembers. */
@@ -77,7 +77,7 @@ public final class Crews {
         NpcData dead = Npcs.data(villager);
         if (dead.crew().isBlank()) return;
 
-        moved(player, dead.crew(), Standing.KILL);
+        moved(player, dead.crew(), -Tuning.KILL_COST.get());
         double inherited = Math.max(MOURNING_AGGRESSION, dead.aggression());
         AABB box = villager.getBoundingBox().inflate(MOURNING_RANGE);
         for (Villager other : level.getEntitiesOfClass(Villager.class, box, Npcs::isOurs)) {
@@ -102,7 +102,7 @@ public final class Crews {
 
         long pence = Purse.valueOf(held);
         held.consume(held.getCount(), player);
-        double points = Standing.tribute(pence);
+        double points = Standing.tribute(pence, Tuning.TRIBUTE_CAP.get());
         villager.setData(ModAttachments.NPC.get(), data.withAggression(Npc.appease(data.aggression(), points * 3)));
         ProductItem.actionBar(player, Component.translatable("message.slumdrugs.tribute",
                 villager.getName(), Coin.format(pence)));

@@ -37,20 +37,20 @@ public final class ConditionTicker {
         if (gameTime % INTERVAL != 0) return;
 
         Condition condition = player.getData(ModAttachments.CONDITION.get());
-        var settings = Condition.Settings.defaults();
+        var settings = Tuning.condition();
         long now = gameTime * 50L;
         long previous = Math.max(condition.lastUse, now - INTERVAL * 50L);
         condition.advance(previous, now, settings);
         // Once a second, to the owner only: what the HUD draws.
         player.syncData(ModAttachments.CONDITION.get());
 
-        int severity = condition.withdrawalSeverity(now, settings);
+        int severity = Tonic.on() ? 0 : condition.withdrawalSeverity(now, settings);
         if (severity > 0) {
             applyWithdrawal(player, severity);
             if (gameTime % CRAVING_INTERVAL == 0)
                 ProductItem.actionBar(player, Component.translatable(
                         "message.slumdrugs.withdrawal_" + severity).withStyle(s -> s.withColor(0x9A6BA8)));
-        } else if (condition.craving(now, settings) && gameTime % CRAVING_INTERVAL == 0) {
+        } else if (!Tonic.on() && condition.craving(now, settings) && gameTime % CRAVING_INTERVAL == 0) {
             ProductItem.actionBar(player, Component.translatable("message.slumdrugs.craving")
                     .withStyle(s -> s.withColor(0xB0A070)));
         }

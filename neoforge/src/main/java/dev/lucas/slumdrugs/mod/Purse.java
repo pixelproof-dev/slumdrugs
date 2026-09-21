@@ -95,8 +95,10 @@ public final class Purse {
         if (progress.started) return;
         progress.started = true;
         player.syncData(ModAttachments.PROGRESSION.get());
-        pay(player, Coin.STARTING_PURSE, false);
+        long purse = Tuning.STARTING_PURSE.get();
+        if (purse <= 0) return;
+        pay(player, purse, false);
         player.sendSystemMessage(Component.translatable("message.slumdrugs.starting_purse",
-                Coin.format(Coin.STARTING_PURSE)).withStyle(s -> s.withColor(0xE0B040)));
+                Coin.format(purse)).withStyle(s -> s.withColor(0xE0B040)));
     }
 }

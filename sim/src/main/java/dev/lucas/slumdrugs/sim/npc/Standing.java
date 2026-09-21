@@ -61,8 +61,10 @@ public final class Standing {
     public static double clamp(double v) { return Math.max(MIN, Math.min(MAX, v)); }
 
     /** What a tribute is worth: a point a shilling, up to the cap. */
-    public static double tribute(long pence) {
-        return Math.min(TRIBUTE_CAP, Math.max(0, pence) / 12.0);
+    public static double tribute(long pence) { return tribute(pence, TRIBUTE_CAP); }
+
+    public static double tribute(long pence, double cap) {
+        return Math.min(Math.max(0, cap), Math.max(0, pence) / 12.0);
     }
 
     public static boolean atWar(double standing) { return standing <= WAR_AT; }

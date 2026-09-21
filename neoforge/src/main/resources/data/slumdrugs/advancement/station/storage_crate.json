@@ -1,0 +1,35 @@
+{
+  "parent": "slumdrugs:tier/workshop",
+  "display": {
+    "icon": {
+      "id": "slumdrugs:storage_crate"
+    },
+    "title": {
+      "translate": "advancements.slumdrugs.station.storage_crate.title"
+    },
+    "description": {
+      "translate": "advancements.slumdrugs.station.storage_crate.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "placed": {
+      "trigger": "minecraft:placed_block",
+      "conditions": {
+        "location": {
+          "type": "minecraft:match_block",
+          "blocks": "slumdrugs:storage_crate"
+        }
+      }
+    }
+  },
+  "requirements": [
+    [
+      "placed"
+    ]
+  ],
+  "sends_telemetry_event": false
+}

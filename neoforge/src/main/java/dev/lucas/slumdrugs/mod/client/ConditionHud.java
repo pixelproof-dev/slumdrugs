@@ -1,6 +1,8 @@
 package dev.lucas.slumdrugs.mod.client;
 
 import dev.lucas.slumdrugs.mod.ModAttachments;
+import dev.lucas.slumdrugs.mod.Tonic;
+import dev.lucas.slumdrugs.mod.Tuning;
 import dev.lucas.slumdrugs.sim.player.Condition;
 import dev.lucas.slumdrugs.sim.player.Suspicion;
 import net.minecraft.client.DeltaTracker;
@@ -43,11 +45,13 @@ public final class ConditionHud implements GuiLayer {
         if (player == null || minecraft.level == null || player.isSpectator()) return;
 
         Condition condition = player.getData(ModAttachments.CONDITION.get());
-        var settings = Condition.Settings.defaults();
+        var settings = Tuning.loaded() ? Tuning.condition() : Condition.Settings.defaults();
+        var watchSettings = Tuning.loaded() ? Tuning.suspicion() : Suspicion.Settings.defaults();
         long now = minecraft.level.getGameTime() * 50L;
-        boolean craving = condition.craving(now, settings);
-        int severity = condition.withdrawalSeverity(now, settings);
-        double untilWithdrawal = condition.minutesUntilWithdrawal(now, settings);
+        boolean tonic = Tonic.on();
+        boolean craving = !tonic && condition.craving(now, settings);
+        int severity = tonic ? 0 : condition.withdrawalSeverity(now, settings);
+        double untilWithdrawal = tonic ? -1 : condition.minutesUntilWithdrawal(now, settings);
 
         Suspicion suspicion = player.getData(ModAttachments.SUSPICION.get());
         long untilRaid = suspicion.untilRaid(now);
@@ -57,10 +61,11 @@ public final class ConditionHud implements GuiLayer {
         int y = graphics.guiHeight() - MARGIN - METER_HEIGHT - 2;
 
         // The Watch, above everything else, only once it has noticed.
-        if (suspicion.level().ordinal() >= Suspicion.Level.NOTICED.ordinal()) {
+        Suspicion.Level watchLevel = suspicion.level(watchSettings);
+        if (watchLevel.ordinal() >= Suspicion.Level.NOTICED.ordinal()) {
             Component watch = untilRaid >= 0
                     ? Component.translatable("hud.slumdrugs.raid", (untilRaid + 999) / 1000)
-                    : Component.translatable("hud.slumdrugs.suspicion_" + suspicion.level().name().toLowerCase(java.util.Locale.ROOT));
+                    : Component.translatable("hud.slumdrugs.suspicion_" + watchLevel.name().toLowerCase(java.util.Locale.ROOT));
             graphics.text(font, watch, x, y - 2 * font.lineHeight - 2, untilRaid >= 0 ? METER_HIGH : WATCH, true);
         }
 
@@ -90,7 +95,7 @@ public final class ConditionHud implements GuiLayer {
             graphics.text(font, Component.translatable("hud.slumdrugs.until_withdrawal",
                     minutes(untilWithdrawal)), x, textY, TEXT, true);
         } else if (condition.intoxication > 0.5) {
-            graphics.text(font, Component.translatable("hud.slumdrugs.intoxication",
+            graphics.text(font, Component.translatable(Tonic.key("hud.slumdrugs.intoxication"),
                     (int) Math.round(condition.intoxication)), x, textY, TEXT, true);
         }
     }

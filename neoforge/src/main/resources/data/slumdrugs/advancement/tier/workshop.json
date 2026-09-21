@@ -1,0 +1,40 @@
+{
+  "parent": "slumdrugs:tier/backroom",
+  "display": {
+    "icon": {
+      "id": "slumdrugs:coin_sovereign"
+    },
+    "title": {
+      "translate": "advancements.slumdrugs.tier.workshop.title"
+    },
+    "description": {
+      "translate": "advancements.slumdrugs.tier.workshop.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "reached": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "reached"
+    ]
+  ],
+  "sends_telemetry_event": false,
+  "rewards": {
+    "recipes": [
+      "slumdrugs:pressing_bench",
+      "slumdrugs:sealing_press",
+      "slumdrugs:storage_crate",
+      "slumdrugs:centrifuge",
+      "slumdrugs:still",
+      "slumdrugs:cutting_bench",
+      "slumdrugs:grafting_bench"
+    ]
+  }
+}

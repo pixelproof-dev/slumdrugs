@@ -38,7 +38,12 @@ public final class Refining {
         public int seconds(boolean powered) { return powered ? Math.max(1, seconds / 2) : seconds; }
 
         /** Strokes of a hand press that add up to one unpowered run. */
-        public int strokes() { return Math.max(1, (seconds + HAND_STROKE_SECONDS - 1) / HAND_STROKE_SECONDS); }
+        public int strokes() { return strokes(HAND_STROKE_SECONDS); }
+
+        public int strokes(int strokeSeconds) {
+            int stroke = Math.max(1, strokeSeconds);
+            return Math.max(1, (seconds + stroke - 1) / stroke);
+        }
     }
 
     /** Work one pull on a hand press is worth, in seconds of the method's run time. */

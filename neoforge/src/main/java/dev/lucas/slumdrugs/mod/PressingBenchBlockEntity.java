@@ -35,7 +35,7 @@ public final class PressingBenchBlockEntity extends BlockEntity {
 
     public boolean empty() { return batch.isEmpty(); }
     public int strokes() { return strokes; }
-    public int strokesNeeded() { return Refining.Method.PRESS.strokes(); }
+    public int strokesNeeded() { return Refining.Method.PRESS.strokes(Tuning.STROKE_SECONDS.get()); }
 
     /**
      * Puts dried material under the plate: a new batch, or more of the same onto one that has

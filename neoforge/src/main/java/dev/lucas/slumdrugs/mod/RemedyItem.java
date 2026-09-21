@@ -28,7 +28,8 @@ public final class RemedyItem extends Item {
 
         Condition condition = player.getData(ModAttachments.CONDITION.get());
         long now = level.getGameTime() * 50L;
-        if (!condition.remedy(now)) {
+        if (!condition.remedy(now, Tuning.REMEDY_DEPENDENCE.get(), Tuning.REMEDY_TOLERANCE.get(),
+                Tuning.REMEDY_MINUTES.get() * 60000L)) {
             ProductItem.actionBar(player, Component.translatable("message.slumdrugs.remedy_working"));
             return InteractionResult.FAIL;
         }

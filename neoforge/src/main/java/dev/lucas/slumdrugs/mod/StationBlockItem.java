@@ -29,7 +29,7 @@ public final class StationBlockItem extends BlockItem {
     public InteractionResult place(BlockPlaceContext context) {
         Player player = context.getPlayer();
         if (player != null && !player.hasInfiniteMaterials()
-                && !player.getData(ModAttachments.PROGRESSION.get()).reached(required)) {
+                && !player.getData(ModAttachments.PROGRESSION.get()).reached(required, Tuning.progression())) {
             ProductItem.actionBar(player, Component.translatable("message.slumdrugs.tier_locked",
                     getBlock().getName(), Component.translatable("tier.slumdrugs." + required.name().toLowerCase(java.util.Locale.ROOT))));
             return InteractionResult.FAIL;

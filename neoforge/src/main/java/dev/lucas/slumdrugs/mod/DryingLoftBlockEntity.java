@@ -44,7 +44,7 @@ public final class DryingLoftBlockEntity extends BlockEntity {
     }
 
     public boolean ready(Level level, int rail) {
-        return !bundles.get(rail).isEmpty() && Drying.ready(secondsHung(level, rail), Drying.SECONDS);
+        return !bundles.get(rail).isEmpty() && Drying.ready(secondsHung(level, rail), Tuning.DRYING_SECONDS.get());
     }
 
     public boolean anyReady(Level level) {
@@ -57,7 +57,7 @@ public final class DryingLoftBlockEntity extends BlockEntity {
         double least = 1;
         for (int rail = 0; rail < RAILS; rail++)
             if (!bundles.get(rail).isEmpty())
-                least = Math.min(least, Drying.progress(secondsHung(level, rail), Drying.SECONDS));
+                least = Math.min(least, Drying.progress(secondsHung(level, rail), Tuning.DRYING_SECONDS.get()));
         return least;
     }
 
@@ -89,10 +89,11 @@ public final class DryingLoftBlockEntity extends BlockEntity {
         double hung = secondsHung(level, rail);
         ItemStack out;
         String drug = ModItems.drugOf("raw_", bundle);
-        if (drug != null && Drying.ready(hung, Drying.SECONDS)) {
+        int seconds = Tuning.DRYING_SECONDS.get();
+        if (drug != null && Drying.ready(hung, seconds)) {
             out = ModComponents.inherit(bundle, ModComponents.withQuality(
                     new ItemStack(ModItems.get("dried_" + drug).get(), bundle.getCount()),
-                    Drying.quality(ModComponents.qualityOf(bundle), hung, Drying.SECONDS),
+                    Drying.quality(ModComponents.qualityOf(bundle), hung, seconds),
                     bundle.get(ModComponents.GROWER.get())));
         } else {
             out = bundle.copy();

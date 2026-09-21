@@ -30,12 +30,13 @@ public final class JournalItem extends Item {
         if (level.isClientSide()) return InteractionResult.SUCCESS;
 
         Progression progress = player.getData(ModAttachments.PROGRESSION.get());
-        player.sendSystemMessage(Component.translatable("journal.slumdrugs.heading", tierName(progress.tier()))
+        Progression.Settings gates = Tuning.progression();
+        player.sendSystemMessage(Component.translatable("journal.slumdrugs.heading", tierName(progress.tier(gates)))
                 .withStyle(ChatFormatting.GOLD));
         player.sendSystemMessage(Component.translatable("journal.slumdrugs.sold", progress.unitsSold, progress.coinEarned + "s")
                 .withStyle(ChatFormatting.GRAY));
 
-        Progression.Gate gate = progress.gate();
+        Progression.Gate gate = progress.gate(gates);
         if (!gate.reachable())
             player.sendSystemMessage(Component.translatable("journal.slumdrugs.ceiling", tierName(gate.next()))
                     .withStyle(ChatFormatting.DARK_GRAY));

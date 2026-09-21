@@ -293,6 +293,14 @@ public final class SimChecks {
         check(new Progression(-1, -1).unitsSold == 0, "counters never start negative");
         check(Progression.Tier.KINGPIN.next() == Progression.Tier.KINGPIN, "the top has no next");
         for (var t : Progression.Tier.values()) check(!t.label.isBlank(), "every tier has a name");
+
+        // Gates are settings; the defaults are the constants.
+        var easy = new Progression.Settings(5, 10);
+        var e = new Progression(5, 10);
+        check(e.tier(easy) == Progression.Tier.WORKSHOP && e.tier() == Progression.Tier.HAND_TO_MOUTH, "settings move the gates");
+        check(e.gate(easy).next() == Progression.Tier.APOTHECARY && e.gate().unitsNeeded() == Progression.BACKROOM_UNITS - 5, "and the gate reads them");
+        check(new Progression.Settings(-1, -1).backroomUnits() == 0, "no negative gates");
+        check(Progression.Settings.defaults().workshopCoin() == Progression.WORKSHOP_COIN, "the defaults are the constants");
     }
 
     // ---------------------------------------------------------------- unit transfer
@@ -492,6 +500,10 @@ public final class SimChecks {
         // Restoring carries the timer.
         var restored = Condition.of(0, 0, 50, 0, 0, now + minute);
         check(restored.soothed(now) && !restored.soothed(now + 2 * minute), "the soothed timer survives a restore");
+        var strong = new Condition(0, 40, 70);
+        strong.remedy(now, 20, 10, minute);
+        check(strong.dependence == 50 && strong.tolerance == 30 && strong.soothed(now + minute - 1) && !strong.soothed(now + minute),
+                "a draught's numbers are settings");
     }
 
     // ---------------------------------------------------------------- suspicion
@@ -541,6 +553,23 @@ public final class SimChecks {
         lying.cancelRaid();
         check(lying.raidAt == 0 && lying.untilRaid(0) == -1, "a cancelled raid is gone");
         check(new Suspicion(-5, -5).value == 0, "restored values are clamped");
+
+        // Settings move every number, and the defaults are the constants.
+        var strict = new Suspicion.Settings(10, 20, 30, 40, 2, 3, 1, 60000L, 15);
+        var t = new Suspicion();
+        t.sold(10, false, strict);
+        check(t.value == 20 && t.level(strict) == Suspicion.Level.WATCHED && t.level() == Suspicion.Level.NOTICED,
+                "settings change the rate and the thresholds");
+        t.sold(10, false, strict);
+        check(t.shouldCallRaid(strict) && !t.shouldCallRaid(), "a strict town calls the raid sooner");
+        t.callRaid(0, strict);
+        check(t.untilRaid(0) == 60000L, "and rings a shorter bell");
+        t.raided(strict);
+        check(t.value == 15, "and stands down to its own mark");
+        check(Suspicion.Settings.defaults().levelOf(Suspicion.RAID_AT) == Suspicion.Level.RAID, "the defaults are the constants");
+        boolean bad = false;
+        try { new Suspicion.Settings(50, 40, 30, 20, 1, 1, 1, 0, 0); } catch (IllegalArgumentException expected) { bad = true; }
+        check(bad, "thresholds must climb");
     }
 
     // ---------------------------------------------------------------- refining
@@ -612,6 +641,7 @@ public final class SimChecks {
 
         // A hand press is worked in strokes that add up to the method's run.
         check(Refining.Method.PRESS.strokes() == 5, "the pressing bench takes five pulls");
+        check(Refining.Method.PRESS.strokes(10) == 2 && Refining.Method.PRESS.strokes(0) == 20, "a stroke's worth is a setting, never zero");
         for (var method : Refining.Method.values()) {
             check(method.strokes() * Refining.HAND_STROKE_SECONDS >= method.seconds(false),
                     "the strokes cover the run: " + method);
@@ -789,6 +819,8 @@ public final class SimChecks {
         check(Coin.format(6).equals("6d") && Coin.format(12).equals("1s") && Coin.format(18).equals("1s 6d"), "small sums read");
         check(Coin.format(2 * Coin.SOVEREIGN + 3).equals("2 sov 3d"), "sovereigns read with their change");
         check(Coin.STARTING_PURSE == 10 * Coin.SHILLING, "the starting purse is ten shillings");
+        close(Coin.baseUnitPence(10, 1.2), 12, "the scale is a setting");
+        check(Coin.stamped(100, 0.5) == 50 && Coin.stampFee(100, 2) == 100, "the cut is a setting, capped at everything");
     }
 
     // ---------------------------------------------------------------- market
@@ -852,6 +884,7 @@ public final class SimChecks {
         close(Standing.tribute(5 * 12), 5, "five shillings, five points");
         close(Standing.tribute(100 * 12), Standing.TRIBUTE_CAP, "no tribute buys more than the cap");
         check(Standing.tribute(-12) == 0, "no negative tribute");
+        close(Standing.tribute(100 * 12, 25), 25, "a higher cap lets a bigger tribute count");
 
         // Clamped at both ends, and war has a line.
         Standing.apply(map, "quarry", -1000);
