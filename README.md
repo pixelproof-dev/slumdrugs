@@ -38,7 +38,15 @@ Working today:
   returning as compost
 - The condition system: use, tolerance, dependence, craving, withdrawal, recovery and the remedy draught
 - NPCs as villagers carrying an aggression model, trading through the vanilla merchant screen
+- Stations that show their state: a glowing, steaming still, a spinning centrifuge, a lantern
+  that burns while the crop is comfortable, bundles that turn brown when dry; every station
+  with its own sound event, mapped to vanilla sounds until recorded ones exist
+- The street talks: eighty-odd lines in two languages, picked from what each person can see of you
+- Turf without war: corners held by coin and standing, better prices on your own, crews that remember
+- A hired hand: one resident who works your loft and press for a wage out of the nearest crate
 - A full `/slum` command tree, including dry runs of the rules
+- Three checks beyond the build: a data checker, a headless server smoke test, and a simulated
+  week of play that fails when the balance leaves the design's envelope; all three run in CI
 
 ## Build
 
