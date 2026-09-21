@@ -10,6 +10,7 @@ import dev.lucas.slumdrugs.sim.player.Condition;
 import dev.lucas.slumdrugs.sim.player.Recovery;
 import dev.lucas.slumdrugs.sim.station.GrowboxState;
 import dev.lucas.slumdrugs.sim.world.RoomFlood;
+import dev.lucas.slumdrugs.sim.world.StructureFit;
 
 import java.util.List;
 
@@ -33,6 +34,7 @@ public final class SimChecks {
 
     public static void main(String[] args) {
         roomFlood();
+        structureFit();
         growbox();
         recovery();
         condition();
@@ -505,5 +507,80 @@ public final class SimChecks {
                 check(Math.abs(result - boss) <= Math.abs(member - boss) + 1e-9,
                         "spread never moves the crew away from the boss");
             }
+    }
+
+    // ------------------------------------------------------------- structure fit
+
+    private static void structureFit() {
+        // The trader house: 17 x 23 x 17, its ground surface nine up from the cellar floor.
+        var house = new StructureFit.Size(17, 23, 17);
+        var flat = StructureFit.centredOn(0, 0, 41, house, 9, StructureFit.Turn.NONE, -64, 319);
+        check(flat instanceof StructureFit.Fit.Ok, "the house fits on flat ground");
+        var ok = (StructureFit.Fit.Ok) flat;
+        check(ok.cornerY() == 32, "the cellar floor sits nine below the first free level");
+        check(ok.cornerY() + 8 == 40, "the ground surface meets the terrain");
+        check(ok.cornerX() == -8 && ok.cornerZ() == -8, "the piece is centred on its column");
+        check(ok.zeroX() == ok.cornerX() && ok.zeroZ() == ok.cornerZ(),
+                "an unturned piece is written from its own corner");
+
+        // A turn swaps the footprint but never the height.
+        for (StructureFit.Turn turn : StructureFit.Turn.values()) {
+            var oblong = new StructureFit.Size(9, 5, 3);
+            var f = StructureFit.rotated(oblong, turn);
+            check(f.y() == 5, "a turn leaves the height alone");
+            check(turn.swapsAxes() ? f.x() == 3 && f.z() == 9 : f.x() == 9 && f.z() == 3,
+                    "a quarter turn swaps the footprint");
+            var twice = StructureFit.rotated(f, turn);
+            check(twice.x() == oblong.x() && twice.z() == oblong.z(),
+                    "turning the same quarter twice restores the footprint");
+        }
+
+        // The one that was wrong in play: a turned template is written from the corner the turn
+        // maps its origin onto, so check every block of every turn lands inside the reported box.
+        for (StructureFit.Turn turn : StructureFit.Turn.values())
+            for (int sx = 1; sx <= 9; sx += 2)
+                for (int sz = 1; sz <= 9; sz += 2)
+                    for (int column = -16; column <= 16; column += 8) {
+                        var size = new StructureFit.Size(sx, 7, sz);
+                        var fit = StructureFit.centredOn(column, column, 70, size, 3, turn, -64, 319);
+                        check(fit instanceof StructureFit.Fit.Ok, "a small piece fits");
+                        var box = (StructureFit.Fit.Ok) fit;
+                        int minX = Integer.MAX_VALUE, maxX = Integer.MIN_VALUE;
+                        int minZ = Integer.MAX_VALUE, maxZ = Integer.MIN_VALUE;
+                        for (int x = 0; x < sx; x++)
+                            for (int z = 0; z < sz; z++) {
+                                int wx = StructureFit.turnedX(box.zeroX(), x, z, turn);
+                                int wz = StructureFit.turnedZ(box.zeroZ(), x, z, turn);
+                                minX = Math.min(minX, wx); maxX = Math.max(maxX, wx);
+                                minZ = Math.min(minZ, wz); maxZ = Math.max(maxZ, wz);
+                            }
+                        check(minX == box.cornerX(), "a turned piece starts at the reported corner in X");
+                        check(minZ == box.cornerZ(), "a turned piece starts at the reported corner in Z");
+                        check(maxX - minX + 1 == box.footprint().x(), "the reported footprint is the real width");
+                        check(maxZ - minZ + 1 == box.footprint().z(), "the reported footprint is the real depth");
+                        check(Math.abs((minX + maxX) / 2 - column) <= 1, "the box stays centred on its column");
+                    }
+
+        // Refusals, because a placer that fails silently is worse than one that will not run.
+        check(StructureFit.centredOn(0, 0, 41, house, 23, StructureFit.Turn.NONE, -64, 319)
+                instanceof StructureFit.Fit.Refused, "a ground offset past the roof is refused");
+        check(StructureFit.centredOn(0, 0, -60, house, 9, StructureFit.Turn.NONE, -64, 319)
+                instanceof StructureFit.Fit.Refused, "a cellar below the world is refused");
+        check(StructureFit.centredOn(0, 0, 318, house, 9, StructureFit.Turn.NONE, -64, 319)
+                instanceof StructureFit.Fit.Refused, "a roof above the world is refused");
+        check(StructureFit.centredOn(0, 0, -55, house, 9, StructureFit.Turn.NONE, -64, 319)
+                instanceof StructureFit.Fit.Ok, "a cellar that just clears bedrock is allowed");
+
+        // Every legal terrain height between bedrock and the build limit either fits or says why.
+        for (int surface = -64; surface <= 319; surface++) {
+            var fit = StructureFit.centredOn(0, 0, surface, house, 9, StructureFit.Turn.NONE, -64, 319);
+            if (fit instanceof StructureFit.Fit.Ok placed) {
+                check(placed.cornerY() >= -64, "a placed cellar is inside the world");
+                check(placed.cornerY() + 22 <= 319, "a placed roof is inside the world");
+                check(placed.cornerY() == surface - 9, "the sink is always the ground offset");
+            } else {
+                check(surface - 9 < -64 || surface - 9 + 22 > 319, "a refusal has a reason in the numbers");
+            }
+        }
     }
 }
