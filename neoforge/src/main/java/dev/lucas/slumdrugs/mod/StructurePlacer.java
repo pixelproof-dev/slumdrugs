@@ -17,10 +17,12 @@ import net.minecraft.world.level.block.entity.JigsawBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
+import net.minecraft.world.level.levelgen.structure.templatesystem.BlockIgnoreProcessor;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
@@ -133,7 +135,13 @@ public final class StructurePlacer {
         StructurePlaceSettings settings = new StructurePlaceSettings()
                 .setRotation(rotation)
                 .setMirror(Mirror.NONE)
-                .setIgnoreEntities(false);
+                .setIgnoreEntities(false)
+                // A piece marks "leave the terrain alone here" with structure_void, and nothing
+                // in placeInWorld skips it: only JigsawReplacementProcessor does, and that runs
+                // on the jigsaw path, not this one. Without this the game writes structure_void
+                // into the world as a real block — invisible, but it has replaced whatever was
+                // there, so a generated piece leaves holes in the ground around its footing.
+                .addProcessor(new BlockIgnoreProcessor(List.of(Blocks.STRUCTURE_VOID)));
 
         boolean placed = template.placeInWorld(level, writeFrom, writeFrom, settings,
                 level.getRandom(), Block.UPDATE_CLIENTS);
