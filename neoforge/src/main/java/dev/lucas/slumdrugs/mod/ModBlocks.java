@@ -65,6 +65,9 @@ public final class ModBlocks {
                     .mapColor(MapColor.COLOR_ORANGE)
                     .strength(3.5f)
                     .sound(SoundType.COPPER)
+                    // The only station that builds its properties itself rather than from
+                    // wooden(), so it was also the only one still culling its neighbours.
+                    .noOcclusion()
                     .lightLevel(state -> state.getValue(RefineryBlock.WORKING) ? 8 : 0));
 
     static {

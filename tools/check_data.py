@@ -186,6 +186,22 @@ def check_models(items, blocks, van):
     for i in items:
         if not (ASSETS / 'models/item' / f'{i}.json').exists():
             problem(f'item {i}: no item model')
+        # 26.3 needs the model *definition* under items/ as well, which is what
+        # ClientItemInfoLoader reads. Without it the game draws the missing-model cube and
+        # says so only once, at render time, in the client log.
+        d = ASSETS / 'items' / f'{i}.json'
+        if not d.exists():
+            problem(f'item {i}: no item model definition under items/')
+            continue
+        info = load(d)
+        if info is None: continue
+        ref = (info.get('model') or {}).get('model')
+        if not ref:
+            problem(f'items/{i}.json: no model named')
+        else:
+            ns, path = (ref.split(':', 1) if ':' in ref else ('minecraft', ref))
+            if ns == NS and path not in our_models:
+                problem(f'items/{i}.json: model {ref} missing')
     for p in sorted((ASSETS / 'models').rglob('*.json')):
         d = load(p)
         if d is None: continue
