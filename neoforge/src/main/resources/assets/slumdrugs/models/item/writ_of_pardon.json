@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "slumdrugs:item/writ_of_pardon"
+  }
+}

@@ -50,6 +50,41 @@ public final class ModItems {
         }
         simple("fertilizer");
         simple("remedy");
+
+        // Drawn but not yet wired into any system. They register so the art can be looked at,
+        // handed out and built against; every one is a plain item until the rule that uses it
+        // lands in sim. Order follows docs/ART-PROMPTS.md, which is also the creative tab order.
+        for (String coin : List.of("penny", "shilling", "sovereign")) simple("coin_" + coin);
+        for (String drug : SUBSTANCES) simple("essence_" + drug);
+        simple("charcoal_screen");
+        simple("filler");
+        simple("solvent_spirit");
+        simple("sealing_wax");
+        simple("seal_stamp");
+        simple("journal");
+        simple("deed");
+        simple("charter");
+        simple("contract");
+        simple("writ_of_pardon");
+        simple("line_stabiliser");
+        simple("grafting_knife");
+        simple("seed_pouch");
+        simple("dynamo_coil");
+        simple("pump_valve");
+        simple("battery_glass");
+        simple("arc_carbon");
+        simple("lamp_oil");
+        simple("evidence_sack");
+        simple("bounty_poster");
+        simple("carved_mask");
+        simple("lockpicks");
+        simple("constable_whistle");
+        simple("hollowcap");
+        simple("mirror_glass");
+        simple("informants_ledger");
+        simple("shadow_silt");
+        simple("product_nightvein");
+        simple("product_tidecap");
     }
 
     /** Registers the item that places a block, and lists it in the creative tab with the rest. */
