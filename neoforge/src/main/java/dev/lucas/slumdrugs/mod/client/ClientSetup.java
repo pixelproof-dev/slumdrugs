@@ -1,11 +1,19 @@
 package dev.lucas.slumdrugs.mod.client;
 
+import dev.lucas.slumdrugs.mod.ModComponents;
+import dev.lucas.slumdrugs.mod.ModItems;
 import dev.lucas.slumdrugs.mod.ModMenus;
 import dev.lucas.slumdrugs.mod.SlumDrugsMod;
+import dev.lucas.slumdrugs.sim.drug.Quality;
+import dev.lucas.slumdrugs.sim.drug.Sealing;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
+import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
 
 /**
  * Client-only wiring. Nothing here may be touched from common or server code.
@@ -20,5 +28,32 @@ public final class ClientSetup {
     @SubscribeEvent
     public static void registerScreens(RegisterMenuScreensEvent event) {
         event.register(ModMenus.CENTRIFUGE.get(), CentrifugeScreen::new);
+    }
+
+    /**
+     * Quality, grower and seal on the tooltip of anything that carries them. One place for
+     * every item, rather than each item class repeating it.
+     */
+    @SubscribeEvent
+    public static void describeGoods(ItemTooltipEvent event) {
+        ItemStack stack = event.getItemStack();
+        var lines = event.getToolTip();
+
+        Integer quality = stack.get(ModComponents.QUALITY.get());
+        if (quality != null)
+            lines.add(Component.translatable("tooltip.slumdrugs.quality", quality,
+                    Component.translatable("tooltip.slumdrugs.grade." + Quality.Grade.of(quality).name().toLowerCase(java.util.Locale.ROOT)))
+                    .withStyle(ChatFormatting.GRAY));
+
+        String grower = stack.get(ModComponents.GROWER.get());
+        if (grower != null)
+            lines.add(Component.translatable("tooltip.slumdrugs.grower", grower).withStyle(ChatFormatting.DARK_GRAY));
+
+        if (ModItems.drugOf("package_", stack) != null) {
+            lines.add(Component.translatable("tooltip.slumdrugs.parcel", Sealing.UNITS_PER_PARCEL).withStyle(ChatFormatting.GRAY));
+            String seal = stack.get(ModComponents.SEAL.get());
+            if (seal != null)
+                lines.add(Component.translatable("tooltip.slumdrugs.seal", seal).withStyle(ChatFormatting.GOLD));
+        }
     }
 }

@@ -46,7 +46,9 @@ public final class ModItems {
             // Products are usable, so they get their own item class rather than a plain one.
             REGISTERED.put("product_" + drug,
                     ITEMS.registerItem("product_" + drug, props -> new ProductItem(props, drug)));
-            simple("package_" + drug);
+            // Parcels open back into product, so they have behaviour too.
+            REGISTERED.put("package_" + drug,
+                    ITEMS.registerItem("package_" + drug, props -> new ParcelItem(props, drug)));
         }
         simple("fertilizer");
         simple("remedy");
@@ -66,5 +68,18 @@ public final class ModItems {
         DeferredItem<? extends Item> item = REGISTERED.get(name);
         if (item == null) throw new IllegalArgumentException("No such item: " + name);
         return item;
+    }
+
+    /**
+     * Which substance a stack is a stage of, or null if it is not one of ours. The prefix is
+     * the stage: {@code "seed_"}, {@code "raw_"}, {@code "dried_"}, {@code "product_"} or
+     * {@code "package_"}. Stages that only crops have simply do not match for the other two.
+     */
+    public static String drugOf(String stage, net.minecraft.world.item.ItemStack stack) {
+        for (String drug : SUBSTANCES) {
+            DeferredItem<? extends Item> item = REGISTERED.get(stage + drug);
+            if (item != null && stack.is(item.get())) return drug;
+        }
+        return null;
     }
 }

@@ -34,5 +34,21 @@
   "message.slumdrugs.withdrawal_2": "Deine Hände kommen nicht zur Ruhe.",
   "message.slumdrugs.withdrawal_3": "Du hältst es kaum aus.",
   "message.slumdrugs.demand": "%s will Geld sehen.",
-  "message.slumdrugs.refuses": "%s handelt nicht mit dir."
+  "message.slumdrugs.refuses": "%s handelt nicht mit dir.",
+  "message.slumdrugs.loft_full": "Alle Stangen sind belegt.",
+  "message.slumdrugs.loft_drying": "Trocknet noch — %s%%",
+  "message.slumdrugs.press_full": "Die Platte ist beladen; pressen oder abnehmen.",
+  "message.slumdrugs.press_stroke": "Pressen — Zug %s von %s",
+  "message.slumdrugs.seal_bench_full": "Auf die Bank passt nur eine Sorte Ware zugleich.",
+  "message.slumdrugs.seal_pot_full": "Der Wachstopf ist voll.",
+  "message.slumdrugs.seal_short": "Zu wenig für ein Paket: %s von %s Einheiten.",
+  "message.slumdrugs.seal_no_wax": "Kein Wachs im Topf.",
+  "tooltip.slumdrugs.quality": "Qualität %s · %s",
+  "tooltip.slumdrugs.grade.poor": "Schlecht",
+  "tooltip.slumdrugs.grade.standard": "Gewöhnlich",
+  "tooltip.slumdrugs.grade.good": "Gut",
+  "tooltip.slumdrugs.grade.premium": "Erlesen",
+  "tooltip.slumdrugs.grower": "Angebaut von %s",
+  "tooltip.slumdrugs.parcel": "%s Einheiten unter Wachs",
+  "tooltip.slumdrugs.seal": "Versiegelt von %s"
 }

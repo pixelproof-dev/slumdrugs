@@ -28,8 +28,9 @@ A failure prints the label of the rule that broke.
 
 ## Status
 
-Both modules are live and the build is green. Nothing has been launched: no client or server
-has ever run this.
+Both modules are live and the build is green. The mod has run in a local dev client, where
+the trader house places by command and the stations are usable. The village wiring for the
+trader house exists only locally so far and is not yet in this repository.
 
 ## Platform layer (NeoForge)
 
@@ -51,11 +52,31 @@ dried, product and sealed parcels for each substance, plus compost and remedy �
 registry entries with models, a creative tab, and `en_us` plus `de_de` translations.
 
 Then five station blocks: forcing frame, drying loft, pressing bench, sealing press and
-storage crate. Their models are composed from vanilla textures, so they look like something
-without needing new art. The forcing frame is the one with behaviour: plant a seed, watch
+storage crate, and later the centrifuge. Their models are composed from vanilla textures, so
+they look like something without needing new art. The forcing frame was the first with
+behaviour: plant a seed, watch
 five visible stages, harvest by hand. Its block entity holds `GrowboxState` from `sim` and
 does nothing itself — world clock in, block state out, NBT both ways. That is the whole
 architecture in one class, and it means the growth rules stay covered by the assertions.
+
+### Stations
+
+Every station is worked by hand with right-clicks, except the two with a screen. Items keep
+their quality and grower through the whole chain; the tooltip shows both.
+
+| Station | Put in | Work it | Take out |
+| --- | --- | --- | --- |
+| Forcing frame | A seed; compost while it grows | Wait; the block shows five stages | Empty hand when ripe: raw harvest and seed |
+| Drying loft | Raw harvest, up to 8 units on each of three rails | Wait 90 s; the rails show what hangs | Empty hand: every dried bundle. Sneak: everything, raw if unready |
+| Pressing bench | Dried material, one batch of up to 16 | Empty hand pulls the screw; five pulls press the batch | The last pull drops the product. Sneak: the batch back |
+| Sealing press | Product on the bench, honeycomb in the pot | Empty hand pulls the lever once per parcel | A parcel of 8 units under the puller's seal. Sneak: everything back |
+| Centrifuge | Dried in the vessels, charcoal on top, coal at the side | Runs on its own; the screen shows progress | Product in the vessels |
+| Storage crate | Anything | — | The chest screen, 27 slots |
+
+A parcel is used like any item to break the seal and get its 8 units back. A bundle left on
+the loft long past done slowly loses quality, and none of the stations tick except the
+centrifuge; the loft and the presses only move when someone moves them. Breaking any station
+drops what it held. The rules behind them are `Drying`, `Sealing` and `Refining` in `sim`.
 
 ### Writing against 26.3
 
@@ -76,6 +97,9 @@ compiler settled the rest. Three things that a recalled 1.21 pattern gets wrong:
 | `EntityType.VILLAGER` | the constants moved to `EntityTypes`; villagers live in `entity.npc.villager` |
 | `source.hasPermission(2)` | named permissions: `Commands.hasPermission(new PermissionCheck.Require(Permissions.COMMANDS_GAMEMASTER))` |
 | `player.drop(stack, false)` | takes a `Prediction` (`PREDICTED` / `SERVER_ONLY`) |
+| `useItemOn` returns `PASS` for "not my item" | return `TRY_WITH_EMPTY_HAND`, or `useWithoutItem` never runs while anything is held |
+| `BaseEntityBlock` renders invisible without `getRenderShape` | it renders the model; the override is gone |
+| `onRemove` to drop a container's contents | `BlockEntity#preRemoveSideEffects`, which any `Container` block entity already does |
 
 ## Commands
 

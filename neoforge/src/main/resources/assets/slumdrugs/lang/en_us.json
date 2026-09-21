@@ -34,5 +34,21 @@
   "message.slumdrugs.withdrawal_2": "Your hands will not keep still.",
   "message.slumdrugs.withdrawal_3": "You can barely stand it.",
   "message.slumdrugs.demand": "%s wants paying.",
-  "message.slumdrugs.refuses": "%s will not deal with you."
+  "message.slumdrugs.refuses": "%s will not deal with you.",
+  "message.slumdrugs.loft_full": "Every rail is taken.",
+  "message.slumdrugs.loft_drying": "Still drying — %s%%",
+  "message.slumdrugs.press_full": "The plate is loaded; work it or take it down.",
+  "message.slumdrugs.press_stroke": "Pressing — pull %s of %s",
+  "message.slumdrugs.seal_bench_full": "The bench holds one kind of goods at a time.",
+  "message.slumdrugs.seal_pot_full": "The wax pot is full.",
+  "message.slumdrugs.seal_short": "Not enough for a parcel: %s of %s units.",
+  "message.slumdrugs.seal_no_wax": "No wax in the pot.",
+  "tooltip.slumdrugs.quality": "Quality %s · %s",
+  "tooltip.slumdrugs.grade.poor": "Poor",
+  "tooltip.slumdrugs.grade.standard": "Standard",
+  "tooltip.slumdrugs.grade.good": "Good",
+  "tooltip.slumdrugs.grade.premium": "Premium",
+  "tooltip.slumdrugs.grower": "Grown by %s",
+  "tooltip.slumdrugs.parcel": "%s units under wax",
+  "tooltip.slumdrugs.seal": "Sealed by %s"
 }

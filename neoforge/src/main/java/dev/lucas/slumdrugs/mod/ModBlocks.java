@@ -1,6 +1,5 @@
 package dev.lucas.slumdrugs.mod;
 
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
@@ -22,10 +21,14 @@ public final class ModBlocks {
 
     public static final DeferredBlock<ForcingFrameBlock> FORCING_FRAME =
             BLOCKS.registerBlock("forcing_frame", ForcingFrameBlock::new, ModBlocks::wooden);
-    public static final DeferredBlock<Block> DRYING_LOFT = BLOCKS.registerSimpleBlock("drying_loft", ModBlocks::wooden);
-    public static final DeferredBlock<Block> PRESSING_BENCH = BLOCKS.registerSimpleBlock("pressing_bench", ModBlocks::wooden);
-    public static final DeferredBlock<Block> SEALING_PRESS = BLOCKS.registerSimpleBlock("sealing_press", ModBlocks::wooden);
-    public static final DeferredBlock<Block> STORAGE_CRATE = BLOCKS.registerSimpleBlock("storage_crate", ModBlocks::wooden);
+    public static final DeferredBlock<DryingLoftBlock> DRYING_LOFT =
+            BLOCKS.registerBlock("drying_loft", DryingLoftBlock::new, ModBlocks::wooden);
+    public static final DeferredBlock<PressingBenchBlock> PRESSING_BENCH =
+            BLOCKS.registerBlock("pressing_bench", PressingBenchBlock::new, ModBlocks::wooden);
+    public static final DeferredBlock<SealingPressBlock> SEALING_PRESS =
+            BLOCKS.registerBlock("sealing_press", SealingPressBlock::new, ModBlocks::wooden);
+    public static final DeferredBlock<StorageCrateBlock> STORAGE_CRATE =
+            BLOCKS.registerBlock("storage_crate", StorageCrateBlock::new, ModBlocks::wooden);
 
     /** Brass and iron rather than wood: this one is machinery. */
     public static final DeferredBlock<CentrifugeBlock> CENTRIFUGE =

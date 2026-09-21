@@ -1,6 +1,15 @@
 {
   "variants": {
-    "": {
+    "bundles=0": {
+      "model": "slumdrugs:block/drying_loft_0"
+    },
+    "bundles=1": {
+      "model": "slumdrugs:block/drying_loft_1"
+    },
+    "bundles=2": {
+      "model": "slumdrugs:block/drying_loft_2"
+    },
+    "bundles=3": {
       "model": "slumdrugs:block/drying_loft"
     }
   }

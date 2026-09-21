@@ -30,6 +30,13 @@ public final class ModComponents {
                     .networkSynchronized(ByteBufCodecs.STRING_UTF8)
                     .build());
 
+    /** Whose wax seal a parcel carries. Distinct from the grower: the seal names the hand that pressed it. */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<String>> SEAL =
+            TYPES.register("seal", () -> DataComponentType.<String>builder()
+                    .persistent(Codec.STRING)
+                    .networkSynchronized(ByteBufCodecs.STRING_UTF8)
+                    .build());
+
     private ModComponents() {}
 
     /** Quality carried by a stack, or the neutral default for plain vanilla-made items. */

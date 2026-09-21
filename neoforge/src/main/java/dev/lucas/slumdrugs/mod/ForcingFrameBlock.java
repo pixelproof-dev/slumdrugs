@@ -65,10 +65,11 @@ public final class ForcingFrameBlock extends BaseEntityBlock {
             return InteractionResult.SUCCESS;
         }
 
-        if (frame.state().drug != null) return InteractionResult.PASS;
+        // Anything else in hand is not for planting; the empty-hand path handles the harvest.
+        if (frame.state().drug != null) return InteractionResult.TRY_WITH_EMPTY_HAND;
 
         String drug = seedDrug(stack);
-        if (drug == null) return InteractionResult.PASS;
+        if (drug == null) return InteractionResult.TRY_WITH_EMPTY_HAND;
         if (level.isClientSide()) return InteractionResult.SUCCESS;
 
         frame.plant(level, drug, player.getName().getString(), ModComponents.qualityOf(stack));

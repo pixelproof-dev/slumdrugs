@@ -1,8 +1,10 @@
 package dev.lucas.slumdrugs.sim;
 
 import dev.lucas.slumdrugs.sim.drug.Cultivation;
+import dev.lucas.slumdrugs.sim.drug.Drying;
 import dev.lucas.slumdrugs.sim.drug.Quality;
 import dev.lucas.slumdrugs.sim.drug.Refining;
+import dev.lucas.slumdrugs.sim.drug.Sealing;
 import dev.lucas.slumdrugs.sim.drug.UnitTransfer;
 import dev.lucas.slumdrugs.sim.economy.MarketState;
 import dev.lucas.slumdrugs.sim.npc.Npc;
@@ -40,6 +42,8 @@ public final class SimChecks {
         quality();
         cultivation();
         refining();
+        drying();
+        sealing();
         market();
         npcs();
         System.out.println("PASS: " + checks + " simulation assertions.");
@@ -399,6 +403,68 @@ public final class SimChecks {
         rejected = false;
         try { Refining.run(null, batch, 0, 0); } catch (IllegalArgumentException expected) { rejected = true; }
         check(rejected, "a run needs a method");
+
+        // A hand press is worked in strokes that add up to the method's run.
+        check(Refining.Method.PRESS.strokes() == 5, "the pressing bench takes five pulls");
+        for (var method : Refining.Method.values()) {
+            check(method.strokes() * Refining.HAND_STROKE_SECONDS >= method.seconds(false),
+                    "the strokes cover the run: " + method);
+            check((method.strokes() - 1) * Refining.HAND_STROKE_SECONDS < method.seconds(false),
+                    "no stroke is wasted: " + method);
+        }
+    }
+
+    // ---------------------------------------------------------------- drying
+
+    private static void drying() {
+        int t = Drying.SECONDS;
+
+        // Progress is a plain fraction of the drying time and stops at one.
+        close(Drying.progress(0, t), 0, "nothing hung, nothing dried");
+        close(Drying.progress(t / 2.0, t), 0.5, "half the time is half dried");
+        close(Drying.progress(t * 10, t), 1, "progress never passes done");
+        check(!Drying.ready(t - 1, t), "a second early is not ready");
+        check(Drying.ready(t, t), "on time is ready");
+        close(Drying.progress(5, 0), 1, "a zero drying time is instantly done");
+
+        // Taken down early it is what it was; taken on time it is a little better.
+        check(Drying.quality(50, 10, t) == 50, "an unready bundle keeps its input quality");
+        check(Drying.quality(50, t, t) == 50 + Drying.BONUS, "a timely bundle earns the bonus");
+        check(Drying.quality(50, t + Drying.GRACE_SECONDS, t) == 50 + Drying.BONUS,
+                "the grace window keeps the bonus");
+        check(Drying.quality(100, t, t) == 100, "the bonus does not leave the scale");
+
+        // Neglect costs, slowly, and never everything.
+        int justOver = Drying.quality(50, t + Drying.GRACE_SECONDS + t / 3.0 + 1, t);
+        check(justOver == 50 + Drying.BONUS - 1, "the first third over grace costs a point");
+        check(Drying.quality(50, t * 1000, t) == 50 + Drying.BONUS - Drying.MAX_LOSS,
+                "over-drying bottoms out");
+        check(Drying.quality(5, t * 1000, t) == 0, "a poor bundle can dry to nothing, not below");
+        for (double hung = 0; hung <= t * 20; hung += t / 7.0) {
+            int q = Drying.quality(60, hung, t);
+            check(q >= 0 && q <= 100, "dried quality stays on the scale");
+            if (hung >= t) check(q <= Drying.quality(60, Math.max(t, hung - t / 7.0), t),
+                    "a dried bundle never improves by waiting");
+        }
+    }
+
+    // ---------------------------------------------------------------- sealing
+
+    private static void sealing() {
+        int n = Sealing.UNITS_PER_PARCEL;
+        check(Sealing.parcels(0) == 0 && Sealing.loose(0) == 0, "nothing seals into nothing");
+        check(Sealing.parcels(n - 1) == 0 && Sealing.loose(n - 1) == n - 1, "short of a parcel stays loose");
+        check(Sealing.parcels(n) == 1 && Sealing.loose(n) == 0, "exactly one parcel");
+        check(Sealing.parcels(n * 3 + 2) == 3 && Sealing.loose(n * 3 + 2) == 2, "parcels and change");
+        for (int units = 0; units <= 200; units++)
+            check(Sealing.parcels(units) * n + Sealing.loose(units) == units, "parcels and loose account for the units");
+        check(Sealing.parcelsFor(n * 4, 2) == 2, "wax limits how many parcels are sealed");
+        check(Sealing.parcelsFor(n * 2, 10) == 2, "spare wax does not seal air");
+        check(Sealing.parcelsFor(-5, -5) == 0, "negative stock seals nothing");
+
+        // A parcel is the wholesale unit that the plugin's transfer maths already handles.
+        var plan = UnitTransfer.plan(3, n, n + 1);
+        check(plan.remainingPackages() == 1 && plan.looseChange() == n - 1, "opening a parcel returns change");
     }
 
     // ---------------------------------------------------------------- market

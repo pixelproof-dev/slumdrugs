@@ -18,5 +18,21 @@ public final class ModBlockEntities {
             TYPES.register("centrifuge", () -> new BlockEntityType<>(
                     CentrifugeBlockEntity::new, ModBlocks.CENTRIFUGE.get()));
 
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<DryingLoftBlockEntity>> DRYING_LOFT =
+            TYPES.register("drying_loft", () -> new BlockEntityType<>(
+                    DryingLoftBlockEntity::new, ModBlocks.DRYING_LOFT.get()));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<PressingBenchBlockEntity>> PRESSING_BENCH =
+            TYPES.register("pressing_bench", () -> new BlockEntityType<>(
+                    PressingBenchBlockEntity::new, ModBlocks.PRESSING_BENCH.get()));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<SealingPressBlockEntity>> SEALING_PRESS =
+            TYPES.register("sealing_press", () -> new BlockEntityType<>(
+                    SealingPressBlockEntity::new, ModBlocks.SEALING_PRESS.get()));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<StorageCrateBlockEntity>> STORAGE_CRATE =
+            TYPES.register("storage_crate", () -> new BlockEntityType<>(
+                    StorageCrateBlockEntity::new, ModBlocks.STORAGE_CRATE.get()));
+
     private ModBlockEntities() {}
 }
