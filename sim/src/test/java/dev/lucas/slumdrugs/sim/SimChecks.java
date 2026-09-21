@@ -10,6 +10,7 @@ import dev.lucas.slumdrugs.sim.player.Condition;
 import dev.lucas.slumdrugs.sim.player.Recovery;
 import dev.lucas.slumdrugs.sim.station.GrowboxState;
 import dev.lucas.slumdrugs.sim.world.RoomFlood;
+import dev.lucas.slumdrugs.sim.world.PlotSearch;
 import dev.lucas.slumdrugs.sim.world.StructureFit;
 
 import java.util.List;
@@ -35,6 +36,7 @@ public final class SimChecks {
     public static void main(String[] args) {
         roomFlood();
         structureFit();
+        plotSearch();
         growbox();
         recovery();
         condition();
@@ -582,5 +584,85 @@ public final class SimChecks {
                 check(surface - 9 < -64 || surface - 9 + 22 > 319, "a refusal has a reason in the numbers");
             }
         }
+    }
+
+    // ------------------------------------------------------------- plot search
+
+    private static void plotSearch() {
+        // Dead flat ground: any plot fits, so the one nearest the aim wins.
+        PlotSearch.Ground flat = (x, z) -> 64;
+        var onFlat = PlotSearch.flattest(flat, -10, -10, 10, 10, 17, 17, 2, 3, -4);
+        check(onFlat.isPresent(), "a plot is found on flat ground");
+        check(onFlat.get().centreX() == 3 && onFlat.get().centreZ() == -4, "ties go to the aim");
+        check(onFlat.get().spread() == 0, "flat ground has no spread");
+        check(onFlat.get().firstFreeY() == 64, "the level is the ground it rests on");
+
+        // A slope running east: the flattest plot is as far west as the search allows.
+        PlotSearch.Ground slope = (x, z) -> 64 + x;
+        var onSlope = PlotSearch.flattest(slope, 0, 0, 40, 0, 5, 5, 4, 40, 0);
+        check(onSlope.isPresent(), "a five-wide plot fits on a one-in-one slope");
+        check(onSlope.get().spread() == 4, "a five-wide plot on that slope spans four blocks");
+        check(onSlope.get().firstFreeY() == 64 + onSlope.get().centreX() + 2,
+                "the level is the highest column, so nothing pokes through the floor");
+        check(PlotSearch.flattest(slope, 0, 0, 40, 0, 5, 5, 3, 40, 0).isEmpty(),
+                "the same plot is refused when three blocks of spread is the limit");
+
+        // Blocked ground is never built on, however flat it is.
+        PlotSearch.Ground village = (x, z) ->
+                PlotSearch.within(x, z, -20, -20, 20, 20, 0) ? PlotSearch.UNUSABLE : 70;
+        var beside = PlotSearch.flattest(village, -60, -60, 60, 60, 17, 17, 1, 0, 0);
+        check(beside.isPresent(), "a plot is found outside the blocked square");
+        int minX = beside.get().centreX() - 8, minZ = beside.get().centreZ() - 8;
+        for (int x = minX; x < minX + 17; x++)
+            for (int z = minZ; z < minZ + 17; z++)
+                check(!PlotSearch.within(x, z, -20, -20, 20, 20, 0),
+                        "no column of the chosen plot is inside the blocked square");
+        check(PlotSearch.flattest(village, -19, -19, 19, 19, 17, 17, 1, 0, 0).isEmpty(),
+                "searching only inside the blocked square finds nothing");
+
+        // Determinism: the same terrain must answer the same way every time.
+        for (int run = 0; run < 25; run++) {
+            var again = PlotSearch.flattest(village, -60, -60, 60, 60, 17, 17, 1, 0, 0);
+            check(again.isPresent() && again.get().equals(beside.get()), "the search is deterministic");
+        }
+
+        // Every plot it returns really is within the spread it promised.
+        PlotSearch.Ground rough = (x, z) -> 64 + ((x * 7 + z * 13) & 3);
+        for (int limit = 0; limit <= 3; limit++) {
+            var found = PlotSearch.flattest(rough, -20, -20, 20, 20, 3, 3, limit, 0, 0);
+            if (found.isEmpty()) continue;
+            int x0 = found.get().centreX() - 1, z0 = found.get().centreZ() - 1;
+            int lo = Integer.MAX_VALUE, hi = Integer.MIN_VALUE;
+            for (int x = x0; x < x0 + 3; x++)
+                for (int z = z0; z < z0 + 3; z++) {
+                    int h = rough.firstFreeAt(x, z);
+                    lo = Math.min(lo, h); hi = Math.max(hi, h);
+                }
+            check(hi - lo <= limit, "the plot keeps to the spread limit");
+            check(found.get().spread() == hi - lo, "the reported spread is the real one");
+            check(found.get().firstFreeY() == hi, "the reported level is the highest column");
+        }
+
+
+        // The ring form, which is what a settlement placer actually calls.
+        var ringSpots = PlotSearch.ring(-20, -20, 20, 20, 14, 6);
+        check(!ringSpots.isEmpty(), "a ring has candidates");
+        for (var spot : ringSpots) {
+            boolean onEdge = Math.abs(spot.x()) == 34 || Math.abs(spot.z()) == 34
+                    || spot.x() == -34 || spot.z() == -34;
+            check(spot.x() >= -34 && spot.x() <= 34 && spot.z() >= -34 && spot.z() <= 34,
+                    "a ring candidate stays within the outset box");
+            check(onEdge, "a ring candidate sits on the edge of that box");
+        }
+        check(ringSpots.size() == new java.util.HashSet<>(ringSpots).size(),
+                "a ring does not repeat a candidate");
+        var onRing = PlotSearch.flattestAmong(village, ringSpots, 17, 17, 1, 0, 0);
+        check(onRing.isPresent(), "a plot is found on the ring outside a village");
+        check(PlotSearch.flattestAmong(village, PlotSearch.ring(-20, -20, 20, 20, 0, 6),
+                17, 17, 1, 0, 0).isEmpty(), "a ring hugging the village finds nothing usable");
+
+        check(PlotSearch.within(0, 0, -1, -1, 1, 1, 0), "a column inside the box is inside");
+        check(!PlotSearch.within(5, 0, -1, -1, 1, 1, 0), "a column outside is outside");
+        check(PlotSearch.within(5, 0, -1, -1, 1, 1, 4), "a margin widens the box");
     }
 }

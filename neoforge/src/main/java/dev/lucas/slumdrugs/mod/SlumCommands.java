@@ -384,7 +384,20 @@ public final class SlumCommands {
                                         .suggests((ctx, builder) -> SharedSuggestionProvider.suggest(
                                                 java.util.Arrays.stream(net.minecraft.world.level.block.Rotation.values())
                                                         .map(Enum::name).toList(), builder))
-                                        .executes(ctx -> placeStructure(ctx, rotation(ctx))))));
+                                        .executes(ctx -> placeStructure(ctx, rotation(ctx))))))
+                .then(Commands.literal("village").executes(SlumCommands::villageHouse));
+    }
+
+    /** Gives the settlement you are standing in its trader house, without waiting for the tick. */
+    private static int villageHouse(CommandContext<CommandSourceStack> ctx) {
+        var outcomes = VillageTraderHouse.considerAround(
+                ctx.getSource().getLevel(), BlockPos.containing(ctx.getSource().getPosition()));
+        if (outcomes.isEmpty()) {
+            ctx.getSource().sendFailure(Component.literal("You are not standing in a settlement"));
+            return 0;
+        }
+        outcomes.forEach(line -> reply(ctx, line));
+        return outcomes.size();
     }
 
     private static net.minecraft.world.level.block.Rotation rotation(CommandContext<CommandSourceStack> ctx) {
