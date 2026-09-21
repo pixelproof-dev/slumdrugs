@@ -44,7 +44,38 @@ public final class Npcs {
     /** Changes the trade a villager wears when their role changes: a resident taken on, a hand let go. */
     public static void dress(ServerLevel level, Villager villager, Npc.Role role) {
         villager.setVillagerData(villager.getVillagerData().withProfession(level.registryAccess(), profession(role)));
+        keepThisTrade(villager);
         NpcTrades.fill(villager, role);
+    }
+
+    /**
+     * Stops the game taking the trade back off them.
+     *
+     * <p>{@code ResetProfession} fires any villager who holds no job site, unless their trade is
+     * none or nitwit, or they have some experience behind them. Ours are placed by the mod and
+     * never claim a workstation, so without this every trader in the quarter is unemployed within
+     * the minute — and then {@code AssignProfessionFromJobSite} hands them the nearest free block,
+     * which in the trader's house means one of eleven barrels. A fisherman.
+     *
+     * <p>The shop goes with the job: {@link Villager#setVillagerData} drops the offers on every
+     * change of trade, so the player finds a villager with nothing of ours to sell.
+     *
+     * <p>A single point of experience is enough and costs nothing else: ten are needed before a
+     * villager gains a level.
+     */
+    private static void keepThisTrade(Villager villager) {
+        if (villager.getVillagerXp() == 0) villager.setVillagerXp(1);
+    }
+
+    /**
+     * Puts one of ours back in the trade we gave them, offers and all, if something took it.
+     *
+     * <p>Experience covers the firing, but a villager with no trade at all — a customer — can
+     * still be handed a workstation they walk past. Called from the ticker, so any such drift
+     * lasts a second at most.
+     */
+    public static void keepTrade(ServerLevel level, Villager villager, Npc.Role role) {
+        if (!villager.getVillagerData().profession().is(profession(role))) dress(level, villager, role);
     }
 
     public static String randomName(ServerLevel level) {
@@ -62,8 +93,9 @@ public final class Npcs {
                 .withProfession(level.registryAccess(), profession(role)));
         villager.setCustomName(Component.literal(name));
         villager.setCustomNameVisible(true);
-        // Ours are placed on purpose and must not wander off or despawn.
+        // Ours are placed on purpose and must not wander off, despawn, or be put out of work.
         villager.setPersistenceRequired();
+        keepThisTrade(villager);
 
         double resting = Npc.restingAggression(role, 0, 0);
         villager.setData(ModAttachments.NPC.get(), new NpcData(role, crew, resting));
