@@ -31,7 +31,7 @@ public final class JournalItem extends Item {
         Progression progress = player.getData(ModAttachments.PROGRESSION.get());
         player.sendSystemMessage(Component.translatable("journal.slumdrugs.heading", tierName(progress.tier()))
                 .withStyle(ChatFormatting.GOLD));
-        player.sendSystemMessage(Component.translatable("journal.slumdrugs.sold", progress.unitsSold, progress.coinEarned)
+        player.sendSystemMessage(Component.translatable("journal.slumdrugs.sold", progress.unitsSold, progress.coinEarned + "s")
                 .withStyle(ChatFormatting.GRAY));
 
         Progression.Gate gate = progress.gate();

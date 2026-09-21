@@ -7,6 +7,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import dev.lucas.slumdrugs.sim.drug.Cultivation;
 import dev.lucas.slumdrugs.sim.drug.Refining;
+import dev.lucas.slumdrugs.sim.economy.Coin;
 import dev.lucas.slumdrugs.sim.npc.Npc;
 import dev.lucas.slumdrugs.sim.player.Condition;
 import dev.lucas.slumdrugs.sim.player.Progression;
@@ -60,7 +61,8 @@ public final class SlumCommands {
                 .then(structure())
                 .then(progress())
                 .then(market())
-                .then(suspicion());
+                .then(suspicion())
+                .then(coin());
         event.getDispatcher().register(root);
         event.getDispatcher().register(Commands.literal("slumdrugs").redirect(event.getDispatcher().register(root)));
     }
@@ -496,7 +498,7 @@ public final class SlumCommands {
                     : gate.unitsNeeded() > 0 ? gate.unitsNeeded() + " more units to " + gate.next().label
                     : gate.coinNeeded() + " more coin to " + gate.next().label;
             reply(ctx, String.format("%s — %s: %d units sold, %d coin earned; %s",
-                    player.getName().getString(), p.tier().label, p.unitsSold, p.coinEarned, next));
+                    player.getName().getString(), p.tier().label, p.unitsSold, p.coinEarned + "s", next));
         }
         return targets.size();
     }
@@ -545,9 +547,9 @@ public final class SlumCommands {
         ServerLevel level = ctx.getSource().getLevel();
         var market = Market.of(level);
         for (String drug : ModItems.SUBSTANCES)
-            reply(ctx, String.format("%s — demand %.0f of %.0f, price x%.2f, broker pays %d/unit",
+            reply(ctx, String.format("%s — demand %.0f of %.0f, price x%.2f, broker pays %s/unit",
                     drug, market.demand(drug), market.settings().demandMax(), market.demandFactor(drug),
-                    Market.standardEmeralds(level, drug, 1, 1.2)));
+                    Coin.format(Market.standardPence(level, drug, 1, 1.2))));
         return 1;
     }
 
@@ -605,6 +607,28 @@ public final class SlumCommands {
         }
         reply(ctx, "Set suspicion to " + value + " on " + targets.size() + " player(s)");
         return targets.size();
+    }
+
+    // ------------------------------------------------------------------ coin
+
+    /** A purse of a given value, loose or stamped, as the fewest coins. */
+    private static LiteralArgumentBuilder<CommandSourceStack> coin() {
+        return Commands.literal("coin").requires(Commands.hasPermission(OP))
+                .then(Commands.argument("pence", IntegerArgumentType.integer(1))
+                        .executes(ctx -> giveCoin(ctx, false))
+                        .then(Commands.literal("stamped").executes(ctx -> giveCoin(ctx, true))));
+    }
+
+    private static int giveCoin(CommandContext<CommandSourceStack> ctx, boolean stamped) {
+        ServerPlayer player = ctx.getSource().getPlayer();
+        if (player == null) {
+            ctx.getSource().sendFailure(Component.literal("This one needs a player"));
+            return 0;
+        }
+        int pence = IntegerArgumentType.getInteger(ctx, "pence");
+        Purse.pay(player, pence, stamped);
+        reply(ctx, "Gave " + Coin.format(pence) + (stamped ? " stamped" : " loose"));
+        return 1;
     }
 
     // ------------------------------------------------------------------ helpers

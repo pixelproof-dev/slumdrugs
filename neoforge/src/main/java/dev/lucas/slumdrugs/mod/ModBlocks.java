@@ -41,6 +41,10 @@ public final class ModBlocks {
     public static final DeferredBlock<CuttingBenchBlock> CUTTING_BENCH =
             BLOCKS.registerBlock("cutting_bench", CuttingBenchBlock::new, ModBlocks::wooden);
 
+    /** A desk, not a machine: it holds nothing, so it is a plain block. */
+    public static final DeferredBlock<CountingHouseBlock> COUNTING_HOUSE =
+            BLOCKS.registerBlock("counting_house", CountingHouseBlock::new, ModBlocks::wooden);
+
     /** The still is machinery too: copper over a firebox. */
     public static final DeferredBlock<StillBlock> STILL =
             BLOCKS.registerBlock("still", StillBlock::new, () -> BlockBehaviour.Properties.of()
@@ -62,6 +66,9 @@ public final class ModBlocks {
         // The design puts cutting at the Apothecary; that tier is not reachable yet, so the
         // Workshop has it, and the pressure valve is open from the first press.
         ModItems.blockItem("cutting_bench", CUTTING_BENCH, Progression.Tier.WORKSHOP);
+        // The design's counting house is an institution in the settlement. Until settlements
+        // exist a player builds the desk, from the backroom on.
+        ModItems.blockItem("counting_house", COUNTING_HOUSE, Progression.Tier.BACKROOM);
     }
 
     private ModBlocks() {}

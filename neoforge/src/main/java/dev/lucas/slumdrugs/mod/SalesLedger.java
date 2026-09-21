@@ -1,12 +1,12 @@
 package dev.lucas.slumdrugs.mod;
 
 import dev.lucas.slumdrugs.sim.drug.Sealing;
+import dev.lucas.slumdrugs.sim.economy.Coin;
 import dev.lucas.slumdrugs.sim.player.Progression;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.item.trading.ItemCost;
 import net.minecraft.world.item.trading.MerchantOffer;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -29,8 +29,7 @@ public final class SalesLedger {
         MerchantOffer offer = event.getMerchantOffer();
 
         int units = unitsIn(offer.getItemCostA()) + offer.getItemCostB().map(SalesLedger::unitsIn).orElse(0);
-        ItemStack paid = offer.getResult();
-        int coin = paid.is(Items.EMERALD) ? paid.getCount() : 0;
+        long pence = Purse.valueOf(offer.getResult());
         if (units == 0) return;
 
         // What the broker takes, the street has seen: it comes out of demand like any sale.
@@ -40,15 +39,15 @@ public final class SalesLedger {
             market.consume(drug, units);
             level.setData(ModAttachments.MARKET.get(), market);
         }
-        record(player, units, coin);
+        record(player, units, pence);
         Watch.noticed(player, units, ModItems.drugOf("package_", offer.getItemCostA().itemStack()) != null);
     }
 
-    /** Counts a sale, however it was made, and tells the player when it moved them up. */
-    public static void record(ServerPlayer player, int units, int coin) {
+    /** Counts a sale, however it was made, in whole shillings, and tells the player when it moved them up. */
+    public static void record(ServerPlayer player, int units, long pence) {
         Progression progress = player.getData(ModAttachments.PROGRESSION.get());
         Progression.Tier before = progress.tier();
-        progress.sold(units, coin);
+        progress.sold(units, (int) (pence / Coin.SHILLING));
         player.syncData(ModAttachments.PROGRESSION.get());
 
         Progression.Tier after = progress.tier();

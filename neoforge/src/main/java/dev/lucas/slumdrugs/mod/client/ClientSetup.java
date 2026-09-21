@@ -3,6 +3,7 @@ package dev.lucas.slumdrugs.mod.client;
 import dev.lucas.slumdrugs.mod.ModComponents;
 import dev.lucas.slumdrugs.mod.ModItems;
 import dev.lucas.slumdrugs.mod.ModMenus;
+import dev.lucas.slumdrugs.mod.Purse;
 import dev.lucas.slumdrugs.mod.SlumDrugsMod;
 import dev.lucas.slumdrugs.sim.drug.Quality;
 import dev.lucas.slumdrugs.sim.drug.Sealing;
@@ -47,6 +48,10 @@ public final class ClientSetup {
     public static void describeGoods(ItemTooltipEvent event) {
         ItemStack stack = event.getItemStack();
         var lines = event.getToolTip();
+
+        if (Purse.isCoin(stack))
+            lines.add(Component.translatable(Purse.isStamped(stack) ? "tooltip.slumdrugs.stamped" : "tooltip.slumdrugs.loose")
+                    .withStyle(Purse.isStamped(stack) ? ChatFormatting.GOLD : ChatFormatting.GRAY));
 
         Integer quality = stack.get(ModComponents.QUALITY.get());
         if (quality != null)

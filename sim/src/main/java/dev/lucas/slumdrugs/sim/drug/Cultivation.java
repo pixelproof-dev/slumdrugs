@@ -64,11 +64,17 @@ public final class Cultivation {
 
     /** 0-1 climate fit: one inside the band on both axes, falling to the floor as either strays. */
     public static double climateFit(double warmth, double damp, Band band) {
+        return climateFit(warmth, damp, band, CLIMATE_FLOOR);
+    }
+
+    /** The same with a line's own floor: a hardy strain minds a bad climate less. */
+    public static double climateFit(double warmth, double damp, Band band, double floor) {
         if (band == null) return 1;
+        double bottom = Math.max(CLIMATE_FLOOR, Math.min(1, floor));
         double outside = distanceOutside(warmth, band.warmthLow(), band.warmthHigh())
                 + distanceOutside(damp, band.dampLow(), band.dampHigh());
-        double fit = 1 - outside / BAND_FALLOFF * (1 - CLIMATE_FLOOR);
-        return Math.max(CLIMATE_FLOOR, Math.min(1, fit));
+        double fit = 1 - outside / BAND_FALLOFF * (1 - bottom);
+        return Math.max(bottom, Math.min(1, fit));
     }
 
     /** Neutral quality: an average seed in tilled ground with nothing added returns this. */

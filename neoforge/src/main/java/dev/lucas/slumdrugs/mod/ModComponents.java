@@ -37,6 +37,13 @@ public final class ModComponents {
                     .networkSynchronized(ByteBufCodecs.STRING_UTF8)
                     .build());
 
+    /** Present and true on coin the counting house has stamped. Absent on loose coin. */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Boolean>> STAMPED =
+            TYPES.register("stamped", () -> DataComponentType.<Boolean>builder()
+                    .persistent(Codec.BOOL)
+                    .networkSynchronized(ByteBufCodecs.BOOL)
+                    .build());
+
     /** 0-1, how much of a batch is filler. Absent on anything honest. */
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<Float>> CUT =
             TYPES.register("cut", () -> DataComponentType.<Float>builder()

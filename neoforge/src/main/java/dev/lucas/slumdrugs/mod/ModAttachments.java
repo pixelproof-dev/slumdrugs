@@ -57,12 +57,14 @@ public final class ModAttachments {
     private static final com.mojang.serialization.MapCodec<Progression> PROGRESSION_CODEC =
             RecordCodecBuilder.mapCodec(instance -> instance.group(
                     Codec.INT.fieldOf("units_sold").forGetter(p -> p.unitsSold),
-                    Codec.INT.fieldOf("coin_earned").forGetter(p -> p.coinEarned)
+                    Codec.INT.fieldOf("coin_earned").forGetter(p -> p.coinEarned),
+                    Codec.BOOL.optionalFieldOf("started", false).forGetter(p -> p.started)
             ).apply(instance, Progression::new));
 
     private static final StreamCodec<RegistryFriendlyByteBuf, Progression> PROGRESSION_STREAM = StreamCodec.composite(
             ByteBufCodecs.VAR_INT, p -> p.unitsSold,
             ByteBufCodecs.VAR_INT, p -> p.coinEarned,
+            ByteBufCodecs.BOOL, p -> p.started,
             Progression::new);
 
     /** What a player has sold and earned, and so which tier they stand on. Death does not demote anyone. */

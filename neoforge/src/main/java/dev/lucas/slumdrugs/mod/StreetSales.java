@@ -1,16 +1,15 @@
 package dev.lucas.slumdrugs.mod;
 
+import dev.lucas.slumdrugs.sim.economy.Coin;
 import dev.lucas.slumdrugs.sim.npc.Npc;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.Prediction;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.npc.villager.Villager;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
@@ -64,20 +63,19 @@ public final class StreetSales {
         }
 
         int quality = ModComponents.qualityOf(held);
-        int coin = Market.emeralds(level, wants, quality, units, MARKUP);
+        long pence = Market.pence(level, wants, quality, units, MARKUP);
 
         held.consume(units, player);
         market.consume(wants, units);
         level.setData(ModAttachments.MARKET.get(), market);
 
-        ItemStack pay = new ItemStack(Items.EMERALD, coin);
-        if (!player.getInventory().add(pay)) player.drop(pay, false, Prediction.SERVER_ONLY);
-        SalesLedger.record(player, units, coin);
+        Purse.pay(player, pence, false);
+        SalesLedger.record(player, units, pence);
         // Sick customers talk: cut goods are noticed as if there were twice as many of them.
         Watch.noticed(player, ModComponents.cutOf(held) > 0 ? units * 2 : units, false);
 
         ProductItem.actionBar(player, Component.translatable("message.slumdrugs.street_sale",
-                villager.getName(), coin, units, Component.translatable("item.slumdrugs.product_" + wants)));
+                villager.getName(), Coin.format(pence), units, Component.translatable("item.slumdrugs.product_" + wants)));
         level.playSound(null, villager.blockPosition(), SoundEvents.VILLAGER_YES, SoundSource.NEUTRAL, 0.8f, 1.0f);
     }
 }

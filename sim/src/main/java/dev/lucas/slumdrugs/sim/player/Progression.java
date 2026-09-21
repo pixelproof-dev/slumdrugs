@@ -37,13 +37,23 @@ public final class Progression {
     public static final Tier REACHABLE = Tier.WORKSHOP;
 
     public int unitsSold;
+
+    /** In shillings. */
     public int coinEarned;
+
+    /** Whether the starting purse has been handed over. */
+    public boolean started;
 
     public Progression() {}
 
     public Progression(int unitsSold, int coinEarned) {
+        this(unitsSold, coinEarned, false);
+    }
+
+    public Progression(int unitsSold, int coinEarned, boolean started) {
         this.unitsSold = Math.max(0, unitsSold);
         this.coinEarned = Math.max(0, coinEarned);
+        this.started = started;
     }
 
     /** Records a sale. Negative amounts are ignored; a refund is not a sale undone. */

@@ -6,7 +6,9 @@ import dev.lucas.slumdrugs.sim.drug.Drying;
 import dev.lucas.slumdrugs.sim.drug.Quality;
 import dev.lucas.slumdrugs.sim.drug.Refining;
 import dev.lucas.slumdrugs.sim.drug.Sealing;
+import dev.lucas.slumdrugs.sim.drug.Strain;
 import dev.lucas.slumdrugs.sim.drug.UnitTransfer;
+import dev.lucas.slumdrugs.sim.economy.Coin;
 import dev.lucas.slumdrugs.sim.economy.MarketState;
 import dev.lucas.slumdrugs.sim.npc.Npc;
 import dev.lucas.slumdrugs.sim.player.Condition;
@@ -51,9 +53,11 @@ public final class SimChecks {
         cultivation();
         refining();
         cutting();
+        strains();
         drying();
         sealing();
         market();
+        coin();
         npcs();
         System.out.println("PASS: " + checks + " simulation assertions.");
     }
@@ -614,6 +618,49 @@ public final class SimChecks {
         }
     }
 
+    // ---------------------------------------------------------------- strains
+
+    private static void strains() {
+        double[] mid = {0.5, 0.5, 0.5, 0.5};
+        double[] high = {1, 1, 1, 1};
+        double[] low = {0, 0, 0, 0};
+
+        // An average line does average things.
+        check(Strain.AVERAGE.isAverage(), "the average is average");
+        close(Strain.AVERAGE.potencyFactor(), 1.0, "average potency changes nothing");
+        close(Strain.AVERAGE.vigourFactor(), 1.0, "average vigour changes nothing");
+        close(Strain.AVERAGE.subtletyFactor(), 1.0, "average subtlety changes nothing");
+        close(new Strain(100, 0, 0, 0).potencyFactor(), 1.3, "full potency is a third more");
+        close(new Strain(0, 100, 0, 0).vigourFactor(), 1.2, "full vigour is a fifth more");
+        close(new Strain(0, 0, 0, 100).subtletyFactor(), 0.6, "full subtlety hides most of a sale");
+        close(new Strain(0, 0, 0, 0).subtletyFactor(), 1.4, "no subtlety shouts");
+        close(new Strain(0, 0, 0, 0).climateFloor(), Cultivation.CLIMATE_FLOOR, "no hardiness is the usual floor");
+        close(new Strain(0, 0, 100, 0).climateFloor(), Math.min(1, Cultivation.CLIMATE_FLOOR * 2), "full hardiness doubles the floor");
+        check(Cultivation.climateFit(0, 1, new Cultivation.Band(0.5, 0.8, 0.2, 0.6), new Strain(0, 0, 100, 0).climateFloor())
+                > Cultivation.climateFit(0, 1, new Cultivation.Band(0.5, 0.8, 0.2, 0.6)), "a hardy line minds a bad climate less");
+        check(new Strain(200, -5, 50, 50).potency() == 100 && new Strain(200, -5, 50, 50).vigour() == 0, "traits are clamped");
+
+        // A cross lands on the mean with middling rolls and within the spread otherwise.
+        var a = new Strain(80, 20, 60, 40);
+        var b = new Strain(40, 60, 60, 80);
+        var child = Strain.cross(a, b, mid);
+        check(child.equals(new Strain(60, 40, 60, 60)), "middling rolls give the parents' mean");
+        var lucky = Strain.cross(a, b, high);
+        var unlucky = Strain.cross(a, b, low);
+        check(lucky.potency() == 60 + Strain.CROSS_SPREAD && unlucky.potency() == 60 - Strain.CROSS_SPREAD, "the spread is the spread");
+        check(Strain.cross(null, null, mid).isAverage(), "no parents is the average");
+        check(Strain.cross(new Strain(100, 100, 100, 100), new Strain(100, 100, 100, 100), high).potency() == 100, "a cross never leaves the scale");
+
+        // Drift is smaller than a cross's spread, and centred.
+        check(a.drift(mid).equals(a), "middling rolls drift nowhere");
+        check(a.drift(high).potency() == 80 + Strain.DRIFT && a.drift(low).potency() == 80 - Strain.DRIFT, "drift is the drift");
+        check(Strain.DRIFT < Strain.CROSS_SPREAD, "a harvest holds a line steadier than a cross does");
+
+        boolean rejected = false;
+        try { Strain.cross(a, b, new double[]{0.5}); } catch (IllegalArgumentException expected) { rejected = true; }
+        check(rejected, "a cross wants four rolls");
+    }
+
     // ---------------------------------------------------------------- cutting
 
     private static void cutting() {
@@ -706,6 +753,40 @@ public final class SimChecks {
         // A parcel is the wholesale unit that the plugin's transfer maths already handles.
         var plan = UnitTransfer.plan(3, n, n + 1);
         check(plan.remainingPackages() == 1 && plan.looseChange() == n - 1, "opening a parcel returns change");
+    }
+
+    // ---------------------------------------------------------------- coin
+
+    private static void coin() {
+        // Twelve pence to the shilling, twenty shillings to the sovereign.
+        check(Coin.SHILLING == 12 && Coin.SOVEREIGN == 240, "the denominations are the design's");
+        var s = Coin.split(3 * Coin.SOVEREIGN + 4 * Coin.SHILLING + 6);
+        check(s.sovereigns() == 3 && s.shillings() == 4 && s.pennies() == 6, "a sum splits largest first");
+        check(s.pence() == 3 * Coin.SOVEREIGN + 4 * Coin.SHILLING + 6, "and adds back up");
+        check(Coin.split(0).pence() == 0 && Coin.split(-5).pence() == 0, "nothing and less than nothing are nothing");
+        for (long p = 0; p < 3000; p += 7) {
+            var sp = Coin.split(p);
+            check(sp.pence() == p, "every sum round-trips");
+            check(sp.shillings() < 20 && sp.pennies() < 12, "no split carries a coin it could trade up");
+        }
+
+        // The base scale: ten points is about two shillings.
+        close(Coin.baseUnitPence(10), 24, "a ten-point base is two shillings");
+        check(Coin.baseUnitPence(-1) == 0, "no negative prices");
+
+        // Stamping costs a tenth, rounded against the player, and never everything.
+        check(Coin.stampFee(100) == 10 && Coin.stampFee(101) == 11, "the fee rounds up");
+        check(Coin.stamped(100) == 90, "ninety of a hundred come back stamped");
+        check(Coin.stamped(1) == 1, "a penny stamps to a penny");
+        check(Coin.stamped(0) == 0, "nothing stamps to nothing");
+        for (long p = 1; p < 2000; p++)
+            check(Coin.stamped(p) >= 1 && Coin.stamped(p) <= p, "stamping keeps most and loses some");
+
+        // The words.
+        check(Coin.format(0).equals("0d"), "nothing reads as nought pence");
+        check(Coin.format(6).equals("6d") && Coin.format(12).equals("1s") && Coin.format(18).equals("1s 6d"), "small sums read");
+        check(Coin.format(2 * Coin.SOVEREIGN + 3).equals("2 sov 3d"), "sovereigns read with their change");
+        check(Coin.STARTING_PURSE == 10 * Coin.SHILLING, "the starting purse is ten shillings");
     }
 
     // ---------------------------------------------------------------- market

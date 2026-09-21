@@ -1,5 +1,6 @@
 package dev.lucas.slumdrugs.mod;
 
+import dev.lucas.slumdrugs.sim.economy.Coin;
 import dev.lucas.slumdrugs.sim.player.Progression;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
@@ -54,6 +55,10 @@ public final class ModItems {
         simple("fertilizer");
         REGISTERED.put("remedy", ITEMS.registerItem("remedy", RemedyItem::new));
         REGISTERED.put("journal", ITEMS.registerItem("journal", JournalItem::new, p -> p.stacksTo(1)));
+        // Money, as items. Named after the art prompts so the drawings drop straight in.
+        REGISTERED.put("coin_penny", ITEMS.registerItem("coin_penny", p -> new CoinItem(p, Coin.PENNY)));
+        REGISTERED.put("coin_shilling", ITEMS.registerItem("coin_shilling", p -> new CoinItem(p, Coin.SHILLING)));
+        REGISTERED.put("coin_sovereign", ITEMS.registerItem("coin_sovereign", p -> new CoinItem(p, Coin.SOVEREIGN)));
     }
 
     /**
