@@ -38,7 +38,7 @@ def load(path):
     try:
         return json.loads(path.read_text(encoding='utf-8'))
     except json.JSONDecodeError as e:
-        problem(f'{path.relative_to(ROOT)}: invalid JSON ({e})')
+        problem(f'{path.relative_to(ROOT).as_posix()}: invalid JSON ({e})')
         return None
 
 
@@ -165,14 +165,14 @@ def check_lang(items, blocks, src):
     for p in sorted(DATA.rglob('*.json')):
         for key in re.findall(r'"translate"\s*:\s*"([^"]+)"', p.read_text(encoding='utf-8')):
             if key not in en:
-                problem(f'{p.relative_to(RES)}: translate key {key} not in en_us.json')
+                problem(f'{p.relative_to(RES).as_posix()}: translate key {key} not in en_us.json')
 
 
 def check_models(items, blocks, van):
     van_tex = van['textures'] if van else None
     van_models = van['models'] if van else None
-    our_models = {str(p.relative_to(ASSETS / 'models'))[:-5] for p in (ASSETS / 'models').rglob('*.json')}
-    our_tex = {str(p.relative_to(ASSETS / 'textures'))[:-4] for p in (ASSETS / 'textures').rglob('*.png')}
+    our_models = {p.relative_to(ASSETS / 'models').as_posix()[:-5] for p in (ASSETS / 'models').rglob('*.json')}
+    our_tex = {p.relative_to(ASSETS / 'textures').as_posix()[:-4] for p in (ASSETS / 'textures').rglob('*.png')}
     for b in blocks:
         p = ASSETS / 'blockstates' / f'{b}.json'
         if not p.exists():
@@ -189,7 +189,7 @@ def check_models(items, blocks, van):
     for p in sorted((ASSETS / 'models').rglob('*.json')):
         d = load(p)
         if d is None: continue
-        where = str(p.relative_to(ASSETS))
+        where = p.relative_to(ASSETS).as_posix()
         parent = d.get('parent')
         if parent:
             ns, path = (parent.split(':', 1) if ':' in parent else ('minecraft', parent))
@@ -227,7 +227,7 @@ def check_recipes(items, van):
     for p in sorted((DATA / 'recipe').glob('*.json')):
         d = load(p)
         if d is None: continue
-        where = str(p.relative_to(RES))
+        where = p.relative_to(RES).as_posix()
         result = d.get('result', {})
         rid = result.get('id') if isinstance(result, dict) else result
         if not rid:
@@ -267,7 +267,7 @@ def check_loot(items, blocks, van):
     for p in sorted((DATA / 'loot_table').rglob('*.json')):
         d = load(p)
         if d is None: continue
-        where = str(p.relative_to(RES))
+        where = p.relative_to(RES).as_posix()
         for pool in d.get('pools', []):
             for e in pool.get('entries', []):
                 if e.get('type') == 'minecraft:item':
@@ -280,11 +280,11 @@ def check_loot(items, blocks, van):
 
 def check_advancements(items, blocks, van):
     van_items = van['items'] if van else None
-    advs = {str(p.relative_to(DATA / 'advancement'))[:-5] for p in (DATA / 'advancement').rglob('*.json')}
+    advs = {p.relative_to(DATA / 'advancement').as_posix()[:-5] for p in (DATA / 'advancement').rglob('*.json')}
     for p in sorted((DATA / 'advancement').rglob('*.json')):
         d = load(p)
         if d is None: continue
-        where = str(p.relative_to(RES))
+        where = p.relative_to(RES).as_posix()
         parent = d.get('parent')
         if parent:
             ns, path = (parent.split(':', 1) if ':' in parent else ('minecraft', parent))
@@ -324,7 +324,7 @@ def check_textures():
     other way round: a .mcmeta beside a square texture animates nothing."""
     for p in sorted((ASSETS / 'textures').rglob('*.png')):
         size = png_size(p)
-        where = str(p.relative_to(ASSETS))
+        where = p.relative_to(ASSETS).as_posix()
         if size is None:
             problem(f'{where}: not a PNG'); continue
         w, h = size
@@ -383,7 +383,7 @@ def check_structures(van):
     roles = set(re.findall(r'^\s+([A-Z_]+)\((?:true|false)\)', (ROOT / 'sim/src/main/java/dev/lucas/slumdrugs/sim/npc/Npc.java').read_text(), re.M))
     van_blocks = van['blocks'] if van else None
     for p in sorted((DATA / 'structure').glob('*.nbt')):
-        where = str(p.relative_to(RES))
+        where = p.relative_to(RES).as_posix()
         try:
             root = mcnbt.read(p)
         except Exception as e:
