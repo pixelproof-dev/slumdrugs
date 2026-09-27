@@ -37,11 +37,14 @@ AIR = 'minecraft:air'
 
 
 def source_version(world):
-    """The DataVersion of the world we are cutting from.
+    """What level.dat claims the world is, used only when the chunks do not say.
 
-    The file carries it so the game's data fixer can do its work. Writing the current version
-    instead would silently skip every rename between: a 1.21 build says `minecraft:chain`,
-    which 26.x calls `iron_chain`, and the block would simply fail to load.
+    Prefer `chunk_version` below. level.dat is rewritten the moment a newer game opens the
+    world, while the chunks themselves are only upgraded when somebody flies near them, so
+    after one glance at a downloaded map its level.dat says 26.3 and its chunks still say
+    1.21.4. Believing it there would write a structure file stamped too new, the data fixer
+    would not run, and every block renamed in between would quietly fail to load: a 1.21 map
+    says `minecraft:chain`, 26.x calls it `iron_chain`, and the chains would simply be gone.
     """
     data = mcnbt.read(world / 'level.dat')['Data']
     return int(data['DataVersion'])
@@ -109,7 +112,7 @@ def section_indices(block_states):
 def read_box(world, lo, hi):
     """Every cell of the box as (name, properties), plus the block entities in it."""
     reg = region_dir(world)
-    cells, entities, spelling = {}, {}, set()
+    cells, entities, spelling, versions = {}, {}, set(), set()
     for cx in range(lo[0] >> 4, (hi[0] >> 4) + 1):
         for cz in range(lo[2] >> 4, (hi[2] >> 4) + 1):
             path = reg / f'r.{cx >> 5}.{cz >> 5}.mca'
@@ -118,6 +121,8 @@ def read_box(world, lo, hi):
             data = chunk(path, cx, cz)
             if not data:
                 continue
+            if 'DataVersion' in data:
+                versions.add(int(data['DataVersion']))
             for section in data.get('sections', []):
                 base = int(section['Y']) * 16
                 if base > hi[1] or base + 15 < lo[1]:
@@ -138,7 +143,7 @@ def read_box(world, lo, hi):
                 pos = (int(be.get('x', 0)), int(be.get('y', 0)), int(be.get('z', 0)))
                 if all(lo[k] <= pos[k] <= hi[k] for k in range(3)):
                     entities[pos] = {k: v for k, v in be.items() if k not in ('x', 'y', 'z', 'keepPacked')}
-    return cells, entities, spelling
+    return cells, entities, spelling, versions
 
 
 def open_air(cells, lo, hi):
@@ -196,8 +201,14 @@ def cut(world, name, corner_a, corner_b, keep_air=False):
     hi = tuple(max(a, b) for a, b in zip(corner_a, corner_b))
     size = tuple(hi[k] - lo[k] + 1 for k in range(3))
 
-    cells, entities, spelling = read_box(world, lo, hi)
-    version = source_version(world)
+    cells, entities, spelling, versions = read_box(world, lo, hi)
+    if len(versions) > 1:
+        raise SystemExit(
+            'the chunks in that box are not all the same version: ' + repr(sorted(versions)) +
+            '. A structure file carries one DataVersion, so a mixed box cannot be fixed up '
+            'correctly. Cut from an untouched copy of the map rather than one a newer game '
+            'has already opened and partly upgraded.')
+    version = versions.pop() if versions else source_version(world)
     # Keep the source's own spelling: a file that says one thing in a palette and
     # another in its DataVersion is a file the fixer will read wrong.
     old = 'Name' in spelling
