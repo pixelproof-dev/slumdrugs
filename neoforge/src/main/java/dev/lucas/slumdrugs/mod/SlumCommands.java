@@ -409,7 +409,23 @@ public final class SlumCommands {
                                                         .map(Enum::name).toList(), builder))
                                         .executes(ctx -> placeStructure(ctx, rotation(ctx))))))
                 .then(Commands.literal("village").executes(SlumCommands::villageHouse)
-                        .then(Commands.literal("survey").executes(SlumCommands::villageSurvey)));
+                        .then(Commands.literal("survey").executes(SlumCommands::villageSurvey)))
+                .then(Commands.literal("town").executes(SlumCommands::town));
+    }
+
+    /** Lays a whole town from where you stand, north-west corner at your feet. */
+    private static int town(CommandContext<CommandSourceStack> ctx) {
+        var level = ctx.getSource().getLevel();
+        var built = CityBuilder.build(level, BlockPos.containing(ctx.getSource().getPosition()),
+                level.getRandom().nextLong());
+        if (built.buildings() == 0) {
+            ctx.getSource().sendFailure(Component.literal("Nothing was built — no structure files?"));
+            return 0;
+        }
+        reply(ctx, "Town of " + built.buildings() + " buildings, " + built.spanX() + " by "
+                + built.spanZ() + ", " + built.people() + " people, from "
+                + built.origin().toShortString());
+        return built.buildings();
     }
 
     /** Says where each piece would go beside the settlement you are standing in, and builds nothing. */

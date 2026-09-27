@@ -420,6 +420,7 @@ compiler settled the rest. Three things that a recalled 1.21 pattern gets wrong:
 | `Heightmap.Types.WORLD_SURFACE_WG` on a loaded chunk | that heightmap exists only during generation; a loaded chunk logs "Unprimed heightmap" and answers from nothing. `WORLD_SURFACE` |
 | `{Name: "minecraft:bricks", Properties: {...}}` in a structure file's palette | a piece at the current DataVersion is read with `id` and `properties`; the old keys are only ever upgraded by the data fixer, so a current piece with them is all air |
 | a server left alone keeps ticking | it pauses when empty after `pause-when-empty-seconds` (default 60), and a force-loaded chunk then never arrives; the smoke test sets it to 0 |
+| `Blocks.GRAY_CONCRETE` and its fifteen siblings | folded into one `ColorCollection`: `Blocks.CONCRETE.pick(DyeColor.GRAY)`. Same for wool, terracotta, glazed terracotta, concrete powder, and their stairs and slabs |
 
 ## A week of play
 

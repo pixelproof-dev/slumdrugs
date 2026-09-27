@@ -21,6 +21,7 @@ import dev.lucas.slumdrugs.sim.player.Recovery;
 import dev.lucas.slumdrugs.sim.player.Suspicion;
 import dev.lucas.slumdrugs.sim.station.GrowboxState;
 import dev.lucas.slumdrugs.sim.world.RoomFlood;
+import dev.lucas.slumdrugs.sim.world.CityPlan;
 import dev.lucas.slumdrugs.sim.world.PlotSearch;
 import dev.lucas.slumdrugs.sim.world.StructureFit;
 
@@ -48,6 +49,7 @@ public final class SimChecks {
         roomFlood();
         structureFit();
         plotSearch();
+        cityPlan();
         growbox();
         recovery();
         condition();
@@ -72,6 +74,73 @@ public final class SimChecks {
         turf();
         hire();
         System.out.println("PASS: " + checks + " simulation assertions.");
+    }
+
+    // ---------------------------------------------------------------- city plan
+
+    private static void cityPlan() {
+        // The real six, so the checks fail if a building is added that the layout cannot hold.
+        List<CityPlan.Size> pieces = List.of(
+                new CityPlan.Size(16, 33), new CityPlan.Size(22, 21), new CityPlan.Size(17, 21),
+                new CityPlan.Size(14, 30), new CityPlan.Size(19, 26), new CityPlan.Size(43, 33));
+        CityPlan.Plan town = CityPlan.of(pieces, 7, 1234);
+
+        check(town.lots().size() == pieces.size(), "every building gets a plot");
+        check(CityPlan.of(pieces, 7, 1234).equals(town), "the same seed lays out the same town");
+        check(!CityPlan.of(pieces, 7, 99).lots().get(0).equals(town.lots().get(0)),
+                "a different seed puts a different building on the first plot");
+
+        for (CityPlan.Lot lot : town.lots()) {
+            CityPlan.Size size = pieces.get(lot.piece());
+            check(lot.area().width() == size.width() && lot.area().depth() == size.depth(),
+                    "a plot is exactly its building's footprint, so nothing is cut off");
+            check(lot.area().minX() >= 0 && lot.area().minZ() >= 0
+                            && lot.area().maxX() < town.spanX() && lot.area().maxZ() < town.spanZ(),
+                    "no plot hangs over the edge of the town");
+        }
+
+        for (int a = 0; a < town.lots().size(); a++)
+            for (int b = a + 1; b < town.lots().size(); b++)
+                check(!town.lots().get(a).area().overlaps(town.lots().get(b).area()),
+                        "no two buildings stand in the same place");
+
+        for (CityPlan.Lot lot : town.lots())
+            for (CityPlan.Rect street : town.streets())
+                check(!lot.area().overlaps(street), "no building stands in the road");
+
+        // Every building has to be reachable, which for a town means its front is on a street.
+        for (CityPlan.Lot lot : town.lots()) {
+            CityPlan.Rect at = lot.area();
+            int z = lot.faces() == CityPlan.Face.SOUTH ? at.maxZ() + 1 : at.minZ() - 1;
+            boolean onStreet = true;
+            for (int x = at.minX(); x <= at.maxX(); x++)
+                onStreet &= CityPlan.isStreet(town, x, z);
+            check(onStreet, "the whole frontage of a building is on a street");
+        }
+
+        // The two halves look at each other across the street rather than all one way.
+        boolean north = false, south = false;
+        for (CityPlan.Lot lot : town.lots()) {
+            north |= lot.faces() == CityPlan.Face.NORTH;
+            south |= lot.faces() == CityPlan.Face.SOUTH;
+        }
+        check(north && south, "a town faces both ways, not all one way like a film set");
+
+        // The outside is roadway, so a town never presents a blank wall to whoever walks up.
+        for (int x = 0; x < town.spanX(); x++) {
+            check(CityPlan.isStreet(town, x, 0), "the northern edge is street");
+            check(CityPlan.isStreet(town, x, town.spanZ() - 1), "the southern edge is street");
+        }
+        for (int z = 0; z < town.spanZ(); z++) {
+            check(CityPlan.isStreet(town, 0, z), "the western edge is street");
+            check(CityPlan.isStreet(town, town.spanX() - 1, z), "the eastern edge is street");
+        }
+
+        // One building alone is still a town, and the arithmetic must not divide by zero.
+        CityPlan.Plan hamlet = CityPlan.of(List.of(new CityPlan.Size(9, 9)), 3, 1);
+        check(hamlet.lots().size() == 1, "one building is a town too");
+        check(hamlet.spanX() == 9 + 3 * 2 && hamlet.spanZ() == 9 + 3 * 2,
+                "a lone building is a street's width from each edge");
     }
 
     // ---------------------------------------------------------------- room flood
