@@ -2,7 +2,7 @@
   "parent": "slumdrugs:tier/backroom",
   "display": {
     "icon": {
-      "id": "slumdrugs:coin_sovereign"
+      "id": "slumdrugs:cash_brick"
     },
     "title": {
       "translate": "advancements.slumdrugs.tier.workshop.title"
@@ -29,12 +29,12 @@
   "rewards": {
     "recipes": [
       "slumdrugs:pressing_bench",
-      "slumdrugs:sealing_press",
+      "slumdrugs:vacuum_sealer",
       "slumdrugs:storage_crate",
       "slumdrugs:centrifuge",
       "slumdrugs:still",
       "slumdrugs:cutting_bench",
-      "slumdrugs:grafting_bench"
+      "slumdrugs:cloning_bench"
     ]
   }
 }

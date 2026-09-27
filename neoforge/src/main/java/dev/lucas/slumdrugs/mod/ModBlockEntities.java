@@ -11,7 +11,7 @@ public final class ModBlockEntities {
             DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, SlumDrugsMod.ID);
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<ForcingFrameBlockEntity>> FORCING_FRAME =
-            TYPES.register("forcing_frame", () -> new BlockEntityType<>(
+            TYPES.register("grow_tent", () -> new BlockEntityType<>(
                     ForcingFrameBlockEntity::new, ModBlocks.FORCING_FRAME.get()));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<CentrifugeBlockEntity>> CENTRIFUGE =
@@ -19,7 +19,7 @@ public final class ModBlockEntities {
                     CentrifugeBlockEntity::new, ModBlocks.CENTRIFUGE.get()));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<DryingLoftBlockEntity>> DRYING_LOFT =
-            TYPES.register("drying_loft", () -> new BlockEntityType<>(
+            TYPES.register("drying_rack", () -> new BlockEntityType<>(
                     DryingLoftBlockEntity::new, ModBlocks.DRYING_LOFT.get()));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<PressingBenchBlockEntity>> PRESSING_BENCH =
@@ -27,7 +27,7 @@ public final class ModBlockEntities {
                     PressingBenchBlockEntity::new, ModBlocks.PRESSING_BENCH.get()));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<SealingPressBlockEntity>> SEALING_PRESS =
-            TYPES.register("sealing_press", () -> new BlockEntityType<>(
+            TYPES.register("vacuum_sealer", () -> new BlockEntityType<>(
                     SealingPressBlockEntity::new, ModBlocks.SEALING_PRESS.get()));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<StorageCrateBlockEntity>> STORAGE_CRATE =
@@ -43,8 +43,15 @@ public final class ModBlockEntities {
                     CuttingBenchBlockEntity::new, ModBlocks.CUTTING_BENCH.get()));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<GraftingBenchBlockEntity>> GRAFTING_BENCH =
-            TYPES.register("grafting_bench", () -> new BlockEntityType<>(
+            TYPES.register("cloning_bench", () -> new BlockEntityType<>(
                     GraftingBenchBlockEntity::new, ModBlocks.GRAFTING_BENCH.get()));
+
+    static {
+        ModernNames.alias(TYPES, "forcing_frame");
+        ModernNames.alias(TYPES, "drying_loft");
+        ModernNames.alias(TYPES, "grafting_bench");
+        ModernNames.alias(TYPES, "sealing_press");
+    }
 
     private ModBlockEntities() {}
 }

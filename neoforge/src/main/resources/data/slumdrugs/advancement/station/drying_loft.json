@@ -2,7 +2,7 @@
   "parent": "slumdrugs:root",
   "display": {
     "icon": {
-      "id": "slumdrugs:drying_loft"
+      "id": "slumdrugs:drying_rack"
     },
     "title": {
       "translate": "advancements.slumdrugs.station.drying_loft.title"
@@ -21,7 +21,7 @@
       "conditions": {
         "location": {
           "type": "minecraft:match_block",
-          "blocks": "slumdrugs:drying_loft"
+          "blocks": "slumdrugs:drying_rack"
         }
       }
     }

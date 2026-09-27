@@ -2,7 +2,7 @@
   "parent": "slumdrugs:tier/workshop",
   "display": {
     "icon": {
-      "id": "slumdrugs:grafting_bench"
+      "id": "slumdrugs:cloning_bench"
     },
     "title": {
       "translate": "advancements.slumdrugs.station.grafting_bench.title"
@@ -21,7 +21,7 @@
       "conditions": {
         "location": {
           "type": "minecraft:match_block",
-          "blocks": "slumdrugs:grafting_bench"
+          "blocks": "slumdrugs:cloning_bench"
         }
       }
     }

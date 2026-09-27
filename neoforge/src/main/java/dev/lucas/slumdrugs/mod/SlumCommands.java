@@ -101,7 +101,7 @@ public final class SlumCommands {
 
     private static int giveItem(CommandContext<CommandSourceStack> ctx, int count, int quality) {
         String name = StringArgumentType.getString(ctx, "item");
-        if (!ModItems.all().containsKey(name)) {
+        if (!ModItems.all().containsKey(ModernNames.id(name))) {
             ctx.getSource().sendFailure(Component.literal("No such item: " + name));
             return 0;
         }

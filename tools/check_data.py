@@ -47,6 +47,19 @@ def java_text():
 
 
 # ---------------------------------------------------------------- registrations
+def rename_tables_agree():
+    """The rename lives twice: ModernNames.java for the game, tools/modern_item_names.json for
+    the scripts. They agree today; this keeps it so, because the day somebody edits only one,
+    everything downstream checks and draws the wrong names and still reports nothing wrong."""
+    java = (JAVA / 'dev/lucas/slumdrugs/mod/ModernNames.java').read_text(encoding='utf-8')
+    in_java = dict(re.findall(r'Map\.entry\("([a-z_0-9]+)",\s*"([a-z_0-9]+)"\)', java))
+    in_json = json.loads((ROOT / 'tools/modern_item_names.json').read_text())['ids']
+    for old in sorted(set(in_java) | set(in_json)):
+        if in_java.get(old) != in_json.get(old):
+            problem(f'rename tables disagree on {old}: ModernNames.java says {in_java.get(old)}, '
+                    f'modern_item_names.json says {in_json.get(old)}')
+
+
 def registered():
     """Item and block ids, read out of ModItems and ModBlocks the way the game would build them."""
     items = ModItemsParser.parse((JAVA / 'dev/lucas/slumdrugs/mod/ModItems.java').read_text())
@@ -54,9 +67,11 @@ def registered():
     blocks = re.findall(r'registerBlock\("([a-z_0-9]+)"', blocks_src)
     block_items = re.findall(r'blockItem\("([a-z_0-9]+)"', blocks_src)
     for b in block_items:
-        if b not in blocks:
+        renames = json.loads((ROOT / 'tools/modern_item_names.json').read_text())['ids']
+        if renames.get(b, b) not in blocks:
             problem(f'ModBlocks: blockItem("{b}") has no registerBlock')
-    return items + block_items, blocks
+    renames = json.loads((ROOT / 'tools/modern_item_names.json').read_text())['ids']
+    return [renames.get(n, n) for n in items + block_items], blocks
 
 
 class ModItemsParser:
@@ -72,8 +87,8 @@ class ModItemsParser:
         for d in subs:
             items += [f'product_{d}', f'essence_{d}', f'package_{d}']
         # A name that ends in an underscore is a prefix completed at runtime; the loops above cover those.
-        items += [n for n in re.findall(r'(?:registerSimpleItem|simple)\("([a-z_0-9]+)"', src) if not n.endswith('_')]
-        items += [n for n in re.findall(r'registerItem\("([a-z_0-9]+)"', src) if not n.endswith('_')]
+        items += [n for n in re.findall(r'(?:registerSimpleItem|simple)\((?:named\()?"([a-z_0-9]+)"', src) if not n.endswith('_')]
+        items += [n for n in re.findall(r'registerItem\((?:named\()?"([a-z_0-9]+)"', src) if not n.endswith('_')]
         seen, out = set(), []
         for i in items:
             if i not in seen:
@@ -445,6 +460,7 @@ def check_structures(van):
 
 def main():
     src = java_text()
+    rename_tables_agree()
     items, blocks = registered()
     van = vanilla()
     check_lang(items, blocks, src)

@@ -30,14 +30,14 @@ public final class ModBlocks {
 
     /** The frame's lantern lights the room while a crop is comfortable in it. */
     public static final DeferredBlock<ForcingFrameBlock> FORCING_FRAME =
-            BLOCKS.registerBlock("forcing_frame", ForcingFrameBlock::new, () -> wooden()
+            BLOCKS.registerBlock("grow_tent", ForcingFrameBlock::new, () -> wooden()
                     .lightLevel(state -> state.getValue(ForcingFrameBlock.LIT) ? 9 : 0));
     public static final DeferredBlock<DryingLoftBlock> DRYING_LOFT =
-            BLOCKS.registerBlock("drying_loft", DryingLoftBlock::new, ModBlocks::wooden);
+            BLOCKS.registerBlock("drying_rack", DryingLoftBlock::new, ModBlocks::wooden);
     public static final DeferredBlock<PressingBenchBlock> PRESSING_BENCH =
             BLOCKS.registerBlock("pressing_bench", PressingBenchBlock::new, ModBlocks::wooden);
     public static final DeferredBlock<SealingPressBlock> SEALING_PRESS =
-            BLOCKS.registerBlock("sealing_press", SealingPressBlock::new, ModBlocks::wooden);
+            BLOCKS.registerBlock("vacuum_sealer", SealingPressBlock::new, ModBlocks::wooden);
     public static final DeferredBlock<StorageCrateBlock> STORAGE_CRATE =
             BLOCKS.registerBlock("storage_crate", StorageCrateBlock::new, ModBlocks::wooden);
 
@@ -53,11 +53,11 @@ public final class ModBlocks {
             BLOCKS.registerBlock("cutting_bench", CuttingBenchBlock::new, ModBlocks::wooden);
 
     public static final DeferredBlock<GraftingBenchBlock> GRAFTING_BENCH =
-            BLOCKS.registerBlock("grafting_bench", GraftingBenchBlock::new, ModBlocks::wooden);
+            BLOCKS.registerBlock("cloning_bench", GraftingBenchBlock::new, ModBlocks::wooden);
 
     /** A desk, not a machine: it holds nothing, so it is a plain block. */
     public static final DeferredBlock<CountingHouseBlock> COUNTING_HOUSE =
-            BLOCKS.registerBlock("counting_house", CountingHouseBlock::new, ModBlocks::wooden);
+            BLOCKS.registerBlock("cash_counter", CountingHouseBlock::new, ModBlocks::wooden);
 
     /** The still is machinery too: copper over a firebox, which glows while it runs. */
     public static final DeferredBlock<StillBlock> STILL =
@@ -71,6 +71,12 @@ public final class ModBlocks {
                     .lightLevel(state -> state.getValue(RefineryBlock.WORKING) ? 8 : 0));
 
     static {
+        ModernNames.alias(BLOCKS, "forcing_frame");
+        ModernNames.alias(BLOCKS, "drying_loft");
+        ModernNames.alias(BLOCKS, "grafting_bench");
+        ModernNames.alias(BLOCKS, "sealing_press");
+        ModernNames.alias(BLOCKS, "counting_house");
+
         // Block items live in the item registry and in the creative tab, in this order. The
         // tier is the one that lets a player set the station up; see Progression for why the
         // frame and the loft are open from the start.

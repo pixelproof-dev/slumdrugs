@@ -2,7 +2,7 @@
   "parent": "slumdrugs:root",
   "display": {
     "icon": {
-      "id": "slumdrugs:forcing_frame"
+      "id": "slumdrugs:grow_tent"
     },
     "title": {
       "translate": "advancements.slumdrugs.station.forcing_frame.title"
@@ -21,7 +21,7 @@
       "conditions": {
         "location": {
           "type": "minecraft:match_block",
-          "blocks": "slumdrugs:forcing_frame"
+          "blocks": "slumdrugs:grow_tent"
         }
       }
     }

@@ -2,7 +2,7 @@
   "parent": "slumdrugs:tier/apothecary",
   "display": {
     "icon": {
-      "id": "slumdrugs:coin_sovereign"
+      "id": "slumdrugs:cash_brick"
     },
     "title": {
       "translate": "advancements.slumdrugs.tier.guild.title"

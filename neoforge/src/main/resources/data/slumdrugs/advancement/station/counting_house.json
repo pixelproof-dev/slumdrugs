@@ -2,7 +2,7 @@
   "parent": "slumdrugs:tier/backroom",
   "display": {
     "icon": {
-      "id": "slumdrugs:counting_house"
+      "id": "slumdrugs:cash_counter"
     },
     "title": {
       "translate": "advancements.slumdrugs.station.counting_house.title"
@@ -21,7 +21,7 @@
       "conditions": {
         "location": {
           "type": "minecraft:match_block",
-          "blocks": "slumdrugs:counting_house"
+          "blocks": "slumdrugs:cash_counter"
         }
       }
     }

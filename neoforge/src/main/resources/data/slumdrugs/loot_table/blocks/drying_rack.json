@@ -7,7 +7,7 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "slumdrugs:counting_house"
+          "name": "slumdrugs:drying_rack"
         }
       ],
       "conditions": [

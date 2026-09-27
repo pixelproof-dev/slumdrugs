@@ -32,8 +32,13 @@ public final class ModItems {
 
     private ModItems() {}
 
+    private static String named(String legacy) {
+        ModernNames.alias(ITEMS, legacy);
+        return ModernNames.id(legacy);
+    }
+
     private static DeferredItem<Item> simple(String name) {
-        DeferredItem<Item> item = ITEMS.registerSimpleItem(name);
+        DeferredItem<Item> item = ITEMS.registerSimpleItem(named(name));
         REGISTERED.put(name, item);
         return item;
     }
@@ -47,21 +52,21 @@ public final class ModItems {
         for (String drug : SUBSTANCES) {
             // Products are usable, so they get their own item class rather than a plain one.
             REGISTERED.put("product_" + drug,
-                    ITEMS.registerItem("product_" + drug, props -> new ProductItem(props, drug)));
+                    ITEMS.registerItem(named("product_" + drug), props -> new ProductItem(props, drug)));
             // Essence is product boiled down: the same item, hitting harder.
             REGISTERED.put("essence_" + drug,
-                    ITEMS.registerItem("essence_" + drug, props -> new ProductItem(props, drug, "essence_", ProductItem.ESSENCE_DOSE)));
+                    ITEMS.registerItem(named("essence_" + drug), props -> new ProductItem(props, drug, "essence_", ProductItem.ESSENCE_DOSE)));
             // Parcels open back into product, so they have behaviour too.
             REGISTERED.put("package_" + drug,
-                    ITEMS.registerItem("package_" + drug, props -> new ParcelItem(props, drug)));
+                    ITEMS.registerItem(named("package_" + drug), props -> new ParcelItem(props, drug)));
         }
         simple("fertilizer");
-        REGISTERED.put("remedy", ITEMS.registerItem("remedy", RemedyItem::new));
-        REGISTERED.put("journal", ITEMS.registerItem("journal", JournalItem::new, p -> p.stacksTo(1)));
+        REGISTERED.put("remedy", ITEMS.registerItem(named("remedy"), RemedyItem::new));
+        REGISTERED.put("journal", ITEMS.registerItem(named("journal"), JournalItem::new, p -> p.stacksTo(1)));
         // Money, as items. Named after the art prompts so the drawings drop straight in.
-        REGISTERED.put("coin_penny", ITEMS.registerItem("coin_penny", p -> new CoinItem(p, Coin.PENNY)));
-        REGISTERED.put("coin_shilling", ITEMS.registerItem("coin_shilling", p -> new CoinItem(p, Coin.SHILLING)));
-        REGISTERED.put("coin_sovereign", ITEMS.registerItem("coin_sovereign", p -> new CoinItem(p, Coin.SOVEREIGN)));
+        REGISTERED.put("coin_penny", ITEMS.registerItem(named("coin_penny"), p -> new CoinItem(p, Coin.PENNY)));
+        REGISTERED.put("coin_shilling", ITEMS.registerItem(named("coin_shilling"), p -> new CoinItem(p, Coin.SHILLING)));
+        REGISTERED.put("coin_sovereign", ITEMS.registerItem(named("coin_sovereign"), p -> new CoinItem(p, Coin.SOVEREIGN)));
 
         // Drawn but not yet wired into any system. They register so the art can be looked
         // at, handed out and built against; every one is a plain item until the rule that
@@ -101,18 +106,20 @@ public final class ModItems {
      * in the creative tab with the rest.
      */
     static void blockItem(String name, DeferredBlock<? extends Block> block, Progression.Tier tier) {
-        REGISTERED.put(name, ITEMS.registerItem(name,
+        REGISTERED.put(name, ITEMS.registerItem(named(name),
                 props -> new StationBlockItem(block.get(), tier, props),
                 Item.Properties::useBlockDescriptionPrefix));
     }
 
     /** Registration order, which is also the order they appear in the creative tab. */
     public static Map<String, DeferredItem<? extends Item>> all() {
-        return Collections.unmodifiableMap(REGISTERED);
+        Map<String, DeferredItem<? extends Item>> modern = new LinkedHashMap<>();
+        REGISTERED.forEach((name, item) -> modern.put(ModernNames.id(name), item));
+        return Collections.unmodifiableMap(modern);
     }
 
     public static DeferredItem<? extends Item> get(String name) {
-        DeferredItem<? extends Item> item = REGISTERED.get(name);
+        DeferredItem<? extends Item> item = REGISTERED.get(name.equals("product_flatline") ? "hollowcap" : ModernNames.legacy(name));
         if (item == null) throw new IllegalArgumentException("No such item: " + name);
         return item;
     }

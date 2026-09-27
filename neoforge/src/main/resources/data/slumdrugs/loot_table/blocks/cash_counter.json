@@ -7,7 +7,7 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "slumdrugs:sealing_press"
+          "name": "slumdrugs:cash_counter"
         }
       ],
       "conditions": [

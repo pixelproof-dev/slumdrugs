@@ -1,7 +1,7 @@
 {
   "display": {
     "icon": {
-      "id": "slumdrugs:journal"
+      "id": "slumdrugs:notebook"
     },
     "title": {
       "translate": "advancements.slumdrugs.root.title"
@@ -27,8 +27,8 @@
   ],
   "rewards": {
     "recipes": [
-      "slumdrugs:forcing_frame",
-      "slumdrugs:drying_loft"
+      "slumdrugs:grow_tent",
+      "slumdrugs:drying_rack"
     ]
   },
   "sends_telemetry_event": false

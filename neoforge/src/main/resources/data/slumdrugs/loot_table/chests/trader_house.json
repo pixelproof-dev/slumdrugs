@@ -11,7 +11,7 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "slumdrugs:seed_sunleaf",
+          "name": "slumdrugs:seed_daybreak",
           "weight": 8,
           "modifier": {
             "type": "minecraft:set_count",
@@ -24,7 +24,7 @@
         },
         {
           "type": "minecraft:item",
-          "name": "slumdrugs:seed_frostroot",
+          "name": "slumdrugs:seed_coldsnap",
           "weight": 4,
           "modifier": {
             "type": "minecraft:set_count",
@@ -37,7 +37,7 @@
         },
         {
           "type": "minecraft:item",
-          "name": "slumdrugs:seed_emberbloom",
+          "name": "slumdrugs:seed_redline",
           "weight": 2,
           "modifier": {
             "type": "minecraft:set_count",
@@ -169,7 +169,7 @@
         },
         {
           "type": "minecraft:item",
-          "name": "slumdrugs:journal",
+          "name": "slumdrugs:notebook",
           "weight": 1
         }
       ]

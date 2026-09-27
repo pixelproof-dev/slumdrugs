@@ -2,7 +2,7 @@
   "parent": "slumdrugs:root",
   "display": {
     "icon": {
-      "id": "slumdrugs:coin_shilling"
+      "id": "slumdrugs:cash_roll"
     },
     "title": {
       "translate": "advancements.slumdrugs.tier.backroom.title"
@@ -28,7 +28,7 @@
   "sends_telemetry_event": false,
   "rewards": {
     "recipes": [
-      "slumdrugs:counting_house"
+      "slumdrugs:cash_counter"
     ]
   }
 }

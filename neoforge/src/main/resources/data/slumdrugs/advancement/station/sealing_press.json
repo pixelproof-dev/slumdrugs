@@ -2,7 +2,7 @@
   "parent": "slumdrugs:tier/workshop",
   "display": {
     "icon": {
-      "id": "slumdrugs:sealing_press"
+      "id": "slumdrugs:vacuum_sealer"
     },
     "title": {
       "translate": "advancements.slumdrugs.station.sealing_press.title"
@@ -21,7 +21,7 @@
       "conditions": {
         "location": {
           "type": "minecraft:match_block",
-          "blocks": "slumdrugs:sealing_press"
+          "blocks": "slumdrugs:vacuum_sealer"
         }
       }
     }

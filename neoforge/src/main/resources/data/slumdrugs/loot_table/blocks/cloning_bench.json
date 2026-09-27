@@ -7,7 +7,7 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "slumdrugs:grafting_bench"
+          "name": "slumdrugs:cloning_bench"
         }
       ],
       "conditions": [
