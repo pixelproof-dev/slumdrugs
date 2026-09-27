@@ -74,24 +74,31 @@ public final class VillageTraderHouse {
     private static final int VILLAGE_MARGIN = 4;
 
     /**
-     * A plot may lean by this much before it is refused. A seventeen-wide house rides a lean of
-     * three on its own foundation, but a hall fifty-two by sixty-one will not find three blocks
-     * of flat ground anywhere near a village, so the plot is levelled first and the limit is what
-     * the levelling may reasonably cut through.
+     * How far a plot may lean before it is refused, which has to grow with the building.
+     *
+     * <p>A flat limit does not work: measured over twenty villages, a seventeen-wide house found
+     * ground leaning two nearly every time, while a hall fifty-two by sixty-one found nothing
+     * under five anywhere — a footprint that wide simply crosses more terrain. So the allowance
+     * follows the longer side, and the plot is levelled to meet it.
+     *
+     * <p>It is the levelling that sets the ceiling. Every block of lean is a block cut off the
+     * high side and filled on the low one, so ten is about as far as this can go before a
+     * building sits in an obvious quarry: 17 wide gives 5, 33 gives 7, 61 gives 10.
      */
-    private static final int MAX_SPREAD = 5;
-
-    /** How deep under the plot to fill when levelling, before giving up on a hole. */
-    private static final int FILL_DEPTH = 6;
+    private static int leanLimit(Vec3i size) {
+        return Math.min(10, 3 + Math.max(size.getX(), size.getZ()) / 8);
+    }
 
     /**
-     * Which pieces a village gets on its own. The three converted from downloaded builds are
-     * 32 by 33 and larger, and measured against real terrain they never find a plot: a village
-     * simply has no patch of ground that size and that level beside it. They stay available to
-     * /slum structure place, where a person picks the spot.
+     * How deep under the plot to fill when levelling, before giving up on a hole.
+     *
+     * <p>One deeper than the lean the plot was accepted with: the low corner needs that much
+     * earth under it, and the extra block is the difference between a floor and a floor with
+     * daylight under its edge.
      */
-    private static final java.util.Set<String> BESIDE_A_VILLAGE =
-            java.util.Set.of("trader_house", "resident_house");
+    private static int fillDepth(Vec3i size) {
+        return leanLimit(size) + 1;
+    }
 
     private static int ticks;
 
@@ -122,6 +129,65 @@ public final class VillageTraderHouse {
         return outcomes;
     }
 
+    /**
+     * Where a piece of this size would stand beside that settlement, if anywhere.
+     *
+     * <p>Pulled out of the placing so it can be asked without answering: see
+     * {@link #surveyAround}.
+     */
+    private static Optional<PlotSearch.Plot> plotFor(ServerLevel level, BoundingBox box,
+                                                     int aimX, int aimZ,
+                                                     List<SettlementRecords.Placed> taken,
+                                                     Vec3i size) {
+        Map<Long, Integer> surveyed = new HashMap<>();
+        PlotSearch.Ground ground = (x, z) -> surveyed.computeIfAbsent(
+                (long) x << 32 | (z & 0xFFFFFFFFL), key -> survey(level, box, taken, x, z));
+
+        int reach = Math.max(size.getX(), size.getZ()) / 2;
+        List<PlotSearch.Spot> candidates = new ArrayList<>();
+        for (int outset : RINGS)
+            candidates.addAll(PlotSearch.ring(box.minX(), box.minZ(), box.maxX(), box.maxZ(),
+                    outset + reach, RING_STEP));
+
+        return PlotSearch.flattestAmong(ground, candidates, size.getX(), size.getZ(),
+                leanLimit(size), aimX, aimZ);
+    }
+
+    /**
+     * Asks where each piece would go beside the settlement at {@code pos}, and changes nothing.
+     *
+     * <p>Here so that a change to the rings or to the lean limit can be measured rather than
+     * guessed at. Placing a building levels the ground it stands on and rules that ground out
+     * for the next one, so two settings can only be compared honestly on terrain that neither
+     * of them has touched — which means asking without building.
+     */
+    public static List<String> surveyAround(ServerLevel level, BlockPos pos) {
+        Registry<Structure> structures = level.registryAccess().lookupOrThrow(Registries.STRUCTURE);
+        List<String> lines = new ArrayList<>();
+        for (Map.Entry<Structure, LongSet> entry : level.structureManager().getAllStructuresAt(pos).entrySet()) {
+            if (!isSettlement(structures, entry.getKey())) continue;
+            level.structureManager().fillStartsForStructure(entry.getKey(), entry.getValue(), start -> {
+                if (!start.isValid()) return;
+                BoundingBox box = start.getBoundingBox();
+                int aimX = (box.minX() + box.maxX()) / 2;
+                int aimZ = (box.minZ() + box.maxZ()) / 2;
+                for (Map.Entry<String, StructurePlacer.Piece> piece : StructurePlacer.PIECES.entrySet()) {
+                    Vec3i size = StructurePlacer.sizeOf(level, piece.getValue());
+                    if (size == null) {
+                        lines.add(piece.getKey() + ": no structure file");
+                        continue;
+                    }
+                    Optional<PlotSearch.Plot> plot =
+                            plotFor(level, box, aimX, aimZ, List.of(), size);
+                    lines.add(String.format("survey %s %dx%d at %s: %s",
+                            piece.getKey(), size.getX(), size.getZ(), start.getChunkPos(),
+                            plot.map(p -> "plot leaning " + p.spread()).orElse("none")));
+                }
+            });
+        }
+        return lines;
+    }
+
     private static boolean isSettlement(Registry<Structure> structures, Structure structure) {
         for (Holder<Structure> holder : structures.getTagOrEmpty(StructureTags.VILLAGE))
             if (holder.value() == structure) return true;
@@ -141,7 +207,6 @@ public final class VillageTraderHouse {
 
         for (Map.Entry<String, StructurePlacer.Piece> entry : StructurePlacer.PIECES.entrySet()) {
             String name = entry.getKey();
-            if (!BESIDE_A_VILLAGE.contains(name)) continue;
             if (records.has(village, name)) continue;
 
             Vec3i size = StructurePlacer.sizeOf(level, entry.getValue());
@@ -151,20 +216,16 @@ public final class VillageTraderHouse {
             }
 
             // Survey afresh for each building: what is unusable grows as each one lands.
-            List<SettlementRecords.Placed> taken = records.of(village);
-            Map<Long, Integer> surveyed = new HashMap<>();
-            PlotSearch.Ground ground = (x, z) -> surveyed.computeIfAbsent(
-                    (long) x << 32 | (z & 0xFFFFFFFFL), key -> survey(level, box, taken, x, z));
-
-            int reach = Math.max(size.getX(), size.getZ()) / 2;
-            List<PlotSearch.Spot> candidates = new ArrayList<>();
-            for (int outset : RINGS)
-                candidates.addAll(PlotSearch.ring(box.minX(), box.minZ(), box.maxX(), box.maxZ(),
-                        outset + reach, RING_STEP));
-
-            Optional<PlotSearch.Plot> found = PlotSearch.flattestAmong(
-                    ground, candidates, size.getX(), size.getZ(), MAX_SPREAD, aimX, aimZ);
-            if (found.isEmpty()) continue;
+            Optional<PlotSearch.Plot> found =
+                    plotFor(level, box, aimX, aimZ, records.of(village), size);
+            if (found.isEmpty()) {
+                // Worth saying out loud: a piece this size beside a village on broken ground is
+                // the case that decides whether the rings and the levelling are set wide enough.
+                LOG.info("no plot for {} ({}x{}) beside the settlement at {}",
+                        name, size.getX(), size.getZ(), start.getChunkPos());
+                said.add(name + ": no plot flat enough");
+                continue;
+            }
 
             PlotSearch.Plot plot = found.get();
             level(level, plot, size);
@@ -209,12 +270,12 @@ public final class VillageTraderHouse {
 
         for (int x = minX; x < minX + size.getX(); x++) {
             for (int z = minZ; z < minZ + size.getZ(); z++) {
-                for (int y = plot.firstFreeY(); y <= plot.firstFreeY() + MAX_SPREAD; y++) {
+                for (int y = plot.firstFreeY(); y <= plot.firstFreeY() + leanLimit(size); y++) {
                     pos.set(x, y, z);
                     if (!world.getBlockState(pos).isAir())
                         world.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_CLIENTS);
                 }
-                for (int y = ground; y > ground - FILL_DEPTH; y--) {
+                for (int y = ground; y > ground - fillDepth(size); y--) {
                     pos.set(x, y, z);
                     if (!world.getBlockState(pos).isAir()) break;
                     world.setBlock(pos, fill, Block.UPDATE_CLIENTS);

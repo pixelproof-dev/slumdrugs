@@ -408,7 +408,20 @@ public final class SlumCommands {
                                                 java.util.Arrays.stream(net.minecraft.world.level.block.Rotation.values())
                                                         .map(Enum::name).toList(), builder))
                                         .executes(ctx -> placeStructure(ctx, rotation(ctx))))))
-                .then(Commands.literal("village").executes(SlumCommands::villageHouse));
+                .then(Commands.literal("village").executes(SlumCommands::villageHouse)
+                        .then(Commands.literal("survey").executes(SlumCommands::villageSurvey)));
+    }
+
+    /** Says where each piece would go beside the settlement you are standing in, and builds nothing. */
+    private static int villageSurvey(CommandContext<CommandSourceStack> ctx) {
+        var lines = VillageTraderHouse.surveyAround(
+                ctx.getSource().getLevel(), BlockPos.containing(ctx.getSource().getPosition()));
+        if (lines.isEmpty()) {
+            ctx.getSource().sendFailure(Component.literal("You are not standing in a settlement"));
+            return 0;
+        }
+        lines.forEach(line -> reply(ctx, line));
+        return lines.size();
     }
 
     /** Gives the settlement you are standing in its trader house, without waiting for the tick. */
