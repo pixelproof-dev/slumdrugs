@@ -1,134 +1,77 @@
-# Station models
+# Modern station models — Blockbench and Minecraft
 
-The ten station blocks each have their own model, built to be told apart at a glance from
-across a room. None of them is a cube. They are generated, not hand-modelled: `tools/build_models.py`
-writes every block model JSON from a short description of boxes, octagons and crossed planes, so
-a change to a model is a change to that script, run again. Items stay flat sprites: vanilla items
-are 2D, and a 3D item icon looks wrong in a hotbar next to everything else.
+The ten stations now use custom present-day models: cool steel, powder-coated housings,
+plastic, reflective tent lining, printed labels, digital displays and small colour accents.
+The geometry is authored by `tools/build_models.py`; the pixel materials are authored by
+`tools/make_textures.py`. No external texture downloads are needed.
 
-```
-python3 tools/make_textures.py     # the palette PNGs (deterministic; safe to re-run)
-python3 tools/build_models.py      # all seventeen block models
-python3 tools/render_models.py     # previews in build/model-previews/
-```
+## Open in Blockbench
 
-## Why generated
+Unzip `release/SlumDrugs-Modern-Stations.zip`, then use **File → Open Model** to open a
+`.bbmodel` from `blockbench/`. All textures are embedded. Each cuboid remains editable,
+with explicit face UVs, named elements and Minecraft-compatible rotations.
 
-Vanilla JSON allows one rotation axis per element, at ±22.5 or ±45 degrees only, with every
-coordinate between -16 and 32. Blockbench lets you rotate freely, shows it, then the export
-silently drops it. The generator only produces legal geometry: anything round is an octagon
-made of four bars (two square, two at 45°), anything leafy is two planes crossed at 45°, and
-every angle is one of the four allowed. The `Model` class has three primitives:
+There are **27 projects**: all ten stations plus the growth, light, loading, drying and
+working variants. The matching Minecraft JSONs, PNG materials, animations, blockstates,
+item definitions and previews are included in the archive.
 
-- `box(from, to, texture, faces=…, rot=…, only=…, skip=…, shade=…)`: one element, optional per-face
-  texture override, optional single-axis rotation, optional face culling.
-- `octagon(cx, y0, y1, cz, width, texture, top=…, bottom=…, axis=…)`: a drum or a pot. The diagonal
-  pair is shrunk by 0.02 so the bars never z-fight.
-- `cross(cx, y0, y1, cz, width, texture)`: a plant, a hanging bundle. Unshaded so it reads flat.
+The generator also leaves the projects in `build/blockbench-modern/`. The overview is
+`build/model-previews/modern-stations-overview.png`.
 
-Every model is written with the vanilla block-item display transforms (gui 30/225/0 at 0.625,
-third person 0/45/0 at 0.4), a particle texture, and `#slot` texture names, so a texture swap is a
-one-line change in the script.
+## The ten stations
 
-## The palette
+| Model | Design and details |
+| --- | --- |
+| `grow_tent_stage0..4` | Open zipped tent, rolled door with orange straps, reflective walls, suspended three-bar light, two grow pots, ventilation unit, controller; five crop stages and light-off variants. |
+| `drying_rack` | Three steel mesh trays, blue pull handles, green/brown material according to dryness, rear clip fan, rubber feet; empty and partially loaded variants. |
+| `cloning_bench` | Six rockwool plugs and seedlings beneath a transparent propagation lid, mint handle, cutter and dispenser on a steel workbench. |
+| `cutting_bench` | Steel table with backsplash, white work mat, digital scales, card, blade and labelled container. |
+| `pressing_bench` | Orange hydraulic crosshead, twin uprights, chrome ram, platen, gauge, side pump handle and caution strip. |
+| `vacuum_sealer` | Raised clamshell lid, black gasket, display, film roll, clear feed sheet and stacked labelled bags. |
+| `still` | Stainless vessel, banded column, sight window, gauge, condenser, receiver and digital hotplate; animated running display. |
+| `centrifuge` | White benchtop housing, dark lid seam, visible rotor, blue handle, vents and digital panel; animated rotor and running display. |
+| `storage_crate` | Two ribbed blue polymer crates with dark reinforced rims, recessed hand grips, barcode label and ribbed lid. |
+| `cash_counter` | Note counter with feed rollers, banknote hopper, output tray, banded cash stacks and a raised desk lamp. |
 
-The stations share one set of materials so they read as one workshop. The textures live in
-`assets/slumdrugs/textures/block/` and are drawn by `tools/make_textures.py`: flat, low-noise
-surfaces, because the models stretch them across faces of every size and the detail lives in the
-geometry. They are placeholders in the sense that matters: the hand-drawn art overwrites them by
-filename, and nothing in the models changes when it does.
+## Compatibility
 
-| Slot | File | Where it shows |
-| --- | --- | --- |
-| brass, brass_band | `brass.png`, `brass_band.png` | frame posts, capstan wheel, drum, lever, fittings |
-| copper | `copper.png` | the still's boiler, neck and worm |
-| iron | `iron.png` | legs, press frame, scale beam, cleaver |
-| walnut | `walnut.png` | dark furniture: bench tops, desk, loft posts |
-| pine | `pine.png` | pale furniture: crate, sealing bench, grafting bench |
-| end_grain | `end_grain.png` | the cutting block's top |
-| terracotta | `terracotta.png` | wax pot, plant pots |
-| leather_green | `leather_green.png` | the desk's writing slope |
-| wax, paper, parcel_top | `wax.png`, `paper.png`, `parcel_top.png` | sealed parcels waiting on the benches |
-| glass | `glass.png` | cold-frame panes, receiver flask |
-| soil, herb, powder | `soil.png`, `herb.png`, `powder.png` | beds, a heap of dried herb, a heap of cut |
-| twine, crate_label, gauge, firebox, ledger, lamp, gold_stack | one file each | the small tells |
-| plant_1..4 | `plant_1.png` … `plant_4.png` | crop stages on the crossed planes |
-| bundle | `bundle.png` | hanging herb in the loft |
+The modern models also replace the legacy model filenames used by the currently registered
+blocks. Existing `forcing_frame`, `drying_loft`, `grafting_bench`, `sealing_press` and
+`counting_house` blocks therefore receive the new appearance immediately. The future IDs
+`grow_tent`, `drying_rack`, `cloning_bench`, `vacuum_sealer` and `cash_counter` have matching
+asset definitions ready. This does not rename Java registrations or save data.
 
-## The models
+Models are decorative geometry, at 16 units per block. The tallest reach 25.5 units; place
+them with clear space above. Existing collision shapes, gameplay and particles are unchanged.
+Screen and rotor animations are pixel animation strips, not custom entity renderers.
 
-Each is described by its silhouette, the one thing you recognise it by, and its footprint.
-Extents past the block are allowed by the format and used sparingly for height and for parts
-that should hang over the edge.
+## Rebuild and check
 
-Four of them have a second look for a second state, generated from the same function with a
-flag: the frame's lantern dark (`forcing_frame_stage*_dark`), the loft's bundles dried brown
-(`drying_loft_*_dry`), the still's firebox lit (`still_working`, with an animated
-`firebox_lit` strip) and the centrifuge's band spinning (`centrifuge_working`, with an
-animated `brass_band_spin` strip). The blockstate files pick between them.
-
-**`forcing_frame_stage0..4`.** A brass-framed glasshouse on a walnut bed: four brass posts, glass
-walls, a gabled glass roof with a brass ridge, and a lit lantern hung inside under the ridge. The
-crop is the only thing that changes between stages: nothing at stage 0, one crossed plant from
-stage 1 growing taller, two more sprouting beside it from stage 3. The tell is the glow inside
-the glass. Footprint 16×16, 15 high.
-
-**`drying_loft_0..2`** and the plain `drying_loft`. Four tall walnut posts, a low pine shelf, two
-rails with a cord slung between them, under a peaked roof of pine slats. Bundles of herb hang
-from the rails as crossed planes: none, a few, a full row. The tell is the peaked slat roof and
-what hangs beneath it. Footprint 18×16 (the eaves overhang), 18 high.
-
-**`pressing_bench`.** A walnut bench with a tall iron frame standing on it and a brass capstan
-wheel on top of the screw. Dried herb sits under the plate. The tell is the wheel, held well
-above everything else in the room. Footprint 16×16, 27 high.
-
-**`sealing_press`.** A pine bench with a brass lever press, a die under the lever, a terracotta
-wax pot beside it, and finished parcels stacked at the other end. The tell is the pot of red wax
-next to brown paper. Footprint 16×16, 19 high.
-
-**`storage_crate`.** A pine crate with diagonal walnut braces on each side, the lid propped open
-a crack, a paper label on the front and rope handles on the ends. The tell is the braces and the
-open lid. Footprint 16×16, 14 high.
-
-**`centrifuge`.** An octagonal brass drum with a band around its waist, standing on four iron
-legs, with a lid, a gauge on the front and a crank on the side. The only thing in the set that is
-mostly round and mostly metal. Footprint 16×16, 17 high.
-
-**`still`.** A copper onion boiler on a firebox, its swan neck bending over and down into a
-walnut worm barrel, a glass receiver at the outlet. Bands of brass where copper meets copper. The
-tell is the swan neck. Footprint 18×12, 22 high.
-
-**`cutting_bench`.** A thick end-grain block on walnut legs, a heap of powder on it, a cleaver
-stuck upright, and a brass balance scale standing at the end with its pans hanging over the edge.
-The tell is the scale. Footprint 18×16, 21 high.
-
-**`grafting_bench`.** A pine potting bench with a trellis of twine-lashed laths at the back and
-two terracotta pots on top, each with a young plant, tools hung on the trellis. The tell is the
-trellis. Footprint 16×16, 22 high.
-
-**`counting_house`.** A walnut clerk's desk with a green leather writing slope, an open ledger
-on it, stacks of coin, an ink pot and a brass stamp. The tell is the green leather and gold.
-Footprint 16×16, 20 high.
-
-## Seeing a model without Blockbench
-
-`tools/render_models.py` draws the model JSON with the textures and writes a PNG to
-`build/model-previews/`. It needs nothing installed, only that `./gradlew build` has run once so
-the Minecraft jar is on disk for any vanilla texture a model still references.
+Run from the repository root:
 
 ```
-python3 tools/render_models.py                 # every block model
-python3 tools/render_models.py centrifuge      # just one
+python tools/make_textures.py
+python tools/build_models.py
+python tools/check_data.py
+./gradlew build
+python tools/render_models.py
 ```
 
-It is an orthographic, z-buffered renderer using Minecraft's own per-face shading, with element
-rotation. It shows proportion and silhouette faithfully. It does not show ambient occlusion,
-block light, per-face UV mapping, or how a model behaves in the hand, so it answers "are the
-proportions right" and not "does it look good in the world".
+The standard renderer uses a fixed camera that may crop tall models; the supplied overview
+uses a raised centre and consistent reduced scale. The software previews approximate glass
+and shading and are not in-game screenshots.
 
-## Editing by hand
+Validation on 2026-09-27:
 
-**blockbench.net/web** opens these files directly with `File → Import → JSON Model`. Anything
-edited there and exported back will be overwritten the next time the generator runs, so either
-make the change in `tools/build_models.py` or delete that model's function from the script and
-own the JSON by hand from then on. The rotation limit above still applies to hand edits.
+- Data checker: `68 items, 10 blocks, 0 problems`.
+- Gradle: `BUILD SUCCESSFUL`; `PASS: 98673 simulation assertions` and the playthrough passed.
+- All 27 project/model pairs passed bounds, legal rotations, texture-index and embedded-PNG checks.
+- All ten primary models were rendered from front and rear; front overview visually reviewed.
+- No Minecraft client or Blockbench UI validation was performed for this asset pass.
+
+## Editing ownership
+
+Regenerating overwrites both JSON models and `.bbmodel` projects. For permanent edits,
+change the generator, or deliberately take ownership of an exported model and remove its
+write call from the generator. Edit all relevant state variants together. Compatibility
+copies must receive the same geometry until the Java rename is complete.
