@@ -67,6 +67,12 @@ public final class CityBuilder {
         return job.result();
     }
 
+    /**
+     * What goes on the plots a grid would otherwise leave as bare grass. A town has more than one
+     * shop, and the corner shop is the one a player needs most often -- it sells the seed.
+     */
+    private static final String FILLER = "corner_shop";
+
     /** Lays out a town for the buildings that exist, or null if there are none. */
     static CityPlan.Plan plan(ServerLevel level, long seed, Map<Integer, String> namesOut) {
         List<CityPlan.Size> sizes = new ArrayList<>();
@@ -76,7 +82,18 @@ public final class CityBuilder {
             namesOut.put(sizes.size(), entry.getKey());
             sizes.add(new CityPlan.Size(size.getX(), size.getZ()));
         }
-        return sizes.isEmpty() ? null : CityPlan.of(sizes, STREET_WIDTH, seed);
+        if (sizes.isEmpty()) return null;
+        // Pad to a full grid with more shops. CityPlan.plots is checked to keep the grid's shape
+        // when padded to, so this fills the gaps rather than moving them somewhere else.
+        StructurePlacer.Piece filler = StructurePlacer.PIECES.get(FILLER);
+        Vec3i fillerSize = filler == null ? null : StructurePlacer.sizeOf(level, filler);
+        if (fillerSize != null) {
+            for (int n = sizes.size(), full = CityPlan.plots(n); n < full; n++) {
+                namesOut.put(sizes.size(), FILLER);
+                sizes.add(new CityPlan.Size(fillerSize.getX(), fillerSize.getZ()));
+            }
+        }
+        return CityPlan.of(sizes, STREET_WIDTH, seed);
     }
 
     /**

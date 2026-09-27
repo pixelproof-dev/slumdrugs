@@ -172,6 +172,18 @@ public final class CityPlan {
         return Math.floorMod(to.ordinal() - from.ordinal(), 4);
     }
 
+    /**
+     * How many plots a town laid out for this many buildings has, counting the ones left empty.
+     *
+     * <p>The grid is as square as it can be, so seven buildings get a three by three block and
+     * two plots of bare grass. A builder that wants a full town pads the list up to this number;
+     * padding to it never changes the grid's shape, which is what makes that safe.
+     */
+    public static int plots(int buildings) {
+        int cols = (int) Math.ceil(Math.sqrt(buildings));
+        return cols * ((buildings + cols - 1) / cols);
+    }
+
     /** Whether a column is roadway. Used by the builder to lay tarmac and by the checks. */
     public static boolean isStreet(Plan plan, int x, int z) {
         for (Rect street : plan.streets()) if (street.contains(x, z)) return true;

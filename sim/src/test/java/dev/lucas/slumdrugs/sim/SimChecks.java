@@ -152,6 +152,19 @@ public final class SimChecks {
                 check((CityPlan.quarterTurns(a, b) + CityPlan.quarterTurns(b, a)) % 4 == 0,
                         "turning there and back again is a whole number of full turns");
 
+        // Filling a town's empty plots. Padding to plots(n) must leave the grid as it was --
+        // otherwise the padded town would lay out differently and leave new gaps elsewhere.
+        check(CityPlan.plots(7) == 9, "seven buildings sit in a three by three block");
+        check(CityPlan.plots(6) == 6 && CityPlan.plots(9) == 9, "a full grid needs no padding");
+        for (int n = 1; n <= 60; n++) {
+            int full = CityPlan.plots(n);
+            check(full >= n, "there are never fewer plots than buildings");
+            check(CityPlan.plots(full) == full, "padding to the plot count keeps the grid's shape");
+            List<CityPlan.Size> many = new java.util.ArrayList<>();
+            for (int i = 0; i < full; i++) many.add(new CityPlan.Size(10, 10));
+            check(CityPlan.of(many, 5, n).lots().size() == full, "a padded town fills every plot");
+        }
+
         // One building alone is still a town, and the arithmetic must not divide by zero.
         CityPlan.Plan hamlet = CityPlan.of(List.of(new CityPlan.Size(9, 9)), 3, 1);
         check(hamlet.lots().size() == 1, "one building is a town too");
