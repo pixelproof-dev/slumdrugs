@@ -32,33 +32,55 @@ up either owning the district or getting out clean before it owns you.
 
 ### Era
 
-**Minecraft's own world, one notch into the industrial age: gaslight, not spaceships.**
-Brick and brass, glass and soot, canals and warehouses, lanterns hung on chains, a constable's
-whistle and a magistrate's writ. Steam, water and muscle are the power — a mill wheel, a press,
-a pump — and at the top end the quarter's first **dynamos**, arc lamps humming over a workshop
-that can afford them. That is the ceiling: current exists, computers do not. No engines with
-brains, no screens, no radio, no firearms. The Constabulary carries crossbows and lanterns, and
-the fastest message in the quarter is still a boy who runs.
+**Minecraft's own world, present day: concrete, glass and sodium light.** Tower blocks and a
+skyline, rain on asphalt, freight yards and lock-ups, a strip of shops with the shutters half
+down. Power comes out of the wall. A phone fits in a pocket, a police scanner squawks, a camera
+watches the loading bay. The Department has cars, radios and a precinct house; you have a burner
+and whoever still owes you a favour.
 
-Gaslight giving way to the first electric light is a real, narrow window in history, and it is
-exactly the right one: it lets the mod have a power system (§5.16) that other tech mods can
-plug into, without ever looking like science fiction.
+Changed 2026-09-27, replacing the gaslight setting chosen on 2026-09-19. The reasons for
+gaslight were real — it sat beside a vanilla village, beside Create, beside MineColonies — and
+they are what this change gives up. Say it plainly: a glass tower does not belong next to a
+thatched village, and this is the cost of the new theme, paid deliberately.
 
-Why this and not full medieval, decided 2026-09-19: Create — the mod this world would most
-plausibly share a pack with once it ports — is early-industrial itself, brass and cogs and
-steam, roughly the nineteenth century. MineColonies builds everything from village to colonial
-town. Gaslight sits comfortably beside both *and* beside a vanilla village, which full steampunk
-does not. It is also simply where this genre lives: the Watch, the magistrate, wax seals, the
-gaol, a reward posted on a board — that is Victorian crime fiction, not medieval fantasy.
+The answer to that is distance. **The city is rare, the way a stronghold is rare.** It is not
+scenery you stumble into on the way to somewhere else; it is a place you go looking for, far
+enough from any village that the two never share a horizon. Finding it is a thing you do, not a
+thing that happens to you — and because a player cannot be expected to wander for hours, the
+city is findable by hand: a **burner phone**, crafted early, points the way to the nearest one.
+That is the whole reason the city may be rare without being a punishment.
 
-Where a modern crime-fiction idea is worth keeping, it wears a period costume instead of being
-cut: insurance becomes a **guild surety**, a licence becomes a **charter**, forged identity
-papers become a **writ of pardon**, a police radio becomes a **bell and a whistle**, a forensics
-lab becomes a **magistrate's ledger of seized wax seals**. Redstone is the only technology and
-it stays sparing — a bell wire, a trapped door, a lamp on a timer.
+What still does not exist, and these are deliberate:
 
-The test for any asset, name or mechanic: *would it look at home in a quarter lit by lanterns,
-next to a vanilla village?* If not, it does not ship. Appendix D maps every term.
+- **No firearms.** The Department carries what Minecraft carries — crossbows, batons, dogs.
+  This is a game about supply, not about shooting people, and adding guns would change what
+  the mod is for. Vanilla's own arsenal is the ceiling.
+- **No real substances, no real chemistry.** Unchanged from §10 and, if anything, tightened:
+  a modern setting invites real-world names far more strongly than a gaslight one did. Every
+  product is invented, every processing verb stays abstract (dry, press, cut, seal), and a name
+  that reads like something real does not ship — see the substance list below.
+- **No internet, no smartphones beyond a burner.** The phone makes calls, keeps a list of
+  contacts and points at the city. It is not a screen you play the game through.
+
+The test for any asset, name or mechanic: *would it look at home under a street lamp on a wet
+night, in a city Minecraft could plausibly contain?* If not, it does not ship.
+
+### Substances
+
+Eight, all invented, all named the way a street names things — after what they do to you, never
+after what they are. None of them is a real drug wearing a new label, and none of them may be
+named for one: that is the rule the list is checked against.
+
+| Ships as | Was | Kind | What it is for |
+| --- | --- | --- | --- |
+| **Daybreak** | sunleaf | grown | The cheap one. Lifts, wears off, everybody's first. |
+| **Coldsnap** | frostroot | grown | Numbing, slow, the long night's one. |
+| **Redline** | emberbloom | grown | Fast, hot, expensive to run and to take. |
+| **Neon** | glowcap | cultured | Hallucinatory; light behaves wrongly. |
+| **Voltage** | sparkshard | refined | The stimulant. Mineral, not plant. |
+| **Blackout** | nightvein | refined | The heavy one. Takes the evening off you. |
+| **Riptide** | tidecap | cultured | Comes in waves, leaves on one. |
+| **Flatline** | hollowcap | cultured | The dissociative of §5.17 — invented whole, no real counterpart. |
 
 ### Fantasy in one line
 
@@ -1153,10 +1175,13 @@ reach. One unit of Standard-quality product sells for about 2s, which is where t
 
 ## Appendix D — Terminology
 
-The reskin table. Left is the modern crime-fiction term this document started with; right is
-what ships. If a new idea has no right-hand column, it is not ready.
+This table used to be a costume: modern crime fiction on the left, a gaslight translation on
+the right, and only the right-hand column shipped. With the setting moved to the present day
+(§1), the translating stops — the left column *is* what ships. The right-hand column is kept
+for one release as a rename map, because every item id, texture and lang key in the mod is
+still spelled the old way, and a reader hunting for `counting_house` needs to find it here.
 
-| Modern | In-world |
+| Ships as (present day) | Was (gaslight) |
 | --- | --- |
 | Dollars / wallet | Minted coin in a purse: penny, shilling, sovereign |
 | Dirty money | Loose coin — unmarked, unstamped |
