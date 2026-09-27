@@ -409,3 +409,81 @@ for f in range(4):
 png_frames(OUT/'brass_band_spin.png', frames, 2)
 
 print("wrote:", ", ".join(sorted(p.name for p in OUT.glob('*.png'))))
+
+# Modern stations: restrained cool metals, legible screens, and selective colour accents.
+def modern_textures():
+    import json
+    palettes = {
+        'steel': ((80,94,103),(134,151,160),(190,207,214)),
+        'shell': ((112,123,131),(175,186,192),(221,229,231)),
+        'dark': ((20,28,36),(35,46,56),(53,67,78)),
+        'rubber': ((13,19,25),(25,32,40),(36,44,53)),
+        'silver': ((87,105,118),(152,176,188),(217,234,239)),
+        'blue': ((23,64,96),(34,101,141),(64,148,180)),
+        'orange': ((156,64,25),(225,114,38),(255,169,69)),
+        'mint': ((31,99,87),(59,164,137),(127,222,175)),
+        'cash': ((65,90,76),(128,160,127),(192,211,167)),
+        'rockwool': ((120,116,69),(174,170,100),(213,207,137)),
+        'leaf': ((29,67,47),(57,119,65),(113,166,87)),
+        'dry_leaf': ((85,69,44),(132,113,68),(176,156,96)),
+        'white': ((161,172,176),(216,225,222),(243,246,235)),
+    }
+    for name, colors in palettes.items():
+        colors = [(*c,255) for c in colors]
+        px = grid(colors[1])
+        for y in range(16):
+            for x in range(16):
+                if y == 0 or x == 0: px[y][x] = colors[2]
+                elif y == 15 or x == 15: px[y][x] = colors[0]
+                elif name in ('steel','silver') and y in (4,10): px[y][x] = colors[2 if x < 9 else 1]
+                elif name in ('leaf','dry_leaf','rockwool') and noise(x,y,13) < 60: px[y][x] = colors[(x+y)%3]
+                elif name == 'cash' and y in (4,7,10,12): px[y][x] = colors[0 if 2<x<13 else 1]
+        png(OUT/f'modern_{name}.png',px)
+    for name in ('screen','screen_on','label','vent','mesh','led','led_off','gauge','hazard','glass','fan','rotor'):
+        px = grid((22,33,43,255))
+        for y in range(16):
+            for x in range(16):
+                if name == 'label':
+                    px[y][x] = (222,231,225,255)
+                    if (3<=y<=6 and x in (2,3,5,8,10,11,13)) or (y in (10,12) and 2<=x<=12): px[y][x]=(41,57,64,255)
+                elif name == 'vent': px[y][x] = ((76,90,100,255) if y%4==0 else (16,25,33,255))
+                elif name == 'mesh': px[y][x] = (124,146,156,255) if x%4==0 or y%4==0 else (0,0,0,0)
+                elif name in ('led','led_off'): px[y][x] = ((184,255,223,255) if name=='led' else (64,83,87,255)) if 2<=y<14 else (32,47,56,255)
+                elif name == 'hazard': px[y][x] = (242,163,45,255) if (x+y)%10<5 else (30,39,46,255)
+                elif name == 'glass': px[y][x]=(182,225,235,100) if x in (0,15) or y in (0,15) or x+y in (8,9,22) else (118,172,189,35)
+                elif name == 'gauge':
+                    r=(x-7.5)**2+(y-7.5)**2
+                    px[y][x]=(224,232,226,255) if r<43 else (49,66,77,255)
+                    if (x in (4,11) and y in (4,11)) or (x==8 and 3<=y<=8) or (y==8 and 8<=x<=11): px[y][x]=(218,86,50,255)
+                elif name in ('fan','rotor'):
+                    r=(x-7.5)**2+(y-7.5)**2
+                    px[y][x]=(96,122,135,255) if r<44 and (abs(x-y)<3 or abs(x+y-15)<3) else (21,33,43,255)
+                    if r<5: px[y][x]=(187,207,217,255)
+                else:
+                    if 3<=x<=12 and y in (4,8,12): px[y][x]=(91,232,178,255) if name=='screen_on' else (48,101,109,255)
+                    if x in (3,7,12) and 4<y<12: px[y][x]=(91,232,178,255) if name=='screen_on' else (48,101,109,255)
+        png(OUT/f'modern_{name}.png',px)
+    # Four discrete rotor/screen frames; Minecraft advances them without a custom renderer.
+    global H
+    for name in ('rotor_spin','screen_run'):
+        H=64
+        frames=[]
+        for frame in range(4):
+            for y in range(16):
+                row=[]
+                for x in range(16):
+                    if name=='rotor_spin':
+                        r=(x-7.5)**2+(y-7.5)**2
+                        a=__import__('math').atan2(y-7.5,x-7.5)+frame*__import__('math').pi/8
+                        c=(150,179,192,255) if r<44 and __import__('math').cos(4*a)>.4 else (26,41,53,255)
+                        if r<5: c=(211,228,232,255)
+                    else:
+                        c=(105,244,186,255) if (y in (4,8) and 3<=x<=12) or (y==12 and x<4+frame*3) else (19,36,45,255)
+                    row.append(c)
+                frames.append(row)
+        png(OUT/f'modern_{name}.png',frames)
+        (OUT/f'modern_{name}.png.mcmeta').write_text(json.dumps({'animation':{'frametime':3,'interpolate':False}})+'\n')
+        H=16
+    print('wrote modern station palette and animated displays')
+
+modern_textures()

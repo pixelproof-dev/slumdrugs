@@ -99,298 +99,266 @@ def legs(m, tex, inset=1, size=2.5, height=8, y0=0):
             m.box((x, y0, z), (x + size, height, z + size), tex)
 
 
-# ---------------------------------------------------------------- forcing frame
-def forcing_frame(stage, lit=True):
-    m = Model(T + 'brass')
-    brass, glass, soil, walnut = m.tex('brass', T + 'brass'), m.tex('glass', T + 'glass'), m.tex('soil', T + 'soil'), m.tex('walnut', T + 'walnut')
-    lamp = m.tex('lamp', T + ('lamp' if lit else 'lamp_off'))
-    # A deep bed with a soil top.
-    m.box((0.5, 0, 0.5), (15.5, 4, 15.5), walnut, faces={'up': soil})
-    # Brass corner posts and a top rail.
-    for x in (0, 14.5):
-        for z in (0, 14.5):
-            m.box((x, 0, z), (x + 1.5, 11, z + 1.5), brass)
-    for (f, t) in (((0, 10, 0), (16, 11, 1.5)), ((0, 10, 14.5), (16, 11, 16)), ((0, 10, 0), (1.5, 11, 16)), ((14.5, 10, 0), (16, 11, 16))):
-        m.box(f, t, brass)
-    # Glass walls, a hair inside the posts.
-    m.box((1.5, 4, 0.9), (14.5, 10, 1.1), glass)
-    m.box((1.5, 4, 14.9), (14.5, 10, 15.1), glass)
-    m.box((0.9, 4, 1.5), (1.1, 10, 14.5), glass)
-    m.box((14.9, 4, 1.5), (15.1, 10, 14.5), glass)
-    # A gabled glass roof: two panes leaning in to a brass ridge, gable ends filled.
-    m.box((-0.5, 11, 0), (16.5, 11.3, 8.4), glass, rot={'origin': [8, 11, 0], 'axis': 'x', 'angle': 22.5})
-    m.box((-0.5, 11, 7.6), (16.5, 11.3, 16), glass, rot={'origin': [8, 11, 16], 'axis': 'x', 'angle': -22.5})
-    m.box((-0.7, 13.9, 7.2), (16.7, 15, 8.8), brass)
-    # Gable-end brass struts that follow the slope.
-    for x in (0, 15):
-        m.box((x, 11, 0), (x + 1, 11.6, 8.4), brass, rot={'origin': [8, 11, 0], 'axis': 'x', 'angle': 22.5})
-        m.box((x, 11, 7.6), (x + 1, 11.6, 16), brass, rot={'origin': [8, 11, 16], 'axis': 'x', 'angle': -22.5})
-    # The lantern that keeps it warm, hung from the ridge inside.
-    m.box((7, 12.2, 7.2), (9, 13.9, 8.8), brass, only=('up', 'down'))
-    m.box((6.6, 9.4, 6.6), (9.4, 12.3, 9.4), lamp, shade=not lit)
-    m.box((7.6, 12.3, 7.6), (8.4, 13.9, 8.4), brass)
-    # The crop.
-    if stage >= 1:
-        plant = m.tex('plant', T + f'plant_{min(stage, 4)}')
-        size = {1: 5, 2: 7, 3: 9, 4: 10}[stage]
-        m.cross(8, 4, 4 + size, 8, size, plant)
-        if stage >= 3:
-            m.cross(4.5, 4, 4 + size - 2, 5, size - 2, plant)
-            m.cross(11.5, 4, 4 + size - 3, 11, size - 3, plant)
-    return m.write(f'forcing_frame_stage{stage}' + ('' if lit else '_dark'))
+# Modern, Minecraft-compatible models. Front is north (-Z); 16 units = one block.
+import base64, uuid, shutil
+ASSETS = OUT.parents[1]
+PROJECTS = pathlib.Path('build/blockbench-modern')
+WRITTEN = []
 
+def station():
+    m = Model(T+'modern_steel')
+    for t in ('steel','shell','dark','rubber','silver','blue','orange','mint','cash','rockwool','leaf','dry_leaf','white','screen','screen_on','label','vent','mesh','led','led_off','gauge','hazard','glass','fan','rotor','rotor_spin','screen_run'):
+        m.tex(t,T+'modern_'+t)
+    return m
 
-# ---------------------------------------------------------------- drying loft
-def drying_loft(bundles, dry=False):
-    m = Model(T + 'walnut')
-    walnut, pine, twine = m.tex('walnut', T + 'walnut'), m.tex('pine', T + 'pine'), m.tex('twine', T + 'twine')
-    bundle = m.tex('bundle', T + ('bundle_dry' if dry else 'bundle'))
-    # Four tall posts and a low shelf to tie the frame together.
-    for x in (0.5, 14):
-        for z in (0.5, 14):
-            m.box((x, 0, z), (x + 1.5, 14, z + 1.5), walnut)
-    m.box((0.5, 3, 0.5), (15.5, 3.8, 15.5), pine)
-    # Two rails the bundles hang from, front and back, and a thin cord between them.
-    m.box((0, 12.5, 3), (16, 13.5, 4), walnut)
-    m.box((0, 12.5, 12), (16, 13.5, 13), walnut)
-    m.box((1, 13, 3.5), (15, 13.3, 12.5), twine, only=('up', 'down', 'north', 'south'))
-    # A peaked slatted roof that keeps the rain off and the air moving.
-    for dz, angle in ((0, 22.5), (8.2, -22.5)):
-        for i, x in enumerate((-0.6, 3.6, 7.8, 12)):
-            m.box((x, 14, dz), (x + 3.4, 14.6, dz + 8.2), pine,
-                  rot={'origin': [8, 14, 0 if angle > 0 else 16], 'axis': 'x', 'angle': angle})
-    m.box((-1, 16.9, 7.3), (17, 17.9, 8.7), walnut)
-    # The bundles, tips down, hung from the cord across the middle: fill from the middle out.
-    order = [8, 4, 12][:bundles]
-    for x in order:
-        m.box((x - 0.6, 12.4, 7.4), (x + 0.6, 13.2, 8.6), twine)
-        m.cross(x, 4.5, 12.5, 8, 5, bundle)
-    return m.write(('drying_loft' if bundles == 3 else f'drying_loft_{bundles}') + ('_dry' if dry else ''))
+def box(m,a,b,t,**kw): return m.box(a,b,'#'+t,**kw)
+def disc(m,x,y0,y1,z,w,t,**kw): m.octagon(x,y0,y1,z,w,'#'+t,**kw)
+def panel(m,x,y,z,w,h,t): box(m,(x,y,z-.04),(x+w,y+h,z),t,only=('north',),shade=False)
+def feet(m,top=9):
+    for x in (1.2,13.5):
+        for z in (1.4,13):
+            box(m,(x,0,z),(x+1.2,top,z+1.2),'steel')
+            box(m,(x-.2,0,z-.2),(x+1.4,.7,z+1.4),'rubber')
+def table(m,accent='blue'):
+    feet(m)
+    box(m,(.3,9,.5),(15.7,10.3,15.5),'steel')
+    box(m,(1.7,2.2,2),(14.3,2.8,14),'dark')
+    box(m,(.35,9.05,.35),(15.65,9.55,.55),accent)
 
+def write(m,name,aliases=()):
+    # Retain only used textures, making both exported formats self-contained and small.
+    used={f['texture'][1:] for el in m.elements for f in el['faces'].values()}
+    m.textures={k:v for k,v in m.textures.items() if k in used or k=='particle'}
+    m.write(name)
+    for alias in aliases: m.write(alias)
+    WRITTEN.append(name)
+    # Native Blockbench project with embedded PNGs, named elements and editable cuboids.
+    PROJECTS.mkdir(parents=True,exist_ok=True)
+    texkeys=[k for k in m.textures if k!='particle']
+    textures=[]
+    for i,k in enumerate(texkeys):
+        p=ASSETS/'textures'/(m.textures[k].split(':')[1]+'.png')
+        data=p.read_bytes()
+        import struct
+        width,height=struct.unpack('>II',data[16:24])
+        textures.append({'path':'','name':p.name,'folder':'block','namespace':'slumdrugs','id':str(i),'uuid':str(uuid.uuid5(uuid.NAMESPACE_URL,name+'/texture/'+k)),'source':'data:image/png;base64,'+base64.b64encode(data).decode(),'mode':'bitmap','width':width,'height':height,'uv_width':16,'uv_height':16,'render_mode':'default'})
+    elems=[]
+    for i,e in enumerate(m.elements):
+        r=e.get('rotation',{}); rotation=[0,0,0]
+        if r: rotation['xyz'.index(r['axis'])]=r['angle']
+        faces={f:{'uv':d.get('uv',[0,0,16,16]),'texture':texkeys.index(d['texture'][1:])} if f in e['faces'] else {'uv':[0,0,0,0],'texture':None} for f in FACES for d in [e['faces'].get(f,{})]}
+        elems.append({'name':name+' / '+next(iter(e['faces'].values()))['texture'][1:]+' '+str(i+1),'type':'cube','uuid':str(uuid.uuid5(uuid.NAMESPACE_URL,name+'/cube/'+str(i))),'from':e['from'],'to':e['to'],'origin':r.get('origin',[8,8,8]),'rotation':rotation,'rescale':False,'box_uv':False,'shade':e.get('shade',True),'faces':faces})
+    obj={'meta':{'format_version':'4.10','model_format':'java_block','box_uv':False},'name':name,'model_identifier':'slumdrugs:'+name,'resolution':{'width':16,'height':16},'elements':elems,'outliner':[e['uuid'] for e in elems],'textures':textures,'display':DISPLAY,'ambientocclusion':True}
+    (PROJECTS/(name+'.bbmodel')).write_text(json.dumps(obj,indent=2)+'\n')
+    return name
 
-# ---------------------------------------------------------------- pressing bench
+def grow_tent(stage,lit=True):
+    m=station()
+    box(m,(.5,0,.5),(15.5,1,15.5),'rubber')
+    # Open zipped frontage; reflective side/rear lining and rolled fabric door.
+    box(m,(.5,1,14.6),(15.5,23,15.5),'dark',faces={'north':'#silver'})
+    for x in (.5,14.6):
+        box(m,(x,1,1),(x+.9,23,14.6),'dark',faces={'east':'#silver','west':'#silver'})
+    box(m,(.5,22.5,.5),(15.5,23.5,15.5),'dark')
+    for x in (1.3,13.9):
+        box(m,(x,1,1.2),(x+.5,22.5,1.7),'steel')
+        box(m,(x-.2,2,.9),(x+.6,21,1.15),'white')
+    box(m,(1.9,20.5,.6),(13.9,22.1,2.2),'rubber')
+    for x in (4,11): box(m,(x,20.3,.5),(x+.5,22.3,2.3),'orange')
+    for x in (4,11): box(m,(x,19,7),(x+.25,22.5,7.25),'steel')
+    box(m,(3,18.5,3),(13,19.1,12),'shell')
+    for x in (4,7.5,11):
+        box(m,(x,18.2,3.4),(x+.8,18.5,11.6),'led' if lit else 'led_off',shade=not lit)
+    for x,z in ((5,5),(11,10)):
+        box(m,(x-2,1,z-2),(x+2,3.4,z+2),'dark',faces={'up':'#rockwool'})
+        if stage:
+            plant=m.tex('plant',T+'plant_'+str(stage))
+            m.cross(x,3.4,4+stage*2.8,z,3+stage*1.2,plant)
+    panel(m,11.8,14,0.8,1.8,3,'screen_on' if lit else 'screen')
+    box(m,(3.5,23.5,10),(8,25.5,14),'steel')
+    panel(m,4,23.8,9.95,3.5,1.2,'vent')
+    box(m,(.8,4,4),(1.8,8,8),'dark')
+    return write(m,f'grow_tent_stage{stage}'+('' if lit else '_dark'),[f'forcing_frame_stage{stage}'+('' if lit else '_dark')])
+
+def drying_rack(n,dry=False):
+    m=station()
+    for x in (1,14):
+        for z in (2,13):
+            box(m,(x,0,z),(x+1,21,z+1),'steel')
+            box(m,(x-.2,0,z-.2),(x+1.2,.7,z+1.2),'rubber')
+    for level,y in enumerate((4,10,16)):
+        box(m,(1.5,y,2),(14.5,y+.35,14),'mesh')
+        for z in (1.8,13.5): box(m,(1,y-.4,z),(15,y+.6,z+.6),'steel')
+        box(m,(6,y,1.3),(10,y+.55,1.8),'blue')
+        if level<n:
+            for x in (4,8,12):
+                box(m,(x-1.3,y+.4,4),(x+1.3,y+1,11),'dry_leaf' if dry else 'leaf')
+    box(m,(1,20,12.8),(15,21,14),'steel')
+    box(m,(5.2,16.7,11.8),(10.8,22.3,13),'dark')
+    panel(m,5.5,17,11.75,5,5,'fan')
+    panel(m,1.2,17,1.95,1.5,2,'label')
+    suffix=f'_{n}' if n<3 else ''
+    ds='_dry' if dry else ''
+    return write(m,'drying_rack'+suffix+ds,['drying_loft'+suffix+ds])
+
 def pressing_bench():
-    m = Model(T + 'walnut')
-    walnut, iron, brass, herb, pine = m.tex('walnut', T + 'walnut'), m.tex('iron', T + 'iron'), m.tex('brass', T + 'brass'), m.tex('herb', T + 'herb'), m.tex('pine', T + 'pine')
-    band = m.tex('band', T + 'brass_band')
-    # A thick bench on stout legs with a stretcher.
-    m.box((0, 8, 0), (16, 10.5, 16), walnut)
-    legs(m, walnut, inset=1, size=3, height=8)
-    m.box((1, 2, 7), (15, 3.5, 9), pine)
-    # The iron press frame: two uprights and a heavy crossbar, well above the block.
-    m.box((2.5, 10.5, 6), (5, 22, 10), iron)
-    m.box((11, 10.5, 6), (13.5, 22, 10), iron)
-    m.box((1.5, 22, 5.5), (14.5, 24.5, 10.5), iron)
-    # The screw, and the capstan wheel that turns it, with four handles.
-    m.octagon(8, 13, 27, 8, 2.4, iron)
-    m.octagon(8, 25, 26.2, 8, 9, brass, top=band, bottom=band)
-    for angle in (0, 45):
-        m.box((0.5, 25.2, 7.4), (15.5, 26, 8.6), brass, rot={'origin': [8, 25.6, 8], 'axis': 'y', 'angle': angle})
-        m.box((7.4, 25.2, 0.5), (8.6, 26, 15.5), brass, rot={'origin': [8, 25.6, 8], 'axis': 'y', 'angle': angle})
-    # The plate bearing down on a pressed cake, and a brass tray to catch what runs out.
-    m.box((4, 13, 5.5), (12, 14.2, 10.5), iron)
-    m.box((4.5, 10.5, 6), (11.5, 13, 10), herb)
-    m.box((3, 10.5, 11), (13, 11.2, 15), brass, faces={'up': band})
-    m.box((13, 10.5, 12), (15.5, 11, 14), brass)
-    return m.write('pressing_bench')
+    m=station(); table(m,'orange')
+    for x in (2,12):
+        box(m,(x,10.3,5),(x+2,24,11),'dark')
+        box(m,(x+.3,11,4.9),(x+1.7,22,5),'steel')
+    box(m,(1.5,22,4.5),(14.5,24,11.5),'orange')
+    box(m,(6,18,6),(10,22,10),'dark')
+    disc(m,8,14,19,8,1.6,'silver')
+    box(m,(4,13.2,4),(12,14.2,12),'steel')
+    box(m,(3,10.3,3.5),(13,11.4,12.5),'dark')
+    panel(m,3,10.6,3.45,10,.7,'hazard')
+    panel(m,10,22.2,4.45,2,1.6,'gauge')
+    box(m,(13.8,11,8),(15,17,10),'orange')
+    box(m,(14.1,16,6),(14.7,20,6.6),'steel',rot={'origin':[14.4,16,6.3],'axis':'x','angle':-22.5})
+    box(m,(13.8,19.5,4.3),(15,20.5,5.7),'rubber')
+    panel(m,2.5,6,1.3,3,1.5,'label')
+    return write(m,'pressing_bench')
 
+def vacuum_sealer():
+    m=station(); table(m)
+    box(m,(1,10.3,3),(12,12.5,11),'shell')
+    box(m,(1.4,12.5,3.3),(11.6,13,10.7),'rubber')
+    box(m,(1,13,4),(12,14.2,11),'shell',rot={'origin':[6.5,13,11],'axis':'x','angle':22.5})
+    box(m,(2.5,14.3,4.5),(10.5,14.8,5.5),'dark',rot={'origin':[6.5,13,11],'axis':'x','angle':22.5})
+    panel(m,2,10.8,2.95,3,1,'screen_on')
+    box(m,(2,10.35,1),(10,10.55,3),'glass')
+    for y in (10.4,10.9,11.4):
+        box(m,(12, y, 2),(15,y+.35,7),'silver',faces={'up':'#label'})
+    for x in (2,11): box(m,(x,10.3,12),(x+.6,14,14.5),'dark')
+    m.octagon(12.8,2.6,11,13,2.3,'#white',axis='x')
+    return write(m,'vacuum_sealer',['sealing_press'])
 
-# ---------------------------------------------------------------- sealing press
-def sealing_press():
-    m = Model(T + 'pine')
-    pine, walnut, brass, wax, paper, top, tc = (m.tex('pine', T + 'pine'), m.tex('walnut', T + 'walnut'), m.tex('brass', T + 'brass'),
-                                                m.tex('wax', T + 'wax'), m.tex('paper', T + 'paper'), m.tex('parcel', T + 'parcel_top'), m.tex('tc', T + 'terracotta'))
-    m.box((0, 8, 0), (16, 10, 16), pine)
-    legs(m, walnut, inset=1, size=2.5, height=8)
-    # A brass column carrying a long lever, knobbed, pulled down over the die.
-    m.box((10.5, 10, 3), (13.5, 19, 6.5), brass)
-    m.box((0.5, 17.3, 4.1), (14, 18.5, 5.4), brass, rot={'origin': [12, 17.9, 4.75], 'axis': 'z', 'angle': -22.5})
-    m.octagon(4.75, 14.6, 16.4, 4.75, 3, walnut, axis='y')  # the knob, where the lever's end has come down
-    # The die: a round brass seal on its shaft, just above a parcel waiting for it.
-    m.octagon(6, 12.4, 13.4, 4.75, 4.4, brass, bottom=wax)
-    m.box((5.5, 13.4, 4.25), (6.5, 15.2, 5.25), brass)
-    m.box((3.5, 10, 2.25), (8.5, 12.4, 7.25), paper, faces={'up': top})
-    # The wax pot: terracotta, warmed, a brass spoon standing in it.
-    m.octagon(12, 10, 14.5, 11.5, 5.5, tc, top=wax)
-    m.box((11.2, 13, 10.8), (12, 17.5, 11.6), brass, rot={'origin': [11.6, 13, 11.2], 'axis': 'z', 'angle': 22.5})
-    # Sealed parcels stacked, ready to go.
-    m.box((1, 10, 9.5), (6, 12.2, 14.5), paper, faces={'up': top})
-    m.box((1.5, 12.2, 10), (5.5, 14.2, 14), paper, faces={'up': top})
-    return m.write('sealing_press')
-
-
-# ---------------------------------------------------------------- storage crate
 def storage_crate():
-    m = Model(T + 'pine')
-    pine, walnut, twine, label, paper, top = (m.tex('pine', T + 'pine'), m.tex('walnut', T + 'walnut'), m.tex('twine', T + 'twine'),
-                                              m.tex('label', T + 'crate_label'), m.tex('paper', T + 'paper'), m.tex('parcel', T + 'parcel_top'))
-    m.box((1, 0, 1), (15, 12, 15), pine)
-    # Corner battens and diagonal braces across every side.
-    for x in (0.5, 13.5):
-        for z in (0.5, 13.5):
-            m.box((x, 0, z), (x + 2, 12.5, z + 2), walnut)
-    for z, out in ((0.4, 0.4), (14.6, 15.6)):
-        for angle in (45, -45):
-            m.box((2.5, 5.4, z), (13.5, 6.6, z + 1), walnut, rot={'origin': [8, 6, z + 0.5], 'axis': 'z', 'angle': angle})
-    for x in (0.4, 14.6):
-        for angle in (45, -45):
-            m.box((x, 5.4, 2.5), (x + 1, 6.6, 13.5), walnut, rot={'origin': [x + 0.5, 6, 8], 'axis': 'x', 'angle': angle})
-    # The lid, propped open on its back hinge, and what is inside: parcels.
-    m.box((0, 12, 0), (16, 13.5, 16), pine, rot={'origin': [8, 12, 16], 'axis': 'x', 'angle': -22.5})
-    m.box((2, 9, 2), (14, 12, 14), paper, faces={'up': top})
-    m.box((4, 12, 4), (12, 13.8, 12), paper, faces={'up': top})
-    # Rope handles on the sides and a stencilled label on the front.
-    for x in (-0.6, 15.6):
-        m.box((x, 7, 5), (x + 1, 8, 11), twine)
-        m.box((x, 5.5, 5), (x + 1, 7, 6), twine)
-        m.box((x, 5.5, 10), (x + 1, 7, 11), twine)
-    m.box((4.5, 3, 0.4), (11.5, 9, 0.9), label, only=('north',))
-    return m.write('storage_crate')
+    m=station()
+    for y,ox in ((0,0),(7.5,.5)):
+        box(m,(1+ox,y,1),(14.5+ox,y+6.7,15),'blue')
+        box(m,(.6+ox,y+6.4,.6),(14.9+ox,y+7.3,15.4),'dark')
+        for x in (2.2,5.7,9.2,12.7):
+            box(m,(x+ox,y+.7,.7),(x+.55+ox,y+6.2,1),'steel')
+            box(m,(x+ox,y+.7,15),(x+.55+ox,y+6.2,15.3),'dark')
+        for x in (1+ox,14.2+ox):
+            for z in (3,6.5,10,13): box(m,(x-.2,y+.6,z),(x+.4,y+6,z+.4),'dark')
+        panel(m,5+ox,y+4.7,.6,5,1,'rubber')
+    panel(m,4.8,8.7,.55,6,3.1,'label')
+    box(m,(1.1,14.8,1),(15.4,15.4,15),'blue')
+    for z in (4,8,12): box(m,(1.4,15.4,z),(15.1,15.7,z+.45),'dark')
+    return write(m,'storage_crate')
 
-
-# ---------------------------------------------------------------- centrifuge
 def centrifuge(working=False):
-    m = Model(T + 'brass')
-    brass, band, iron, lid, gauge, copper = (m.tex('brass', T + 'brass'), m.tex('band', T + ('brass_band_spin' if working else 'brass_band')), m.tex('iron', T + 'iron'),
-                                             m.tex('lid', T + 'centrifuge_lid'), m.tex('gauge', T + 'gauge'), m.tex('copper', T + 'copper'))
-    # An iron base ring and four splayed legs.
-    m.octagon(8, 0, 1.2, 8, 13, iron)
-    for x, angle in ((2.5, 22.5), (12, -22.5)):
-        m.box((x, 0, 7), (x + 1.5, 5, 9), iron, rot={'origin': [x + 0.75, 5, 8], 'axis': 'z', 'angle': angle})
-    for z, angle in ((2.5, -22.5), (12, 22.5)):
-        m.box((7, 0, z), (9, 5, z + 1.5), iron, rot={'origin': [8, 5, z + 0.75], 'axis': 'x', 'angle': angle})
-    # The drum: a tall brass octagon with riveted bands top and bottom, a lid with the hatch.
-    m.octagon(8, 4, 15, 8, 10, brass)
-    m.octagon(8, 4, 5.4, 8, 11, band)
-    m.octagon(8, 13.6, 15, 8, 11, band)
-    m.octagon(8, 15, 16.2, 8, 8.5, band, top=lid)
-    m.box((7.4, 16.2, 7.4), (8.6, 17.4, 8.6), brass)
-    # The crank wheel on the east side, with its handle, and a gauge on the front.
-    m.octagon(9.5, 12.8, 14.2, 8, 5.5, iron, axis='x')
-    m.box((14.2, 8.9, 7.6), (15.2, 10.1, 8.4), iron)
-    m.box((15.2, 7.4, 7.5), (16.4, 9.2, 8.5), brass)
-    m.box((5.5, 9, 2.4), (10.5, 12.8, 3.2), brass, faces={'north': gauge})
-    # A copper drain from the bottom to a spigot.
-    m.box((7.2, 2, 7.2), (8.8, 4.2, 8.8), copper)
-    m.box((7.2, 2, 8.8), (8.8, 3.6, 14.5), copper)
-    m.box((6.9, 1, 13), (9.1, 3.6, 14.8), copper)
-    return m.write('centrifuge_working' if working else 'centrifuge')
+    m=station(); table(m)
+    box(m,(2,10.3,2),(14,16,14),'shell')
+    box(m,(2.3,10.4,1.7),(13.7,12.6,2),'dark')
+    panel(m,3,10.7,1.65,5,1.5,'screen_run' if working else 'screen')
+    panel(m,10,11,1.65,1,1,'led' if working else 'led_off')
+    box(m,(2,15.8,2),(14,16.25,14),'rubber')
+    box(m,(2,16.25,2),(14,17.1,14),'shell')
+    disc(m,8,17.1,17.3,8,9,'dark',top='#rotor_spin' if working else '#rotor')
+    box(m,(6,17.3,2.8),(10,17.9,3.5),'blue')
+    panel(m,2.4,13,1.95,3,1.8,'label')
+    for z in (4,6,8,10,12): box(m,(14,11,z),(14.04,14,z+.7),'dark')
+    return write(m,'centrifuge'+('_working' if working else ''))
 
-
-# ---------------------------------------------------------------- still
 def still(working=False):
-    m = Model(T + 'copper')
-    copper, iron, fire, band, glass, walnut = (m.tex('copper', T + 'copper'), m.tex('iron', T + 'iron'), m.tex('fire', T + ('firebox_lit' if working else 'firebox_cold')),
-                                               m.tex('band', T + 'brass_band'), m.tex('glass', T + 'glass'), m.tex('walnut', T + 'walnut'))
-    # The firebox: an iron octagon with the grate glowing on every side.
-    m.octagon(6.5, 0, 3, 8, 11, fire, top=iron, shade=not working)
-    # The pot: an onion of stacked octagons, a band at the waist, and a narrow neck.
-    for y0, y1, w in ((3, 5, 9.5), (5, 8.5, 11.5), (8.5, 11, 11), (11, 13, 9), (13, 14.5, 6.5), (14.5, 18, 4)):
-        m.octagon(6.5, y0, y1, 8, w, copper)
-    m.octagon(6.5, 7.8, 9, 8, 12, band)
-    m.octagon(6.5, 18, 19.2, 8, 5.5, band)
-    # The swan neck: up out of the cap, over, and down at an angle into the worm barrel.
-    m.box((6, 19.2, 7.3), (7, 22, 8.7), copper)
-    m.box((6, 21, 7.3), (14.5, 22.2, 8.7), copper)
-    m.box((13.3, 12, 7.3), (14.7, 22.2, 8.7), copper, rot={'origin': [14, 22, 8], 'axis': 'z', 'angle': -22.5})
-    # The worm barrel, a small cask of cold water the coil runs through, and the receiver.
-    m.octagon(14.5, 0, 9, 8, 6.5, walnut, top=band)
-    m.octagon(14.5, 3.5, 4.5, 8, 7, band)
-    m.box((11.6, 1.5, 7.4), (14.5, 2.7, 8.6), copper)
-    m.box((9.5, 0, 6.5), (12, 4.5, 9.5), glass)
-    m.box((10.2, 4.5, 7.2), (11.3, 5.6, 8.8), walnut)
-    return m.write('still_working' if working else 'still')
+    m=station()
+    feet(m,5)
+    box(m,(1,5,1),(15,6.2,15),'steel')
+    box(m,(1.5,6.2,2),(10.5,7.4,12),'dark')
+    panel(m,2,6.35,1.95,3, .8,'screen_run' if working else 'screen')
+    disc(m,6,7.4,8.2,7,8,'rubber')
+    disc(m,6,8.2,15,7,7.4,'steel')
+    for y in (8.4,14.1): disc(m,6,y,y+.6,7,7.8,'silver')
+    disc(m,6,15,16,7,6,'shell')
+    disc(m,6,16,24,7,2.5,'steel')
+    for y in (17,20,23): disc(m,6,y,y+.5,7,3.2,'dark')
+    panel(m,5.35,18,5.55,1.3,1.8,'glass')
+    panel(m,4.5,11,3.05,3,2.2,'gauge')
+    box(m,(5.5,23.5,6.5),(12.5,24.5,7.5),'silver')
+    box(m,(11.5,15,6.5),(12.5,24,7.5),'steel')
+    disc(m,12,16,22,7,2.7,'shell')
+    box(m,(11.7,12.8,6.7),(12.3,16,7.3),'steel')
+    disc(m,12,6.2,7,7,3.4,'blue')
+    disc(m,12,7,12.5,7,3,'glass')
+    disc(m,12,7.2,9,7,2.5,'mint')
+    box(m,(2,9,11),(3,15,12),'orange')
+    panel(m,11,3,1.35,2,1.2,'label')
+    return write(m,'still'+('_working' if working else ''))
 
-
-# ---------------------------------------------------------------- cutting bench
 def cutting_bench():
-    m = Model(T + 'end_grain')
-    grain, walnut, iron, powder, brass, pine = (m.tex('grain', T + 'end_grain'), m.tex('walnut', T + 'walnut'), m.tex('iron', T + 'iron'),
-                                                m.tex('powder', T + 'powder'), m.tex('brass', T + 'brass'), m.tex('pine', T + 'pine'))
-    # A butcher block: thick end-grain top on squat legs.
-    m.box((0, 8, 0), (16, 12.5, 16), walnut, faces={'up': grain})
-    legs(m, pine, inset=1.5, size=3, height=8)
-    # The heap of powder, and three lines cut out of it.
-    m.octagon(11, 12.5, 14.3, 11, 7, powder, top=powder)
-    m.octagon(11, 14.3, 15.5, 11, 4.5, powder, top=powder)
-    m.octagon(11, 15.5, 16.2, 11, 2, powder, top=powder)
-    for i, z in enumerate((2.5, 4.5, 6.5)):
-        m.box((3, 12.5, z), (9 - i, 12.9, z + 0.8), powder)
-    # The cleaver, lying at an angle across the block, and the brass scale behind it.
-    m.box((1.5, 12.5, 8.5), (8.5, 13.1, 12.5), iron, rot={'origin': [5, 12.8, 10.5], 'axis': 'y', 'angle': -22.5})
-    m.box((8.3, 12.5, 10), (12.3, 13.5, 11.2), walnut, rot={'origin': [5, 12.8, 10.5], 'axis': 'y', 'angle': -22.5})
-    m.box((3.2, 12.5, 14), (4.4, 21, 15.2), brass)
-    m.box((-1, 20, 14.2), (8.6, 20.8, 15), brass, rot={'origin': [3.8, 20.4, 14.6], 'axis': 'z', 'angle': 22.5})
-    m.octagon(-0.2, 16.4, 16.9, 14.6, 3.6, brass, top=brass)
-    m.octagon(7.8, 19.2, 19.7, 14.6, 3.6, brass, top=powder)
-    for x in (-0.2, 7.8):
-        y = 16.9 if x < 0 else 19.7
-        m.box((x - 0.15, y, 14.45), (x + 0.15, y + 2.4 if x < 0 else y + 0.9, 14.75), brass)
-    return m.write('cutting_bench')
+    m=station(); table(m)
+    box(m,(1,10.3,11),(15,12,11.6),'steel')
+    box(m,(2,10.3,3),(10,10.6,10),'white')
+    box(m,(10.5,10.3,5),(15,11.1,10),'dark')
+    box(m,(11,11.1,6),(14.5,11.5,9.6),'steel')
+    panel(m,11,10.45,4.95,2.5,.5,'screen_on')
+    box(m,(3,10.6,4),(6.5,10.8,6),'white',rot={'origin':[4.7,10.7,5],'axis':'y','angle':22.5})
+    box(m,(4,10.6,8),(9,10.85,8.6),'steel')
+    box(m,(7.5,10.85,8),(9.5,11.1,8.6),'dark')
+    box(m,(1.5,10.3,12),(5,13.7,14.8),'shell')
+    panel(m,2,11,11.95,2.5,1.5,'label')
+    return write(m,'cutting_bench')
 
+def cloning_bench():
+    m=station(); table(m,'mint')
+    box(m,(1.5,10.3,4),(13,11.1,13.5),'dark')
+    for x in (3.5,7,10.5):
+        for z in (6,10.5):
+            box(m,(x-1,11.1,z-1),(x+1,12.5,z+1),'rockwool')
+            box(m,(x-.15,12.5,z-.15),(x+.15,14.1,z+.15),'leaf')
+            box(m,(x-.9,13.3,z-.6),(x+.9,13.55,z+.6),'leaf',rot={'origin':[x,13.3,z],'axis':'z','angle':22.5})
+    # Clear lid with bevelled shoulders; open front keeps seedlings visible at game scale.
+    for x in (1.5,12.7): box(m,(x,11.1,4),(x+.3,15,13.5),'glass')
+    box(m,(1.5,11.1,13.3),(13,15,13.6),'glass')
+    box(m,(2.3,15,4),(12.2,15.3,13.5),'glass')
+    for x in (1.5,12.2): box(m,(x,14.7,4),(x+.8,15.2,13.5),'silver')
+    box(m,(6,15.3,8),(9,15.7,9),'mint')
+    box(m,(2,10.3,1.8),(9,10.6,2.2),'steel')
+    box(m,(2,10.3,1.7),(4,10.8,2.3),'mint')
+    box(m,(13.5,10.3,10),(15,14,12),'white')
+    box(m,(13.8,14,10.5),(15.2,14.5,11.2),'blue')
+    return write(m,'cloning_bench',['grafting_bench'])
 
-# ---------------------------------------------------------------- grafting bench
-def grafting_bench():
-    m = Model(T + 'pine')
-    pine, walnut, tc, soil, plant, iron, twine = (m.tex('pine', T + 'pine'), m.tex('walnut', T + 'walnut'), m.tex('tc', T + 'terracotta'),
-                                                  m.tex('soil', T + 'soil'), m.tex('plant', T + 'plant_2'), m.tex('iron', T + 'iron'), m.tex('twine', T + 'twine'))
-    m.box((0, 8, 0), (16, 10, 16), pine)
-    legs(m, walnut, inset=1, size=2.5, height=8)
-    # A trellis at the back: two uprights and a lattice of slats at 45 degrees.
-    m.box((0.5, 10, 14), (2, 22, 15.5), walnut)
-    m.box((14, 10, 14), (15.5, 22, 15.5), walnut)
-    m.box((0.5, 21, 14), (15.5, 22, 15.5), walnut)
-    for i in range(-2, 3):
-        m.box((8 - 7, 15.5 + i * 3.2, 14.55), (8 + 7, 16.1 + i * 3.2, 14.95), pine,
-              rot={'origin': [8, 15.8 + i * 3.2, 14.75], 'axis': 'z', 'angle': 45})
-        m.box((8 - 7, 15.5 + i * 3.2, 14.55), (8 + 7, 16.1 + i * 3.2, 14.95), pine,
-              rot={'origin': [8, 15.8 + i * 3.2, 14.75], 'axis': 'z', 'angle': -45})
-    # Two terracotta pots, tapered, with a sprig each.
-    for x in (4.5, 11.5):
-        m.octagon(x, 10, 12, 7, 4.2, tc)
-        m.octagon(x, 12, 14.6, 7, 5.2, tc, top=soil)
-        m.octagon(x, 14.6, 15.3, 7, 5.8, tc, top=soil)
-        m.cross(x, 15.2, 20.4, 7, 5, plant)
-    # The grafting knife, hooked blade up, and a spool of binding twine.
-    m.box((5.5, 10, 2), (10.5, 10.7, 3.2), iron, rot={'origin': [8, 10.3, 2.6], 'axis': 'y', 'angle': 22.5})
-    m.box((10.3, 10, 2.1), (13.3, 11.1, 3.1), walnut, rot={'origin': [8, 10.3, 2.6], 'axis': 'y', 'angle': 22.5})
-    m.octagon(2.6, 10, 12.2, 3, 2.8, twine, top=pine)
-    return m.write('grafting_bench')
+def cash_counter():
+    m=station(); table(m,'mint')
+    box(m,(1.5,10.3,5),(10.5,13,13.5),'shell')
+    box(m,(2,13,9),(10,16.2,13),'dark')
+    box(m,(2,13,5),(10,14.4,7),'shell')
+    panel(m,3,11.3,4.95,4,1.1,'screen_on')
+    box(m,(3,13.1,7),(9,13.4,9),'rubber')
+    for x in (3,8): box(m,(x,13.2,7),(x+.8,14.1,9),'steel')
+    box(m,(3,14,10),(9,16,12.5),'cash')
+    box(m,(3,10.5,2),(9,11,4.8),'cash')
+    for y in (10.3,11.8):
+        box(m,(11,y,3),(15,y+1.3,8),'cash')
+        box(m,(12.4,y-.02,2.98),(13.2,y+1.32,8.02),'white')
+    disc(m,13,10.3,10.7,12.5,3,'dark')
+    box(m,(12.7,10.7,12.2),(13.3,18,12.8),'steel')
+    box(m,(10,17.5,9),(14,18.5,13),'dark')
+    box(m,(10.3,17.3,9.3),(13.7,17.5,12.7),'led',shade=False)
+    panel(m,2,5,1.3,3,1.5,'label')
+    return write(m,'cash_counter',['counting_house'])
 
+def modern_blockstates():
+    pairs={'forcing_frame':'grow_tent','drying_loft':'drying_rack','grafting_bench':'cloning_bench','sealing_press':'vacuum_sealer','counting_house':'cash_counter'}
+    for old,new in pairs.items():
+        src=ASSETS/'blockstates'/(old+'.json')
+        if src.exists():
+            (ASSETS/'blockstates'/(new+'.json')).write_text(src.read_text().replace(old,new))
+    bases={'grow_tent':'grow_tent_stage0','drying_rack':'drying_rack','cloning_bench':'cloning_bench','vacuum_sealer':'vacuum_sealer','cash_counter':'cash_counter'}
+    for name,model in bases.items():
+        (ASSETS/'models/item'/(name+'.json')).write_text(json.dumps({'parent':'slumdrugs:block/'+model},indent=2)+'\n')
+        (ASSETS/'items'/(name+'.json')).write_text(json.dumps({'model':{'type':'minecraft:model','model':'slumdrugs:item/'+name}},indent=2)+'\n')
 
-# ---------------------------------------------------------------- counting house
-def counting_house():
-    m = Model(T + 'walnut')
-    walnut, leather, brass, gold, ledger, paper, iron = (m.tex('walnut', T + 'walnut'), m.tex('leather', T + 'leather_green'), m.tex('brass', T + 'brass'),
-                                                        m.tex('gold', T + 'gold_stack'), m.tex('ledger', T + 'ledger'), m.tex('paper', T + 'paper'), m.tex('iron', T + 'iron'))
-    band = m.tex('band', T + 'brass_band')
-    # A tall clerk's desk: a plinth, a body with a brass-handled drawer, a sloped top.
-    m.box((0.5, 0, 0.5), (15.5, 1.5, 15.5), walnut)
-    m.box((1.5, 1.5, 1.5), (14.5, 12, 14.5), walnut)
-    m.box((3, 3, 1.2), (13, 8, 1.6), walnut)
-    m.box((6.5, 5.2, 0.7), (9.5, 6, 1.3), brass)
-    # The writing slope: leather on walnut, hinged at the back so it rises toward the front.
-    m.box((0, 12, 0), (16, 13.5, 16), walnut, faces={'up': leather}, rot={'origin': [8, 12, 16], 'axis': 'x', 'angle': 22.5})
-    m.box((0, 13.4, 14.5), (16, 15.2, 16), walnut)
-    m.box((0.5, 15.2, 14.6), (15.5, 15.8, 15.9), band)
-    # The open ledger, lying on the slope with the same tilt.
-    m.box((4, 13.5, 3.5), (12, 14.3, 11.5), ledger, faces={'up': paper}, rot={'origin': [8, 12, 16], 'axis': 'x', 'angle': 22.5})
-    m.box((7.85, 14.3, 3.6), (8.15, 14.5, 11.4), walnut, rot={'origin': [8, 12, 16], 'axis': 'x', 'angle': 22.5})
-    # Coin stacks on the flat back ledge, the ink pot, and the counting-house stamp.
-    for x, h in ((2.5, 2.2), (4.5, 3.4), (6.5, 1.6)):
-        m.octagon(x, 15.8, 15.8 + h, 15.2, 1.6, gold, top=gold)
-    m.octagon(12.5, 15.8, 17.4, 15.2, 2, iron, top=iron)
-    m.box((12.3, 17.2, 15), (12.7, 19.5, 15.4), brass, rot={'origin': [12.5, 17.3, 15.2], 'axis': 'z', 'angle': -22.5})
-    m.box((9, 15.8, 14.6), (11, 16.6, 15.8), brass)
-    m.box((9.7, 16.6, 14.9), (10.3, 18.2, 15.5), walnut)
-    return m.write('counting_house')
-
-
-if __name__ == '__main__':
-    written = []
-    for s in range(5): written += [forcing_frame(s), forcing_frame(s, lit=False)]
-    for b in range(4): written.append(drying_loft(b))
-    for b in range(1, 4): written.append(drying_loft(b, dry=True))
-    written += [pressing_bench(), sealing_press(), storage_crate(), centrifuge(), centrifuge(working=True),
-                still(), still(working=True), cutting_bench(), grafting_bench(), counting_house()]
-    print('wrote:', ', '.join(written))
+if __name__=='__main__':
+    for s in range(5):
+        grow_tent(s); grow_tent(s,False)
+    for n in range(4): drying_rack(n)
+    for n in range(1,4): drying_rack(n,True)
+    pressing_bench(); vacuum_sealer(); storage_crate(); centrifuge(); centrifuge(True)
+    still(); still(True); cutting_bench(); cloning_bench(); cash_counter()
+    modern_blockstates()
+    print('Wrote',len(WRITTEN),'modern models and embedded-texture Blockbench projects; legacy IDs retained for the current game build.')
