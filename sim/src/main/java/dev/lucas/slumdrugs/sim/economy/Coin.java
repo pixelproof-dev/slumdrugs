@@ -4,6 +4,9 @@ package dev.lucas.slumdrugs.sim.economy;
  * Money as it is carried: pence, shillings of twelve, sovereigns of twenty shillings. Every
  * price in the rules is in pence; this class splits a sum into the coins that make it and
  * takes the counting house's cut for stamping loose coin. Nothing here is a real currency.
+ *
+ * <p>Since the setting moved to the present day the coins are cash notes, rolls and bricks and a
+ * sum is shown in dollars (see {@link #format}), but the arithmetic below is unchanged.
  */
 public final class Coin {
 
@@ -58,13 +61,16 @@ public final class Coin {
         return Math.max(1, pence - stampFee(pence, cut));
     }
 
-    /** "3 sov 4s 6d", dropping the parts that are zero, "0d" for nothing. */
+    /**
+     * A sum as a player reads it: dollars, grouped by thousands, "$0" for nothing.
+     *
+     * <p>The rules still count in pence, shillings of twelve and sovereigns of twenty shillings,
+     * and nothing about that changed with the setting: every price, cut and wage is balanced in
+     * those units and checked in them. Only what a player sees moved to the present day, at one
+     * dollar to the penny -- so the starting purse of ten shillings reads $120, a day's wage $24,
+     * a sovereign $240, and the notes, rolls and bricks the coins became are those same sums.
+     */
     public static String format(long pence) {
-        Split s = split(pence);
-        StringBuilder out = new StringBuilder();
-        if (s.sovereigns() > 0) out.append(s.sovereigns()).append(" sov");
-        if (s.shillings() > 0) out.append(out.isEmpty() ? "" : " ").append(s.shillings()).append('s');
-        if (s.pennies() > 0 || out.isEmpty()) out.append(out.isEmpty() ? "" : " ").append(s.pennies()).append('d');
-        return out.toString();
+        return String.format(java.util.Locale.ROOT, "$%,d", Math.max(0, pence));
     }
 }

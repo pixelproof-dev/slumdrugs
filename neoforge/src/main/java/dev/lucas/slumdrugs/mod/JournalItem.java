@@ -1,5 +1,6 @@
 package dev.lucas.slumdrugs.mod;
 
+import dev.lucas.slumdrugs.sim.economy.Coin;
 import dev.lucas.slumdrugs.sim.npc.Standing;
 import dev.lucas.slumdrugs.sim.player.Progression;
 import net.minecraft.ChatFormatting;
@@ -33,7 +34,7 @@ public final class JournalItem extends Item {
         Progression.Settings gates = Tuning.progression();
         player.sendSystemMessage(Component.translatable("journal.slumdrugs.heading", tierName(progress.tier(gates)))
                 .withStyle(ChatFormatting.GOLD));
-        player.sendSystemMessage(Component.translatable("journal.slumdrugs.sold", progress.unitsSold, progress.coinEarned + "s")
+        player.sendSystemMessage(Component.translatable("journal.slumdrugs.sold", progress.unitsSold, Coin.format((long) progress.coinEarned * Coin.SHILLING))
                 .withStyle(ChatFormatting.GRAY));
 
         Progression.Gate gate = progress.gate(gates);
@@ -44,7 +45,7 @@ public final class JournalItem extends Item {
             player.sendSystemMessage(Component.translatable("journal.slumdrugs.gate_units", gate.unitsNeeded(), tierName(gate.next()))
                     .withStyle(ChatFormatting.GRAY));
         else
-            player.sendSystemMessage(Component.translatable("journal.slumdrugs.gate_coin", gate.coinNeeded(), tierName(gate.next()))
+            player.sendSystemMessage(Component.translatable("journal.slumdrugs.gate_coin", Coin.format((long) gate.coinNeeded() * Coin.SHILLING), tierName(gate.next()))
                     .withStyle(ChatFormatting.GRAY));
 
         var watch = Watch.of(player instanceof net.minecraft.server.level.ServerPlayer sp ? sp : null);

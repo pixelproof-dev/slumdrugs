@@ -1046,9 +1046,13 @@ public final class SimChecks {
             check(Coin.stamped(p) >= 1 && Coin.stamped(p) <= p, "stamping keeps most and loses some");
 
         // The words.
-        check(Coin.format(0).equals("0d"), "nothing reads as nought pence");
-        check(Coin.format(6).equals("6d") && Coin.format(12).equals("1s") && Coin.format(18).equals("1s 6d"), "small sums read");
-        check(Coin.format(2 * Coin.SOVEREIGN + 3).equals("2 sov 3d"), "sovereigns read with their change");
+        check(Coin.format(0).equals("$0"), "nothing reads as nothing");
+        check(Coin.format(6).equals("$6") && Coin.format(12).equals("$12") && Coin.format(18).equals("$18"),
+                "a dollar to the penny: a shilling reads $12");
+        check(Coin.format(2 * Coin.SOVEREIGN + 3).equals("$483"), "sovereigns and change add up as dollars");
+        check(Coin.format(Coin.STARTING_PURSE).equals("$120"), "the starting purse of ten shillings reads $120");
+        check(Coin.format(1_234_567).equals("$1,234,567"), "large sums are grouped by thousands");
+        check(Coin.format(-50).equals("$0"), "a debt never shows as negative cash in hand");
         check(Coin.STARTING_PURSE == 10 * Coin.SHILLING, "the starting purse is ten shillings");
         close(Coin.baseUnitPence(10, 1.2), 12, "the scale is a setting");
         check(Coin.stamped(100, 0.5) == 50 && Coin.stampFee(100, 2) == 100, "the cut is a setting, capped at everything");

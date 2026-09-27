@@ -581,9 +581,9 @@ public final class SlumCommands {
             var gate = p.gate(Tuning.progression());
             String next = !gate.reachable() ? "the ladder ends here for now"
                     : gate.unitsNeeded() > 0 ? gate.unitsNeeded() + " more units to " + gate.next().label
-                    : gate.coinNeeded() + " more coin to " + gate.next().label;
+                    : Coin.format((long) gate.coinNeeded() * Coin.SHILLING) + " more to " + gate.next().label;
             reply(ctx, String.format("%s — %s: %d units sold, %d coin earned; %s",
-                    player.getName().getString(), p.tier(Tuning.progression()).label, p.unitsSold, p.coinEarned + "s", next));
+                    player.getName().getString(), p.tier(Tuning.progression()).label, p.unitsSold, Coin.format((long) p.coinEarned * Coin.SHILLING), next));
         }
         return targets.size();
     }
