@@ -158,6 +158,20 @@ public final class CityPlan {
         return row < (rows + 1) / 2 ? Face.SOUTH : Face.NORTH;
     }
 
+    /**
+     * Quarter turns clockwise that bring a building whose front points {@code from} round to
+     * point {@code to}: 0 to 3.
+     *
+     * <p>A building is drawn facing whichever way its author faced it, and not all of ours face
+     * the same way — the converted ones came out of their schematics facing north, the pawn shop
+     * was generated facing south. Assuming one direction for all of them stood the pawn shop
+     * with its back to the street. The faces run clockwise in declaration order, which is what
+     * makes this a subtraction.
+     */
+    public static int quarterTurns(Face from, Face to) {
+        return Math.floorMod(to.ordinal() - from.ordinal(), 4);
+    }
+
     /** Whether a column is roadway. Used by the builder to lay tarmac and by the checks. */
     public static boolean isStreet(Plan plan, int x, int z) {
         for (Rect street : plan.streets()) if (street.contains(x, z)) return true;

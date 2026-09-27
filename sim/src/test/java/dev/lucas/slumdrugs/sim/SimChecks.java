@@ -136,6 +136,20 @@ public final class SimChecks {
             check(CityPlan.isStreet(town, town.spanX() - 1, z), "the eastern edge is street");
         }
 
+        // Turning a building round to face its street.
+        check(CityPlan.quarterTurns(CityPlan.Face.NORTH, CityPlan.Face.NORTH) == 0, "already facing it: no turn");
+        check(CityPlan.quarterTurns(CityPlan.Face.NORTH, CityPlan.Face.EAST) == 1, "north to east is one clockwise");
+        check(CityPlan.quarterTurns(CityPlan.Face.NORTH, CityPlan.Face.SOUTH) == 2, "north to south is a half turn");
+        check(CityPlan.quarterTurns(CityPlan.Face.NORTH, CityPlan.Face.WEST) == 3, "north to west is three clockwise");
+        check(CityPlan.quarterTurns(CityPlan.Face.SOUTH, CityPlan.Face.SOUTH) == 0,
+                "a south-facing building on a south-facing plot is left alone -- the pawn shop's case");
+        check(CityPlan.quarterTurns(CityPlan.Face.SOUTH, CityPlan.Face.NORTH) == 2, "south to north is a half turn");
+        check(CityPlan.quarterTurns(CityPlan.Face.EAST, CityPlan.Face.NORTH) == 3, "east to north wraps round");
+        for (CityPlan.Face a : CityPlan.Face.values())
+            for (CityPlan.Face b : CityPlan.Face.values())
+                check((CityPlan.quarterTurns(a, b) + CityPlan.quarterTurns(b, a)) % 4 == 0,
+                        "turning there and back again is a whole number of full turns");
+
         // One building alone is still a town, and the arithmetic must not divide by zero.
         CityPlan.Plan hamlet = CityPlan.of(List.of(new CityPlan.Size(9, 9)), 3, 1);
         check(hamlet.lots().size() == 1, "one building is a town too");

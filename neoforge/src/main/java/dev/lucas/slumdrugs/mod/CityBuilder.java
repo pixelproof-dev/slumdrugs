@@ -79,7 +79,7 @@ public final class CityBuilder {
             int midX = corner.getX() + (lot.area().minX() + lot.area().maxX()) / 2;
             int midZ = corner.getZ() + (lot.area().minZ() + lot.area().maxZ()) / 2;
             StructurePlacer.Result result =
-                    StructurePlacer.placeAt(level, midX, midZ, ground, piece, turn(lot.faces()));
+                    StructurePlacer.placeAt(level, midX, midZ, ground, piece, turn(piece.front(), lot.faces()));
             if (result instanceof StructurePlacer.Result.Placed placed) {
                 buildings++;
                 people += placed.people();
@@ -157,19 +157,13 @@ public final class CityBuilder {
         }
     }
 
-    /**
-     * How far to turn a building so its front is on its street.
-     *
-     * <p>Every piece is assumed to be drawn facing north, because that is how the ones we have
-     * came out of their schematics. A piece that is not gets a quarter turn here rather than
-     * being re-cut.
-     */
-    private static Rotation turn(CityPlan.Face faces) {
-        return switch (faces) {
-            case NORTH -> Rotation.NONE;
-            case EAST -> Rotation.CLOCKWISE_90;
-            case SOUTH -> Rotation.CLOCKWISE_180;
-            case WEST -> Rotation.COUNTERCLOCKWISE_90;
+    /** How far to turn a building so the front it was drawn with ends up on its street. */
+    private static Rotation turn(CityPlan.Face front, CityPlan.Face street) {
+        return switch (CityPlan.quarterTurns(front, street)) {
+            case 1 -> Rotation.CLOCKWISE_90;
+            case 2 -> Rotation.CLOCKWISE_180;
+            case 3 -> Rotation.COUNTERCLOCKWISE_90;
+            default -> Rotation.NONE;
         };
     }
 }

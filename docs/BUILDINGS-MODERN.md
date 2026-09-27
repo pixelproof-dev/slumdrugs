@@ -71,7 +71,7 @@ the person who works the place as a `resident` and let the player hire them.
 
 | id | footprint | who is inside | what happens there |
 | --- | --- | --- | --- |
-| `pawn_shop` | 13 × 13 × 8 | `broker` | Grilles on the window, everything behind glass. Buys what the shops will not; sells lockpicks and a forged ID. |
+| `pawn_shop` | 17 × 15 × 11 | `broker` | Built: barred storefront, lit sign, glass counter with service hatch, stocked displays and staff office. See `PAWN-SHOP.md`. Uses existing broker trades; lockpick/forged-ID offers remain separate gameplay work. |
 | `clinic` | 16 × 16 × 8 | `healer` | Waiting room, one treatment room. Dependence has a visible way out and this is it (§10.2). |
 | `laundrette` | 13 × 13 × 7 | `resident` | Rows of machines, a back room with a desk. The front: loose cash goes in, banded cash comes out. The `cash_counter` station belongs in the back. |
 | `warehouse` | 24 × 24 × 12 | `resident` ×2 | Roller shutter, pallet racking, an office up a metal stair. Bulk storage and the obvious place for a handover. |
