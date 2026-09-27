@@ -4,6 +4,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.lucas.slumdrugs.sim.economy.MarketState;
 import dev.lucas.slumdrugs.sim.player.Condition;
+import dev.lucas.slumdrugs.sim.player.PhoneBook;
 import dev.lucas.slumdrugs.sim.player.Progression;
 import dev.lucas.slumdrugs.sim.player.Suspicion;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -147,6 +148,46 @@ public final class ModAttachments {
             TYPES.register("npc", () -> AttachmentType.builder(() -> NpcData.NONE)
                     .serialize(NpcData.CODEC)
                     .sync(NpcData.LOOKS)
+                    .build());
+
+    private static final Codec<PhoneBook.Contact> CONTACT = RecordCodecBuilder.create(i -> i.group(
+            Codec.STRING.fieldOf("id").forGetter(PhoneBook.Contact::id),
+            Codec.STRING.fieldOf("name").forGetter(PhoneBook.Contact::name),
+            Codec.STRING.fieldOf("substance").forGetter(PhoneBook.Contact::substance),
+            Codec.DOUBLE.fieldOf("loyalty").forGetter(PhoneBook.Contact::loyalty),
+            Codec.INT.fieldOf("x").forGetter(PhoneBook.Contact::x),
+            Codec.INT.fieldOf("y").forGetter(PhoneBook.Contact::y),
+            Codec.INT.fieldOf("z").forGetter(PhoneBook.Contact::z)
+    ).apply(i, PhoneBook.Contact::new));
+
+    private static final Codec<PhoneBook.Order> ORDER = RecordCodecBuilder.create(i -> i.group(
+            Codec.STRING.fieldOf("contact").forGetter(PhoneBook.Order::contactId),
+            Codec.STRING.fieldOf("name").forGetter(PhoneBook.Order::name),
+            Codec.STRING.fieldOf("substance").forGetter(PhoneBook.Order::substance),
+            Codec.INT.fieldOf("units").forGetter(PhoneBook.Order::units),
+            Codec.LONG.fieldOf("placed").forGetter(PhoneBook.Order::placed),
+            Codec.LONG.fieldOf("due").forGetter(PhoneBook.Order::due),
+            Codec.INT.fieldOf("x").forGetter(PhoneBook.Order::x),
+            Codec.INT.fieldOf("y").forGetter(PhoneBook.Order::y),
+            Codec.INT.fieldOf("z").forGetter(PhoneBook.Order::z)
+    ).apply(i, PhoneBook.Order::new));
+
+    private static final com.mojang.serialization.MapCodec<PhoneBook> PHONE_CODEC =
+            RecordCodecBuilder.mapCodec(i -> i.group(
+                    CONTACT.listOf().optionalFieldOf("contacts", java.util.List.of()).forGetter(PhoneBook::contacts),
+                    ORDER.listOf().optionalFieldOf("orders", java.util.List.of()).forGetter(PhoneBook::orders),
+                    Codec.unboundedMap(Codec.STRING, Codec.DOUBLE).optionalFieldOf("owed", java.util.Map.of()).forGetter(PhoneBook::owed)
+            ).apply(i, PhoneBook::new));
+
+    /**
+     * The burner phone's contacts and open orders ({@link Phone}). Kept through death: the
+     * phone may be lost, the numbers are in the player's head. Server only; nothing on the
+     * client reads it, the phone speaks in chat.
+     */
+    public static final DeferredHolder<AttachmentType<?>, AttachmentType<PhoneBook>> PHONE =
+            TYPES.register("phone", () -> AttachmentType.builder(PhoneBook::new)
+                    .serialize(PHONE_CODEC)
+                    .copyOnDeath()
                     .build());
 
     private ModAttachments() {}

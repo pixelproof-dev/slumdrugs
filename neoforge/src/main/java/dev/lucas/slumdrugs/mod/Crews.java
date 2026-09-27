@@ -111,6 +111,6 @@ public final class Crews {
         ProductItem.actionBar(player, Component.translatable("message.slumdrugs.tribute",
                 villager.getName(), Coin.format(pence)));
         moved(player, data.crew(), points);
-        villager.level().playSound(null, villager.blockPosition(), SoundEvents.VILLAGER_TRADE, SoundSource.NEUTRAL, 0.8f, 1.0f);
+        villager.level().playSound(null, villager.blockPosition(), SoundEvents.BOOK_PAGE_TURN, SoundSource.NEUTRAL, 1.0f, 1.0f);
     }
 }

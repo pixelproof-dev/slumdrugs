@@ -4,6 +4,7 @@ import dev.lucas.slumdrugs.sim.economy.Coin;
 import dev.lucas.slumdrugs.sim.npc.Loyalty;
 import dev.lucas.slumdrugs.sim.npc.Npc;
 import dev.lucas.slumdrugs.sim.npc.Turf;
+import dev.lucas.slumdrugs.sim.player.PhoneBook;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -21,8 +22,9 @@ import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
  * use it: a player clicks a customer with product in hand and is paid for what it is worth,
  * by the batch's quality and by how much of it the street has already seen.
  *
- * <p>Customers each want one substance and take a handful at a time. That is the whole
- * street-sale loop the design starts with; loyalty and schedules come later.
+ * <p>Customers each want one substance and take a handful at a time. Every sale saves the
+ * customer's number to the player's phone, and an order they ring in later ({@link Phone}) is
+ * handed over here too: same click, better price.
  */
 @EventBusSubscriber(modid = SlumDrugsMod.ID)
 public final class StreetSales {
@@ -56,7 +58,8 @@ public final class StreetSales {
         if (!(event.getLevel() instanceof ServerLevel level)) return;
 
         String wants = NpcTrades.preferred(villager);
-        NpcData data = Npcs.data(villager);
+        // An order missed while they were out of sight is taken out on the player now.
+        NpcData data = Phone.settle(player, villager, Npcs.data(villager));
         ItemStack held = event.getItemStack();
         String offered = ModItems.drugOf("product_", held);
 
@@ -65,6 +68,21 @@ public final class StreetSales {
             ProductItem.actionBar(player, Component.translatable("message.slumdrugs.customer_lost", villager.getName())
                     .withStyle(s -> s.withColor(0xB05050)));
             if (offered != null) Watch.noticed(player, 1, false, 1);
+            return;
+        }
+
+        // An order placed by phone: the right goods, in full, close it at a better price. The
+        // order is the demand, so the street's appetite does not cap it.
+        PhoneBook book = Phone.of(player);
+        var order = book.orderFrom(villager.getStringUUID());
+        if (order.isPresent() && wants.equals(offered)) {
+            int asked = order.get().units();
+            if (book.deliver(villager.getStringUUID(), offered, held.getCount()) == PhoneBook.Delivery.SHORT) {
+                ProductItem.actionBar(player, Component.translatable("phone.slumdrugs.short",
+                        villager.getName(), asked, Phone.substance(wants)).withStyle(s -> s.withColor(0xB05050)));
+                return;
+            }
+            sell(player, level, villager, data, held, wants, asked, true);
             return;
         }
 
@@ -83,7 +101,16 @@ public final class StreetSales {
                     villager.getName()).withStyle(s -> s.withColor(0xB05050)));
             return;
         }
+        sell(player, level, villager, data, held, wants, units, false);
+    }
 
+    /**
+     * One handover, over the counter or by arrangement. A delivery pays {@link PhoneBook#PREMIUM}
+     * over the street price, earns {@link PhoneBook#ON_TIME} loyalty besides, and is noticed at
+     * {@link PhoneBook#DISCRETION} of what hawking the same units would be.
+     */
+    private static void sell(ServerPlayer player, ServerLevel level, Villager villager, NpcData data,
+                             ItemStack held, String wants, int units, boolean delivery) {
         int quality = ModComponents.qualityOf(held);
         int floor = NpcTrades.floor(villager);
         boolean cut = ModComponents.cutOf(held) > 0;
@@ -91,13 +118,19 @@ public final class StreetSales {
         // does anyone on a corner that is yours.
         boolean ownCorner = Turfs.own(player, villager.blockPosition());
         double markup = Tuning.CUSTOMER_MARKUP.get() * Loyalty.priceFactor(data.loyalty()) * (quality < floor ? 0.7 : 1.0)
-                * ModComponents.strainOf(held).reputationFactor() * Turf.priceFactor(ownCorner);
+                * ModComponents.strainOf(held).reputationFactor() * Turf.priceFactor(ownCorner)
+                * (delivery ? PhoneBook.PREMIUM : 1.0);
         long pence = Market.pence(level, wants, held, units, markup);
 
-        double loyaltyAfter = Loyalty.afterSale(data.loyalty(), quality, floor, cut);
+        double loyaltyAfter = Loyalty.clamp(Loyalty.afterSale(data.loyalty(), quality, floor, cut)
+                + (delivery ? PhoneBook.ON_TIME : 0));
         villager.setData(ModAttachments.NPC.get(), data.withLoyalty(loyaltyAfter));
 
+        // Suspicion is read off the goods before they leave the hand.
+        double subtlety = ModComponents.strainOf(held).subtletyFactor() * Turf.suspicionFactor(ownCorner)
+                * (delivery ? PhoneBook.DISCRETION : 1.0);
         held.consume(units, player);
+        var market = Market.of(level);
         market.consume(wants, units);
         level.setData(ModAttachments.MARKET.get(), market);
 
@@ -105,13 +138,15 @@ public final class StreetSales {
         SalesLedger.record(player, units, pence);
         // Sick customers talk: cut goods are noticed as if there were twice as many of them.
         // On your own corner the street looks the other way a little.
-        Watch.noticed(player, ModComponents.cutOf(held) > 0 ? units * 2 : units, false,
-                ModComponents.strainOf(held).subtletyFactor() * Turf.suspicionFactor(ownCorner));
+        Watch.noticed(player, cut ? units * 2 : units, false, subtlety);
 
-        String key = cut ? "message.slumdrugs.street_sale_cut" : quality < floor ? "message.slumdrugs.street_sale_poor"
+        String key = delivery ? "phone.slumdrugs.delivered" : cut ? "message.slumdrugs.street_sale_cut"
+                : quality < floor ? "message.slumdrugs.street_sale_poor"
                 : Loyalty.lost(loyaltyAfter) ? "message.slumdrugs.street_sale_last" : "message.slumdrugs.street_sale";
         ProductItem.actionBar(player, Component.translatable(key,
                 villager.getName(), Coin.format(pence), units, Component.translatable("item.slumdrugs.product_" + wants)));
-        level.playSound(null, villager.blockPosition(), SoundEvents.VILLAGER_YES, SoundSource.NEUTRAL, 0.8f, 1.0f);
+        level.playSound(null, villager.blockPosition(), SoundEvents.BOOK_PAGE_TURN, SoundSource.NEUTRAL, 1.0f, 1.2f);
+
+        Phone.save(player, villager, wants, loyaltyAfter);
     }
 }

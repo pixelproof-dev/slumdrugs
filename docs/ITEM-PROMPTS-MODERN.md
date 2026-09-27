@@ -1,6 +1,6 @@
 # Item-Sprites — Beschreibungen für PixelLab
 
-65 Items, Stand nach der Umstellung auf die Gegenwart (MOD-GDD.md §1). Jeder Prompt ist
+66 Items, Stand nach der Umstellung auf die Gegenwart (MOD-GDD.md §1). Jeder Prompt ist
 vollständig: kopieren, einfügen, fertig. Die Blöcke (Stationen wie Grow Tent, Centrifuge …)
 sind 3D-Modelle aus Blockbench und fehlen hier absichtlich.
 
@@ -363,4 +363,9 @@ A red plastic jerry can with a yellow spout cap. 16x16 pixel art Minecraft item 
 **`burner_phone`** — Burner Phone
 ```
 A cheap black candybar phone, stubby antenna, small screen lit bright green-cyan, rubber keypad. It should look like the most important thing in the hotbar. 16x16 pixel art Minecraft item icon, transparent background, dark 1px outline, 3-tone shading, light from top left, hard pixels, no anti-aliasing, no text.
+```
+
+**`baseball_bat`** — Baseball Bat
+```
+A worn wooden baseball bat held diagonally, handle lower left wrapped in black grip tape, barrel upper right with dents and scuffs. Carried by crew muscle. 16x16 pixel art Minecraft item icon, transparent background, dark 1px outline, 3-tone shading, light from top left, hard pixels, no anti-aliasing, no text.
 ```

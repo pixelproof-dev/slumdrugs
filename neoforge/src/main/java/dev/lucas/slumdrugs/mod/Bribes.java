@@ -50,6 +50,6 @@ public final class Bribes {
 
         ProductItem.actionBar(player, Component.translatable("message.slumdrugs.bribed",
                 villager.getName(), Coin.format(pence), (int) Math.round(off)));
-        villager.level().playSound(null, villager.blockPosition(), SoundEvents.VILLAGER_TRADE, SoundSource.NEUTRAL, 0.8f, 0.9f);
+        villager.level().playSound(null, villager.blockPosition(), SoundEvents.BOOK_PAGE_TURN, SoundSource.NEUTRAL, 1.0f, 0.9f);
     }
 }

@@ -64,7 +64,7 @@ public final class Hands {
         villager.setData(ModAttachments.NPC.get(), data.asRole(Npc.Role.HAND, Turfs.id(player)).withPaidDay(day(level)));
         Npcs.dress(level, villager, Npc.Role.HAND);
         ProductItem.actionBar(player, Component.translatable("message.slumdrugs.hired", villager.getName()));
-        level.playSound(null, villager.blockPosition(), SoundEvents.VILLAGER_TRADE, SoundSource.NEUTRAL, 0.8f, 1.0f);
+        level.playSound(null, villager.blockPosition(), SoundEvents.BOOK_PAGE_TURN, SoundSource.NEUTRAL, 1.0f, 1.0f);
     }
 
     /** Which day it is on the world's own clock. 26.3 calls the day time the default clock. */

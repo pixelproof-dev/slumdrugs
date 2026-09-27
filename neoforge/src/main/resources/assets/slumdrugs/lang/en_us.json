@@ -413,5 +413,16 @@
   "phone.slumdrugs.bearing.south": "south",
   "phone.slumdrugs.bearing.south_west": "south-west",
   "phone.slumdrugs.bearing.west": "west",
-  "phone.slumdrugs.bearing.north_west": "north-west"
+  "phone.slumdrugs.bearing.north_west": "north-west",
+  "phone.slumdrugs.order": "☎ %1$s: %2$s × %3$s, within %4$s min. %5$s",
+  "phone.slumdrugs.open_order": "• %1$s wants %2$s × %3$s, %4$s min left. %5$s",
+  "phone.slumdrugs.where": "%1$s m %2$s (%3$s, %4$s, %5$s)",
+  "phone.slumdrugs.gave_up": "%1$s stopped waiting for the %2$s. They will remember.",
+  "phone.slumdrugs.no_contacts": "No contacts. Sell to a customer and they keep your number.",
+  "phone.slumdrugs.no_orders": "No orders. %s contacts have your number.",
+  "phone.slumdrugs.saved": "%s saved your number.",
+  "phone.slumdrugs.saved_no_phone": "%s saved your number. Carry a burner phone to take their orders.",
+  "phone.slumdrugs.short": "%1$s ordered %2$s × %3$s. That is not all of it.",
+  "phone.slumdrugs.delivered": "Delivered: %1$s paid %2$s for %3$s × %4$s",
+  "item.slumdrugs.baseball_bat": "Baseball Bat"
 }

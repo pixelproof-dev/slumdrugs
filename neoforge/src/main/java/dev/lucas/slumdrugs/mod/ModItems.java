@@ -66,6 +66,9 @@ public final class ModItems {
         // Finds the nearest town. One to a hand, because it is a thing you carry, not stock.
         REGISTERED.put("burner_phone", ITEMS.registerItem(named("burner_phone"), BurnerPhoneItem::new,
                 p -> p.stacksTo(1)));
+        // What a crew's muscle carries (client.NpcRenderer). An item of its own so it can be
+        // drawn; as a weapon it is still only a stick, until weapons are designed.
+        REGISTERED.put("baseball_bat", ITEMS.registerItem(named("baseball_bat"), Item::new, p -> p.stacksTo(1)));
         // Money, as items. Named after the art prompts so the drawings drop straight in.
         REGISTERED.put("coin_penny", ITEMS.registerItem(named("coin_penny"), p -> new CoinItem(p, Coin.PENNY)));
         REGISTERED.put("coin_shilling", ITEMS.registerItem(named("coin_shilling"), p -> new CoinItem(p, Coin.SHILLING)));

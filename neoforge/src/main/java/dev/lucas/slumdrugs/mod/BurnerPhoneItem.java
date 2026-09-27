@@ -17,7 +17,7 @@ import java.util.Locale;
 import java.util.Optional;
 
 /**
- * Points at the nearest town.
+ * Lists the orders regulars have rung in ({@link Phone}), and points at the nearest town.
  *
  * <p>A town is as rare as a stronghold (MOD-GDD.md §1), and that rarity is only fair if it can be
  * found on purpose. This is how: use it and it names the distance, the direction and the
@@ -53,6 +53,7 @@ public final class BurnerPhoneItem extends Item {
         player.getCooldowns().addCooldown(stack, COOLDOWN_TICKS);
         server.playSound(null, player.blockPosition(), SoundEvents.NOTE_BLOCK_BIT.value(),
                 SoundSource.PLAYERS, 0.6f, 1.6f);
+        if (player instanceof net.minecraft.server.level.ServerPlayer caller) Phone.listOrders(caller);
 
         Optional<TownSites.Site> found = Towns.nearest(server, player.getBlockX(), player.getBlockZ(), REACH);
         if (found.isEmpty()) {

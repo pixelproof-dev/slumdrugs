@@ -17,6 +17,7 @@ import dev.lucas.slumdrugs.sim.npc.Standing;
 import dev.lucas.slumdrugs.sim.npc.Turf;
 import dev.lucas.slumdrugs.sim.npc.Hire;
 import dev.lucas.slumdrugs.sim.player.Condition;
+import dev.lucas.slumdrugs.sim.player.PhoneBook;
 import dev.lucas.slumdrugs.sim.player.Progression;
 import dev.lucas.slumdrugs.sim.player.Recovery;
 import dev.lucas.slumdrugs.sim.player.Suspicion;
@@ -55,6 +56,7 @@ public final class SimChecks {
         townSites();
         localCrews();
         looks();
+        phoneBook();
         growbox();
         recovery();
         condition();
@@ -192,6 +194,109 @@ public final class SimChecks {
         for (int i = 0; i < 200; i++)
             if (Standing.Crew.holding(i * 1024L, 0) != Standing.Crew.holding((i + 1) * 1024L, 0)) differ++;
         check(differ > 100, "neighbouring towns are usually held by different crews");
+    }
+
+    // ---------------------------------------------------------------- phone book
+
+    private static PhoneBook.Contact regular(String id, double loyalty, int x) {
+        return new PhoneBook.Contact(id, "R" + id, "frostroot", loyalty, x, 64, 0);
+    }
+
+    private static void phoneBook() {
+        check(PhoneBook.callChance(Loyalty.LOST) == 0, "a lost customer never rings");
+        check(PhoneBook.callChance(90) > PhoneBook.callChance(50) && PhoneBook.callChance(50) > PhoneBook.callChance(20),
+                "better friends ring more often");
+        check(PhoneBook.callChance(100) <= 0.25, "not even the most devoted rings every time");
+        boolean unitsInRange = true, friendsBuyMore = true;
+        for (long seed = 0; seed < 500; seed++) {
+            int few = PhoneBook.units(10, seed), many = PhoneBook.units(100, seed);
+            unitsInRange &= few >= 2 && many <= 8;
+            friendsBuyMore &= many >= few;
+        }
+        check(unitsInRange, "an order is two to eight units");
+        check(friendsBuyMore, "a devoted regular never asks for less than an indifferent one would");
+        check(PhoneBook.window(8) > PhoneBook.window(2), "a bigger order gets more time");
+        check(PhoneBook.window(2) >= 20 * 60 * 5, "no order has to be run in under five minutes");
+
+        var book = new PhoneBook();
+        check(book.save(regular("a", 50, 0)), "a first sale saves the number");
+        check(!book.save(regular("a", 60, 10)), "a second sale refreshes it rather than adding it twice");
+        check(book.contacts().size() == 1 && book.contacts().get(0).loyalty() == 60, "the refresh keeps the latest loyalty");
+
+        for (int i = 0; i < PhoneBook.MAX_CONTACTS + 5; i++) book.save(regular("c" + i, 20 + i, 0));
+        check(book.contacts().size() == PhoneBook.MAX_CONTACTS, "a phone keeps no more than its limit");
+        check(book.contacts().stream().noneMatch(c -> c.id().equals("c0")), "the coldest regular is the one forgotten");
+
+        // Rings: never more than the limit open, never two from one regular, never from out of reach.
+        var busy = new PhoneBook();
+        for (int i = 0; i < 10; i++) busy.save(regular("b" + i, 100, 0));
+        busy.save(regular("far", 100, PhoneBook.RING_RANGE + 50));
+        int maxOpen = 0; boolean twice = false, far = false;
+        for (long t = 0; t < 200; t++) {
+            busy.ring(t * PhoneBook.RING_EVERY, t, 0, 0);
+            maxOpen = Math.max(maxOpen, busy.orders().size());
+            twice |= busy.orders().stream().map(PhoneBook.Order::contactId).distinct().count() != busy.orders().size();
+            far |= busy.orders().stream().anyMatch(o -> o.contactId().equals("far"));
+            if (t % 3 == 0) busy.orders().forEach(o -> busy.deliver(o.contactId(), o.substance(), o.units()));
+        }
+        check(maxOpen == PhoneBook.MAX_OPEN, "orders fill up to the limit and no further");
+        check(!twice, "one regular has one order open at most");
+        check(!far, "nobody rings from out of reach");
+
+        var quiet = new PhoneBook();
+        quiet.save(regular("lost", Loyalty.LOST, 0));
+        boolean silent = true;
+        for (long t = 0; t < 500; t++) silent &= quiet.ring(t, t, 0, 0).isEmpty();
+        check(silent, "a lost regular never places an order");
+
+        // Delivering.
+        var d = new PhoneBook();
+        d.save(regular("x", 100, 0));
+        PhoneBook.Order order = null;
+        for (long t = 0; order == null && t < 1000; t++) {
+            var placed = d.ring(t, t, 0, 0);
+            if (!placed.isEmpty()) order = placed.get(0);
+        }
+        check(order != null, "a devoted regular rings sooner or later");
+        check(order.due() == order.placed() + PhoneBook.window(order.units()), "the time given is the window for the size");
+        check(d.deliver("x", "sunleaf", 99) == PhoneBook.Delivery.WRONG_GOODS, "the wrong goods do not close an order");
+        check(d.deliver("x", "frostroot", order.units() - 1) == PhoneBook.Delivery.SHORT, "short measure does not close it");
+        check(d.orders().size() == 1, "nor does anything but a delivery");
+        check(d.deliver("x", "frostroot", order.units()) == PhoneBook.Delivery.DELIVERED, "the right goods in full do");
+        check(d.orders().isEmpty() && d.deliver("x", "frostroot", 9) == PhoneBook.Delivery.NO_ORDER,
+                "and after that there is nothing to deliver");
+
+        // Missing one.
+        var m = new PhoneBook();
+        m.save(regular("y", 100, 0));
+        PhoneBook.Order missed = null;
+        for (long t = 0; missed == null && t < 1000; t++) {
+            var placed = m.ring(t, t, 0, 0);
+            if (!placed.isEmpty()) missed = placed.get(0);
+        }
+        check(m.expire(missed.due() - 1).isEmpty(), "an order stands until its time is up");
+        check(m.expire(missed.due()).size() == 1 && m.orders().isEmpty(), "and closes when it is");
+        check(m.contacts().get(0).loyalty() == 100 + PhoneBook.STOOD_UP, "a missed order marks the regular down at once");
+        check(m.settleOwed("y") == PhoneBook.STOOD_UP, "and is owed on their loyalty until they are met");
+        check(m.settleOwed("y") == 0, "once");
+        check(PhoneBook.PREMIUM > 1 && PhoneBook.DISCRETION < 1, "a delivery pays more and draws less notice than hawking");
+        check(-PhoneBook.STOOD_UP > PhoneBook.ON_TIME, "letting someone down costs more than a delivery earns");
+
+        var direct = new PhoneBook();
+        direct.save(regular("z", 50, 0));
+        check(direct.call("z", 100, 1).isPresent(), "a saved regular can be made to ring");
+        check(direct.call("z", 100, 2).isEmpty(), "but not twice while waiting");
+        check(direct.call("nobody", 100, 3).isEmpty(), "and nobody unsaved rings at all");
+
+        // A full phone where everybody is waiting keeps the numbers it has.
+        var full = new PhoneBook();
+        for (int i = 0; i < PhoneBook.MAX_CONTACTS; i++) full.save(regular("f" + i, 100, 0));
+        for (long t = 0; t < 2000 && full.orders().size() < PhoneBook.MAX_OPEN; t++) full.ring(t, t, 0, 0);
+        full.save(regular("new", 100, 0));
+        check(full.contacts().stream().allMatch(c -> !c.id().equals("new") || full.orderFrom("new").isEmpty()),
+                "a regular with an order open is never forgotten to make room");
+        boolean ordersKept = full.orders().stream().allMatch(o -> full.contacts().stream().anyMatch(c -> c.id().equals(o.contactId())));
+        check(ordersKept, "every open order still has its regular in the phone");
     }
 
     // ---------------------------------------------------------------- looks

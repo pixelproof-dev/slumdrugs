@@ -59,6 +59,7 @@ public final class SlumCommands {
                 .then(give())
                 .then(condition())
                 .then(npc())
+                .then(phone())
                 .then(frame())
                 .then(refine())
                 .then(structure())
@@ -198,6 +199,34 @@ public final class SlumCommands {
     private static double clamp(double v) { return Math.max(0, Math.min(100, v)); }
 
     // ------------------------------------------------------------------ npc
+
+    // ------------------------------------------------------------------ phone
+
+    /** Makes the phone ring now, for testing deliveries without waiting on the dice. */
+    private static LiteralArgumentBuilder<CommandSourceStack> phone() {
+        return Commands.literal("phone").requires(Commands.hasPermission(OP))
+                .then(Commands.literal("ring").executes(SlumCommands::phoneRing))
+                .then(Commands.literal("list").executes(ctx -> {
+                    Phone.listOrders(ctx.getSource().getPlayerOrException());
+                    return 1;
+                }));
+    }
+
+    private static int phoneRing(CommandContext<CommandSourceStack> ctx) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        ServerPlayer player = ctx.getSource().getPlayerOrException();
+        var book = Phone.of(player);
+        long now = player.level().getGameTime();
+        for (var contact : book.contacts()) {
+            var order = book.call(contact.id(), now, now ^ contact.id().hashCode());
+            if (order.isPresent()) {
+                Phone.announce(player, order.get(), now);
+                return 1;
+            }
+        }
+        ctx.getSource().sendFailure(Component.literal(book.contacts().isEmpty()
+                ? "No contacts: sell to a customer first" : "Every contact is already waiting, or three orders are open"));
+        return 0;
+    }
 
     private static LiteralArgumentBuilder<CommandSourceStack> npc() {
         return Commands.literal("npc").requires(Commands.hasPermission(OP))
