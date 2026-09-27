@@ -24,6 +24,7 @@ import dev.lucas.slumdrugs.sim.world.RoomFlood;
 import dev.lucas.slumdrugs.sim.world.CityPlan;
 import dev.lucas.slumdrugs.sim.world.PlotSearch;
 import dev.lucas.slumdrugs.sim.world.StructureFit;
+import dev.lucas.slumdrugs.sim.world.TownSites;
 
 import java.util.List;
 
@@ -50,6 +51,7 @@ public final class SimChecks {
         structureFit();
         plotSearch();
         cityPlan();
+        townSites();
         growbox();
         recovery();
         condition();
@@ -155,6 +157,64 @@ public final class SimChecks {
         check(hamlet.lots().size() == 1, "one building is a town too");
         check(hamlet.spanX() == 9 + 3 * 2 && hamlet.spanZ() == 9 + 3 * 2,
                 "a lone building is a street's width from each edge");
+    }
+
+    // ---------------------------------------------------------------- town sites
+
+    private static void townSites() {
+        long seed = 4711;
+        TownSites.Site here = TownSites.site(3, -2, seed);
+        check(here.equals(TownSites.site(3, -2, seed)), "the same region and seed give the same site");
+        check(!here.equals(TownSites.site(3, -2, seed + 1)), "another seed moves it");
+        check(!TownSites.site(0, 0, seed).equals(TownSites.site(1, 0, seed)), "every region has its own");
+
+        // Every site sits inside its own region, clear of the edge, however far out it is.
+        for (int rx = -40; rx <= 40; rx += 7) {
+            for (int rz = -40; rz <= 40; rz += 7) {
+                TownSites.Site s = TownSites.site(rx, rz, seed);
+                check(TownSites.regionOf(s.x()) == rx && TownSites.regionOf(s.z()) == rz,
+                        "a site belongs to the region that drew it, negative regions included");
+                int ox = s.x() - rx * TownSites.REGION, oz = s.z() - rz * TownSites.REGION;
+                check(ox >= TownSites.MARGIN && ox < TownSites.REGION - TownSites.MARGIN
+                                && oz >= TownSites.MARGIN && oz < TownSites.REGION - TownSites.MARGIN,
+                        "a site keeps the margin from its region's edge");
+            }
+        }
+
+        // Two towns are never closer than twice the margin, because each keeps it from its edge.
+        for (int rx = -5; rx < 5; rx++) {
+            TownSites.Site a = TownSites.site(rx, 0, seed), b = TownSites.site(rx + 1, 0, seed);
+            check(Math.abs(b.x() - a.x()) >= 2 * TownSites.MARGIN, "neighbouring towns keep their distance");
+        }
+
+        // regionOf rounds down, not towards zero: -1 is in region -1, not region 0.
+        check(TownSites.regionOf(-1) == -1 && TownSites.regionOf(0) == 0
+                && TownSites.regionOf(TownSites.REGION) == 1 && TownSites.regionOf(-TownSites.REGION) == -1,
+                "regions tile the negative half too");
+
+        // The phone's list: everything in range, nearest first, the same every time.
+        var near = TownSites.nearest(100, -300, 2, seed);
+        check(near.size() == 25, "a radius of two regions is a five by five block of candidates");
+        for (int i = 1; i < near.size(); i++)
+            check(near.get(i - 1).distanceSquared(100, -300) <= near.get(i).distanceSquared(100, -300),
+                    "candidates come nearest first");
+        check(near.equals(TownSites.nearest(100, -300, 2, seed)), "the order is the same every time");
+        check(near.contains(TownSites.site(TownSites.regionOf(100), TownSites.regionOf(-300), seed)),
+                "the player's own region is always among them");
+
+        // The phone's compass. North is negative z in Minecraft, which is the whole point of
+        // checking this: the sign is easy to get backwards, and backwards sends everyone to the
+        // town's mirror image.
+        check(TownSites.bearing(0, -100) == TownSites.Bearing.NORTH, "straight up the map is north");
+        check(TownSites.bearing(0, 100) == TownSites.Bearing.SOUTH, "positive z is south");
+        check(TownSites.bearing(100, 0) == TownSites.Bearing.EAST, "positive x is east");
+        check(TownSites.bearing(-100, 0) == TownSites.Bearing.WEST, "negative x is west");
+        check(TownSites.bearing(100, -100) == TownSites.Bearing.NORTH_EAST, "up and right is north-east");
+        check(TownSites.bearing(-100, 100) == TownSites.Bearing.SOUTH_WEST, "down and left is south-west");
+        check(TownSites.bearing(100, 100) == TownSites.Bearing.SOUTH_EAST, "down and right is south-east");
+        check(TownSites.bearing(-100, -100) == TownSites.Bearing.NORTH_WEST, "up and left is north-west");
+        check(TownSites.bearing(20, -100) == TownSites.Bearing.NORTH, "a little east of north is still north");
+        check(TownSites.bearing(-20, -100) == TownSites.Bearing.NORTH, "a little west of north too, across the wrap");
     }
 
     // ---------------------------------------------------------------- room flood

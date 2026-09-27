@@ -76,7 +76,11 @@ def chunks(path):
 def cells(section):
     states = section.get('block_states') or {}
     palette = states.get('palette') or []
-    names = [e if isinstance(e, str) else (e.get('Name') or e.get('id') or '') for e in palette]
+    # 26.3 writes a default state as {'': 'minecraft:stone'}. Missing that key made whole
+    # sections read as nameless, so the picture showed the section beneath instead -- stone
+    # lying over a road that was, in the world, perfectly clear.
+    names = [e if isinstance(e, str) else (e.get('Name') or e.get('id') or e.get('') or '')
+             for e in palette]
     if not names:
         return None, None
     data = states.get('data')

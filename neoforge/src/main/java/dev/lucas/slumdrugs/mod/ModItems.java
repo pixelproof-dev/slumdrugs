@@ -63,6 +63,9 @@ public final class ModItems {
         simple("fertilizer");
         REGISTERED.put("remedy", ITEMS.registerItem(named("remedy"), RemedyItem::new));
         REGISTERED.put("journal", ITEMS.registerItem(named("journal"), JournalItem::new, p -> p.stacksTo(1)));
+        // Finds the nearest town. One to a hand, because it is a thing you carry, not stock.
+        REGISTERED.put("burner_phone", ITEMS.registerItem(named("burner_phone"), BurnerPhoneItem::new,
+                p -> p.stacksTo(1)));
         // Money, as items. Named after the art prompts so the drawings drop straight in.
         REGISTERED.put("coin_penny", ITEMS.registerItem(named("coin_penny"), p -> new CoinItem(p, Coin.PENNY)));
         REGISTERED.put("coin_shilling", ITEMS.registerItem(named("coin_shilling"), p -> new CoinItem(p, Coin.SHILLING)));

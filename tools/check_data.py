@@ -117,15 +117,24 @@ def vanilla():
     # Sound event ids are not in the jar (sounds.json is a downloaded asset); the subtitle
     # keys are, and every vanilla event that has one is listed under them.
     sounds = {k[len('subtitles.'):] for k in lang if k.startswith('subtitles.')}
+    categories = {}
     src_jar = jars[0].with_name(jars[0].name.replace('.jar', '-sources.jar'))
     if src_jar.exists():
         import io
         with zipfile.ZipFile(src_jar) as sz:
             if 'net/minecraft/sounds/SoundEvents.java' in sz.namelist():
                 sounds = set(re.findall(r'"([a-z_]+(?:\.[a-z_0-9]+)+)"', sz.read('net/minecraft/sounds/SoundEvents.java').decode()))
+            # Recipe-book categories, read from the enums rather than remembered. A recipe with a
+            # category the game does not know fails to parse, and one recipe that fails to parse
+            # takes the whole datapack down with it: the server refuses to start. "tools" did that.
+            for enum, key in (('CraftingBookCategory', 'crafting_categories'),
+                              ('CookingBookCategory', 'cooking_categories')):
+                path = f'net/minecraft/world/item/crafting/{enum}.java'
+                if path in sz.namelist():
+                    categories[key] = set(re.findall(r'^\s+[A-Z_]+\("([a-z_]+)"', sz.read(path).decode(), re.M))
     block_ids = {n[len('assets/minecraft/blockstates/'):-5] for n in names
                  if n.startswith('assets/minecraft/blockstates/') and n.endswith('.json')}
-    return {'items': items | blocks, 'blocks': block_ids, 'textures': textures, 'models': models, 'item_tags': tags, 'sound_events': sounds}
+    return {'items': items | blocks, 'blocks': block_ids, 'textures': textures, 'models': models, 'item_tags': tags, 'sound_events': sounds, **categories}
 
 
 def check_id(ref, kind, ours, van, where):
@@ -263,6 +272,12 @@ def check_recipes(items, van):
         rid = result.get('id') if isinstance(result, dict) else result
         if not rid:
             problem(f'{where}: no result id'); continue
+        kind = d.get('type', '').split(':')[-1]
+        allowed = (van or {}).get('crafting_categories' if kind.startswith('crafting')
+                                  else 'cooking_categories')
+        if 'category' in d and allowed and d['category'] not in allowed:
+            problem(f'{where}: category "{d["category"]}" is not one the game knows '
+                    f'({", ".join(sorted(allowed))}); the recipe fails to parse and the server will not start')
         check_id(rid, 'result', items, van_items, where)
         ings = []
         if 'key' in d:

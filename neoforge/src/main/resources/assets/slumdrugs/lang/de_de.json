@@ -402,5 +402,16 @@
   "item.slumdrugs.package_tidecap": "Versiegeltes Riptide",
   "item.slumdrugs.product_hollowcap": "Flatline",
   "item.slumdrugs.essence_hollowcap": "Flatline-Konzentrat",
-  "item.slumdrugs.package_hollowcap": "Versiegeltes Flatline"
+  "item.slumdrugs.package_hollowcap": "Versiegeltes Flatline",
+  "phone.slumdrugs.signal": "Empfang: eine Stadt %s m Richtung %s (x %s, z %s)",
+  "phone.slumdrugs.no_signal": "Kein Empfang. Keine Stadt im Umkreis von %s Blöcken.",
+  "phone.slumdrugs.no_network": "Hier gibt es kein Netz.",
+  "phone.slumdrugs.bearing.north": "Norden",
+  "phone.slumdrugs.bearing.north_east": "Nordosten",
+  "phone.slumdrugs.bearing.east": "Osten",
+  "phone.slumdrugs.bearing.south_east": "Südosten",
+  "phone.slumdrugs.bearing.south": "Süden",
+  "phone.slumdrugs.bearing.south_west": "Südwesten",
+  "phone.slumdrugs.bearing.west": "Westen",
+  "phone.slumdrugs.bearing.north_west": "Nordwesten"
 }

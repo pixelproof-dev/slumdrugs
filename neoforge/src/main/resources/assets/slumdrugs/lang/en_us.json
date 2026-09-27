@@ -402,5 +402,16 @@
   "item.slumdrugs.package_tidecap": "Sealed Riptide",
   "item.slumdrugs.product_hollowcap": "Flatline",
   "item.slumdrugs.essence_hollowcap": "Flatline Concentrate",
-  "item.slumdrugs.package_hollowcap": "Sealed Flatline"
+  "item.slumdrugs.package_hollowcap": "Sealed Flatline",
+  "phone.slumdrugs.signal": "Signal: a town %s m to the %s (x %s, z %s)",
+  "phone.slumdrugs.no_signal": "No signal. No town within %s blocks.",
+  "phone.slumdrugs.no_network": "No network here.",
+  "phone.slumdrugs.bearing.north": "north",
+  "phone.slumdrugs.bearing.north_east": "north-east",
+  "phone.slumdrugs.bearing.east": "east",
+  "phone.slumdrugs.bearing.south_east": "south-east",
+  "phone.slumdrugs.bearing.south": "south",
+  "phone.slumdrugs.bearing.south_west": "south-west",
+  "phone.slumdrugs.bearing.west": "west",
+  "phone.slumdrugs.bearing.north_west": "north-west"
 }

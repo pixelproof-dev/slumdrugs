@@ -13,16 +13,12 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.StructureTags;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.levelgen.structure.Structure;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
@@ -50,17 +46,20 @@ import java.util.Optional;
  * enough is skipped and tried again next time somebody stands there, which is what a 52 by 61
  * hall will do beside most villages.
  *
+ * <p><b>No longer automatic.</b> Since the setting moved to the present day, the buildings are
+ * glass and concrete, and MOD-GDD.md §1 keeps them out of sight of any thatched village: towns
+ * come from {@link Towns}, rare and far from villages, and this runs only when asked for with
+ * {@code /slum structure village}. The tick hook that used to fire whenever a player stood in a
+ * village is gone; the plot search, the levelling and the survey stay, because the commands use
+ * them and the measurements that sized the lean limit came from them.
+ *
  * <p><b>Not finished:</b> the design's hard rule is that every block changed is journalled with
  * a restore path. {@link SettlementRecords} records where a building went, not what was there
- * before, so a placement cannot yet be undone. That has to land before this ships.
+ * before, so a placement cannot yet be undone.
  */
-@EventBusSubscriber(modid = SlumDrugsMod.ID)
 public final class VillageTraderHouse {
 
     private static final Logger LOG = LogUtils.getLogger();
-
-    /** Five seconds. The work only happens once per settlement; this is the cost of looking. */
-    private static final int EVERY_TICKS = 100;
 
     /**
      * How far outside the settlement's own box to look, and how finely. Three rings, because a
@@ -100,17 +99,7 @@ public final class VillageTraderHouse {
         return leanLimit(size) + 1;
     }
 
-    private static int ticks;
-
     private VillageTraderHouse() {}
-
-    @SubscribeEvent
-    public static void onServerTick(ServerTickEvent.Post event) {
-        if (++ticks % EVERY_TICKS != 0) return;
-        for (ServerLevel level : event.getServer().getAllLevels())
-            for (ServerPlayer player : level.players())
-                considerAround(level, player.blockPosition());
-    }
 
     /**
      * Gives the settlement at {@code pos} its house if it has none yet, and says what happened.

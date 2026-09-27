@@ -410,7 +410,37 @@ public final class SlumCommands {
                                         .executes(ctx -> placeStructure(ctx, rotation(ctx))))))
                 .then(Commands.literal("village").executes(SlumCommands::villageHouse)
                         .then(Commands.literal("survey").executes(SlumCommands::villageSurvey)))
-                .then(Commands.literal("town").executes(SlumCommands::town));
+                .then(Commands.literal("town").executes(SlumCommands::town)
+                        .then(Commands.literal("locate").executes(SlumCommands::townLocate))
+                        .then(Commands.literal("wake").executes(SlumCommands::townWake)));
+    }
+
+    /** What a burner phone would say here, for anyone without one — admins, and tests. */
+    private static int townLocate(CommandContext<CommandSourceStack> ctx) {
+        var level = ctx.getSource().getLevel();
+        var at = BlockPos.containing(ctx.getSource().getPosition());
+        var found = Towns.nearest(level, at.getX(), at.getZ(), 4);
+        if (found.isEmpty()) {
+            ctx.getSource().sendFailure(Component.literal("No town site within four regions"));
+            return 0;
+        }
+        var site = found.get();
+        long dx = site.x() - at.getX(), dz = site.z() - at.getZ();
+        var verdict = Towns.records(level).verdict(site.regionX(), site.regionZ());
+        reply(ctx, "Town site at x " + site.x() + ", z " + site.z() + ", "
+                + Math.round(Math.sqrt((double) dx * dx + (double) dz * dz)) + " m "
+                + dev.lucas.slumdrugs.sim.world.TownSites.bearing(dx, dz).name().toLowerCase(java.util.Locale.ROOT)
+                + ", " + (verdict == null ? "not built yet" : verdict.name().toLowerCase(java.util.Locale.ROOT)));
+        return 1;
+    }
+
+    /** Starts any town in range of here, as a player standing here would. */
+    private static int townWake(CommandContext<CommandSourceStack> ctx) {
+        var at = BlockPos.containing(ctx.getSource().getPosition());
+        int started = Towns.wakeNear(ctx.getSource().getLevel(), at.getX(), at.getZ());
+        reply(ctx, started == 0 ? "No town site in range here, or it was already looked at"
+                : "Started " + started + " town" + (started == 1 ? "" : "s") + "; it goes up over the next seconds");
+        return started;
     }
 
     /** Lays a whole town from where you stand, north-west corner at your feet. */
