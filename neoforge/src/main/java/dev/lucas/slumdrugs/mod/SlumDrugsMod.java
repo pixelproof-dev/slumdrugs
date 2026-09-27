@@ -23,6 +23,7 @@ public final class SlumDrugsMod {
         ModMenus.TYPES.register(modBus);
         ModSounds.SOUNDS.register(modBus);
         ModCreativeTabs.TABS.register(modBus);
+        ModTickets.TYPES.register(modBus);
         // A server config: the server's numbers, sent to every client that joins it.
         container.registerConfig(ModConfig.Type.SERVER, Tuning.SPEC);
     }

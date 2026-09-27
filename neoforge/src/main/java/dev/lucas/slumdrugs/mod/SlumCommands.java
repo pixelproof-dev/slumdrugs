@@ -412,7 +412,10 @@ public final class SlumCommands {
                         .then(Commands.literal("survey").executes(SlumCommands::villageSurvey)))
                 .then(Commands.literal("town").executes(SlumCommands::town)
                         .then(Commands.literal("locate").executes(SlumCommands::townLocate))
-                        .then(Commands.literal("wake").executes(SlumCommands::townWake)));
+                        .then(Commands.literal("wake").executes(SlumCommands::townWake))
+                        .then(Commands.literal("survey")
+                                .then(Commands.argument("regions", IntegerArgumentType.integer(1, 16))
+                                        .executes(SlumCommands::townSurvey))));
     }
 
     /** What a burner phone would say here, for anyone without one — admins, and tests. */
@@ -432,6 +435,34 @@ public final class SlumCommands {
                 + dev.lucas.slumdrugs.sim.world.TownSites.bearing(dx, dz).name().toLowerCase(java.util.Locale.ROOT)
                 + ", " + (verdict == null ? "not built yet" : verdict.name().toLowerCase(java.util.Locale.ROOT)));
         return 1;
+    }
+
+    /**
+     * Tests every town site within some regions of here and says why each failed, recording
+     * nothing. For tuning how rare towns are: the phone saying "no signal" does not say whether
+     * the land is wrong or villages are in the way.
+     */
+    private static int townSurvey(CommandContext<CommandSourceStack> ctx) {
+        var level = ctx.getSource().getLevel();
+        var at = BlockPos.containing(ctx.getSource().getPosition());
+        int radius = IntegerArgumentType.getInteger(ctx, "regions");
+        var counts = new java.util.EnumMap<Towns.SiteVerdict, Integer>(Towns.SiteVerdict.class);
+        var centres = new java.util.TreeMap<String, Integer>();
+        long nearestOk = -1;
+        for (var site : dev.lucas.slumdrugs.sim.world.TownSites.nearest(at.getX(), at.getZ(), radius, level.getSeed())) {
+            var verdict = Towns.siteVerdict(level, site.x(), site.z());
+            counts.merge(verdict, 1, Integer::sum);
+            // Which biome each candidate's middle stands in: what decides how widely to cast the net.
+            centres.merge(level.getUncachedNoiseBiome(net.minecraft.core.QuartPos.fromBlock(site.x()),
+                    net.minecraft.core.QuartPos.fromBlock(level.getSeaLevel()), net.minecraft.core.QuartPos.fromBlock(site.z()))
+                    .unwrapKey().map(k -> k.identifier().getPath()).orElse("?"), 1, Integer::sum);
+            if (verdict == Towns.SiteVerdict.OK && nearestOk < 0)
+                nearestOk = Math.round(Math.sqrt((double) site.distanceSquared(at.getX(), at.getZ())));
+        }
+        reply(ctx, "Sites within " + radius + " regions: " + counts
+                + (nearestOk < 0 ? ", none takes a town" : ", nearest good one " + nearestOk + " m"));
+        reply(ctx, "Centres by biome: " + centres);
+        return counts.getOrDefault(Towns.SiteVerdict.OK, 0);
     }
 
     /** Starts any town in range of here, as a player standing here would. */

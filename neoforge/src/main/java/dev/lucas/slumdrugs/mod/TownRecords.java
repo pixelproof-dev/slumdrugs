@@ -40,8 +40,21 @@ public final class TownRecords extends SavedData {
             Codec.INT.fieldOf("verdict").forGetter(Entry::verdict)
     ).apply(i, Entry::new));
 
+    /**
+     * Which version of the site test the refusals were made under. Bump it whenever
+     * {@link Towns#siteVerdict} changes what it accepts.
+     *
+     * <p>A refusal is only as good as the rule that made it. The first rule was too strict and
+     * refused almost every site; a world that had used a phone under it carried ninety refusals
+     * the looser rule would have accepted, and would have kept its players walking past those
+     * sites for good. Refusals from another version are dropped on load. Towns started or built
+     * are kept whatever the version: they exist, and a rule change does not unbuild them.
+     */
+    public static final int RULES = 2;
+
     public static final Codec<TownRecords> CODEC = RecordCodecBuilder.create(i -> i.group(
-            ENTRY.listOf().optionalFieldOf("sites", List.of()).forGetter(TownRecords::entries)
+            ENTRY.listOf().optionalFieldOf("sites", List.of()).forGetter(TownRecords::entries),
+            Codec.INT.optionalFieldOf("rules", 1).forGetter(r -> RULES)
     ).apply(i, TownRecords::new));
 
     public static final SavedDataType<TownRecords> TYPE = new SavedDataType<>(
@@ -51,11 +64,16 @@ public final class TownRecords extends SavedData {
 
     public TownRecords() {}
 
-    private TownRecords(List<Entry> loaded) {
+    private TownRecords(List<Entry> loaded, int rules) {
+        Verdict[] all = Verdict.values();
         for (Entry e : loaded) {
-            Verdict[] all = Verdict.values();
-            if (e.verdict() >= 0 && e.verdict() < all.length) sites.put(e.region(), all[e.verdict()]);
+            if (e.verdict() < 0 || e.verdict() >= all.length) continue;
+            Verdict verdict = all[e.verdict()];
+            if (verdict == Verdict.REFUSED && rules != RULES) continue;
+            sites.put(e.region(), verdict);
         }
+        // Rewrite under the current version, so the dropped refusals do not come back.
+        if (rules != RULES) setDirty();
     }
 
     private List<Entry> entries() {

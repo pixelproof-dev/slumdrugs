@@ -40,9 +40,13 @@ public final class Towns {
 
     private static final Logger LOG = LogUtils.getLogger();
 
-    /** The biomes a town may stand in. Data-driven, so a server can widen or narrow it. */
+    /** The biomes a town's middle may stand in. Data-driven, so a server can widen or narrow it. */
     public static final TagKey<Biome> TOWN_BIOMES =
             TagKey.create(Registries.BIOME, Identifier.fromNamespaceAndPath(SlumDrugsMod.ID, "town_site"));
+
+    /** Biomes no part of a town may touch: water that runs in, ground too steep to cut. */
+    public static final TagKey<Biome> FORBIDDEN_BIOMES =
+            TagKey.create(Registries.BIOME, Identifier.fromNamespaceAndPath(SlumDrugsMod.ID, "town_forbidden"));
 
     /** Five seconds between looks. The look is a distance sum until a site is actually close. */
     private static final int EVERY_TICKS = 100;
@@ -64,8 +68,13 @@ public final class Towns {
     /** Half the side of the square a town needs, for sampling the ground under all of it. */
     private static final int SITE_SPAN = 64;
 
-    /** Work per tick while a town is going up: columns levelled, or a quarter of a chunk loaded. */
-    private static final int STEP_BUDGET = 1024;
+    /**
+     * Columns levelled per tick while a town is going up. A tick is fifty milliseconds and the
+     * server has its own work to do in it, so a step should stay well under that: a thousand
+     * columns of forest, each cut to the top of its tree, did not. The slowest step is logged
+     * when a town finishes, which is how this number is meant to be set.
+     */
+    private static final int STEP_BUDGET = 256;
 
     private record Running(ServerLevel level, int regionX, int regionZ, CityBuilder.Job job) {}
 
@@ -144,19 +153,32 @@ public final class Towns {
      * search is the one {@code /locate} uses, and is the expensive half, so it runs second.
      */
     public static boolean isTownSite(ServerLevel level, int x, int z) {
-        // The whole footprint, not just its centre: a site whose middle is plains can have a
-        // river down one side, and rivers and oceans are biomes of their own, so a grid of
-        // samples across the square catches them before a stream runs into the cleared ground.
+        return siteVerdict(level, x, z) == SiteVerdict.OK;
+    }
+
+    /** Why a site does or does not take a town. The survey command counts these. */
+    public enum SiteVerdict { OK, BIOME, VILLAGE }
+
+    public static SiteVerdict siteVerdict(ServerLevel level, int x, int z) {
+        // The middle has to be good ground; the rest of the footprint only has to be free of
+        // water and cliffs. The first version demanded all nine samples be good ground, which
+        // refused any plain that touched a wood: measured over 289 candidates in a player's world
+        // it passed two, the nearest town was 7.5 km away, and forest -- flat, and cleared by the
+        // levelling anyway -- was not allowed at all. Rivers, oceans and mountains are biomes of
+        // their own, so a grid of samples still catches them before water runs into the square.
         int y = QuartPos.fromBlock(level.getSeaLevel());
+        if (!level.getUncachedNoiseBiome(QuartPos.fromBlock(x), y, QuartPos.fromBlock(z)).is(TOWN_BIOMES))
+            return SiteVerdict.BIOME;
         for (int dx = -SITE_SPAN; dx <= SITE_SPAN; dx += SITE_SPAN)
             for (int dz = -SITE_SPAN; dz <= SITE_SPAN; dz += SITE_SPAN)
-                if (!level.getUncachedNoiseBiome(QuartPos.fromBlock(x + dx), y,
-                        QuartPos.fromBlock(z + dz)).is(TOWN_BIOMES)) return false;
+                if (level.getUncachedNoiseBiome(QuartPos.fromBlock(x + dx), y,
+                        QuartPos.fromBlock(z + dz)).is(FORBIDDEN_BIOMES)) return SiteVerdict.BIOME;
         BlockPos village = level.findNearestMapStructure(StructureTags.VILLAGE,
                 new BlockPos(x, level.getSeaLevel(), z), VILLAGE_CLEARANCE / 16 + 1, false);
-        if (village == null) return true;
+        if (village == null) return SiteVerdict.OK;
         long dx = village.getX() - x, dz = village.getZ() - z;
-        return dx * dx + dz * dz > (long) VILLAGE_CLEARANCE * VILLAGE_CLEARANCE;
+        return dx * dx + dz * dz > (long) VILLAGE_CLEARANCE * VILLAGE_CLEARANCE
+                ? SiteVerdict.OK : SiteVerdict.VILLAGE;
     }
 
     /**
@@ -169,12 +191,25 @@ public final class Towns {
      */
     public static Optional<TownSites.Site> nearest(ServerLevel level, int x, int z, int radius) {
         TownRecords records = records(level);
-        for (TownSites.Site site : TownSites.nearest(x, z, radius, level.getSeed())) {
+        List<TownSites.Site> candidates = TownSites.nearest(x, z, radius, level.getSeed());
+        int recorded = 0, biome = 0, village = 0;
+        for (TownSites.Site site : candidates) {
             TownRecords.Verdict verdict = records.verdict(site.regionX(), site.regionZ());
-            if (verdict == TownRecords.Verdict.REFUSED) continue;
-            if (verdict != null || isTownSite(level, site.x(), site.z())) return Optional.of(site);
+            if (verdict == TownRecords.Verdict.REFUSED) {
+                recorded++;
+                continue;
+            }
+            if (verdict != null) return Optional.of(site);
+            SiteVerdict test = siteVerdict(level, site.x(), site.z());
+            if (test == SiteVerdict.OK) return Optional.of(site);
+            if (test == SiteVerdict.BIOME) biome++; else village++;
             records.record(site.regionX(), site.regionZ(), TownRecords.Verdict.REFUSED);
         }
+        // Said out loud because "no signal" alone does not say why: a player on a server with a
+        // record of refusals is in a different position from one in open, unsuitable country.
+        LOG.info("no town within {} regions of {}, {} (seed {}): {} candidates, {} already refused, "
+                + "{} wrong ground, {} a village too close", radius, x, z, level.getSeed(),
+                candidates.size(), recorded, biome, village);
         return Optional.empty();
     }
 

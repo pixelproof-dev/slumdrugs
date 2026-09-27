@@ -5,6 +5,7 @@ import dev.lucas.slumdrugs.sim.world.CityPlan;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -55,6 +56,9 @@ public final class CityBuilder {
      */
     private static final int MAX_CUT = 40;
     private static final int FILL_BELOW = 8;
+
+    /** Ticks to wait for a town's chunks before building on whatever has arrived: thirty seconds. */
+    private static final int LOAD_PATIENCE = 20 * 30;
 
     public record Built(BlockPos origin, int spanX, int spanZ, int buildings, int people) {}
 
@@ -118,6 +122,8 @@ public final class CityBuilder {
         private int cursor;
         private int ground;
         private int buildings, people;
+        private long slowestNanos;
+        private final java.util.EnumMap<Phase, Long> slowestByPhase = new java.util.EnumMap<>(Phase.class);
 
         /**
          * @param forceChunks hold the town's chunks loaded for the length of the job. World
@@ -157,16 +163,57 @@ public final class CityBuilder {
             return plan == null ? 0 : plan.spanZ();
         }
 
-        /** Does up to {@code budget} units of work. Returns true once the town is finished. */
+        /** The longest a single step took, which is what a player would feel as a hitch. */
+        public long slowestMillis() {
+            return slowestNanos / 1_000_000;
+        }
+
+        /**
+         * Does up to {@code budget} columns of levelling, or one chunk of loading, or one building.
+         * Returns true once the town is finished. {@link Integer#MAX_VALUE} does it all at once.
+         */
         public boolean step(int budget) {
+            Phase was = phase;
+            long start = System.nanoTime();
+            try {
+                return stepTimed(budget);
+            } finally {
+                long took = System.nanoTime() - start;
+                slowestNanos = Math.max(slowestNanos, took);
+                slowestByPhase.merge(was, took, Math::max);
+            }
+        }
+
+        /** Slowest step of each phase, in milliseconds, for tuning the budgets. */
+        public String slowestByPhase() {
+            StringBuilder out = new StringBuilder();
+            slowestByPhase.forEach((phase, nanos) -> out.append(out.isEmpty() ? "" : ", ")
+                    .append(phase.name().toLowerCase(java.util.Locale.ROOT)).append(' ').append(nanos / 1_000_000));
+            return out.toString();
+        }
+
+        private boolean stepTimed(int budget) {
             switch (phase) {
                 case LOAD -> {
-                    // Forcing a chunk loads it on the spot, generating it if it is new, so this is
-                    // the expensive part of the whole job and is paced in chunks, not columns.
-                    int loads = Math.max(1, budget / 256);
-                    for (int n = 0; n < loads && cursor < chunks.size(); n++, cursor++)
-                        level.setChunkForced((int) chunks.get(cursor)[0], (int) chunks.get(cursor)[1], true);
-                    if (cursor >= chunks.size()) advance(Phase.MEASURE);
+                    // Ask for every chunk at once and then only wait. Loading them here, one per
+                    // step, still generated each new one on the server thread -- 664 ms for one,
+                    // measured. A ticket hands the work to the chunk system's own threads.
+                    if (cursor == 0) {
+                        for (long[] c : chunks)
+                            level.getChunkSource().addTicketWithRadius(ModTickets.TOWN.get(),
+                                    new ChunkPos((int) c[0], (int) c[1]), 0);
+                        cursor = 1;
+                    }
+                    // getChunkNow, not hasChunk: hasChunk only says the ticket is high enough, and
+                    // trusting it let the next phase find the chunks still generating and wait for
+                    // them on the server thread -- 1.6 seconds, measured.
+                    boolean all = true;
+                    for (long[] c : chunks) all &= level.getChunkSource().getChunkNow((int) c[0], (int) c[1]) != null;
+                    if (all || ++cursor > LOAD_PATIENCE) {
+                        if (!all) LOG.warn("town at {}: chunks still loading after {} ticks; building anyway",
+                                corner.toShortString(), LOAD_PATIENCE);
+                        advance(Phase.MEASURE);
+                    }
                 }
                 case MEASURE -> {
                     ground = medianGround();
@@ -189,9 +236,12 @@ public final class CityBuilder {
                     if (cursor >= plan.lots().size()) advance(forceChunks ? Phase.RELEASE : Phase.DONE);
                 }
                 case RELEASE -> {
-                    for (long[] c : chunks) level.setChunkForced((int) c[0], (int) c[1], false);
-                    LOG.info("town of {} buildings and {} people at {}, {} by {}, ground {}",
-                            buildings, people, corner.toShortString(), plan.spanX(), plan.spanZ(), ground);
+                    for (long[] c : chunks)
+                        level.getChunkSource().removeTicketWithRadius(ModTickets.TOWN.get(),
+                                new ChunkPos((int) c[0], (int) c[1]), 0);
+                    LOG.info("town of {} buildings and {} people at {}, {} by {}, ground {}, slowest step {} ms ({})",
+                            buildings, people, corner.toShortString(), plan.spanX(), plan.spanZ(), ground,
+                            slowestMillis(), slowestByPhase());
                     advance(Phase.DONE);
                 }
                 case DONE -> { }

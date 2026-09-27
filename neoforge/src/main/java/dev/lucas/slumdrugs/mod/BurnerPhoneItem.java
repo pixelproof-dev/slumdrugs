@@ -31,8 +31,8 @@ import java.util.Optional;
  */
 public final class BurnerPhoneItem extends Item {
 
-    /** How far out it looks, in regions of {@link TownSites#REGION} blocks. Four is four kilometres. */
-    private static final int REACH = 4;
+    /** How far out it looks, in regions of {@link TownSites#REGION} blocks: six kilometres. */
+    private static final int REACH = 6;
 
     private static final int COOLDOWN_TICKS = 20 * 5;
 
