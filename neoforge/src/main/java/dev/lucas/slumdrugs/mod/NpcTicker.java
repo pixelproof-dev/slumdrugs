@@ -46,7 +46,7 @@ public final class NpcTicker {
         long gameTime = level.getGameTime();
         if (gameTime % INTERVAL != 0) return;
 
-        NpcData data = Npcs.data(villager);
+        NpcData data = Npcs.keepLook(level, villager, Npcs.data(villager));
         Npcs.keepTrade(level, villager, data.role());
 
         // Stalls reprice from the market every few minutes, when nobody is at the counter,

@@ -211,7 +211,7 @@ public final class StructurePlacer {
             BlockState after = finalState(level, jigsaw.getFinalState());
             BlockPos here = pos.immutable();
             level.setBlock(here, after, Block.UPDATE_CLIENTS);
-            if (Npcs.spawn(level, here, role, crew, Npcs.randomName(level)) != null) spawned++;
+            if (Npcs.spawn(level, here, role, crew, null) != null) spawned++;
         }
         return spawned;
     }

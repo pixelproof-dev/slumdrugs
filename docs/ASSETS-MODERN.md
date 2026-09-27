@@ -119,6 +119,24 @@ The full id list is `docs/RENAME-MODERN.md`. Grouped:
   than its size suggests: it is how a player finds the city at all (MOD-GDD.md §1), so it should
   look like the most important thing in the hotbar.
 
+### People — skins, not models
+
+The mod's villagers are drawn as players (`client/NpcRenderer`), so a person is an ordinary
+**64 × 64 player skin**, wide or slim arms (read from the picture), dropped into
+`assets/slumdrugs/textures/entity/npc/`. Nothing else to register: the build lists the folder
+for the server (`npcLooks` in `neoforge/build.gradle.kts`).
+
+The file name says who wears it, in words split by `_`:
+
+- the **role** first: `trader`, `customer`, `resident`, `healer`, `broker`, `constable`,
+  `bruiser`, `lieutenant`, `hand` (without skins of its own a hand wears a resident's);
+- `female` or `male`, so the name they are given fits — leave it out and any name will do;
+- optionally a **crew** (`ashfall`, `tidewater`, `choir`, `quarry`); that crew then wears it
+  and nobody else in the role does.
+
+`resident_female_3.png`, `constable_male.png`, `bruiser_male_ashfall.png`. Several files per
+role are shared out between its people. Vanilla villagers are untouched.
+
 ## Two traps in 26.3 that keep costing days
 
 Both are in MOD-NOTES.md and both have already bitten this project:

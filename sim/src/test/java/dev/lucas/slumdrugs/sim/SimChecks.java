@@ -10,6 +10,7 @@ import dev.lucas.slumdrugs.sim.drug.Strain;
 import dev.lucas.slumdrugs.sim.drug.UnitTransfer;
 import dev.lucas.slumdrugs.sim.economy.Coin;
 import dev.lucas.slumdrugs.sim.economy.MarketState;
+import dev.lucas.slumdrugs.sim.npc.Looks;
 import dev.lucas.slumdrugs.sim.npc.Loyalty;
 import dev.lucas.slumdrugs.sim.npc.Npc;
 import dev.lucas.slumdrugs.sim.npc.Standing;
@@ -53,6 +54,7 @@ public final class SimChecks {
         cityPlan();
         townSites();
         localCrews();
+        looks();
         growbox();
         recovery();
         condition();
@@ -190,6 +192,86 @@ public final class SimChecks {
         for (int i = 0; i < 200; i++)
             if (Standing.Crew.holding(i * 1024L, 0) != Standing.Crew.holding((i + 1) * 1024L, 0)) differ++;
         check(differ > 100, "neighbouring towns are usually held by different crews");
+    }
+
+    // ---------------------------------------------------------------- looks
+
+    private static void looks() {
+        var F = Looks.Sex.FEMALE;
+        var M = Looks.Sex.MALE;
+        var A = Looks.Sex.ANY;
+        java.util.function.Function<String, Looks.Look> look = Looks.Look::of;
+
+        check(look.apply("resident_female_2").sex() == F, "a skin named female is a woman's");
+        check(look.apply("resident_male_2").sex() == M, "a skin named male is a man's");
+        check(look.apply("resident_female").sex() != M, "female is not read as male because it ends in male");
+        check(look.apply("healer").sex() == A, "a skin with neither word fits anyone");
+        check(look.apply("bruiser_male_ashfall").role().equals("bruiser"), "the first word is the role");
+
+        var all = java.util.List.of(look.apply("constable_male"), look.apply("healer"),
+                look.apply("resident_female_1"), look.apply("resident_female_2"),
+                look.apply("resident_male_1"), look.apply("bruiser_male"), look.apply("bruiser_male_ashfall"));
+
+        // The point of the whole thing: a name never contradicts the face it is given with.
+        for (long seed = 0; seed < 2000; seed++) {
+            for (Npc.Role role : Npc.Role.values()) {
+                var picked = Looks.pick(all, role, "", A, seed);
+                if (picked.isEmpty()) continue;
+                String name = Looks.name(picked.get().sex(), seed * 31);
+                var sex = Looks.sexOf(name);
+                if (!(sex == A || picked.get().sex() == A || sex == picked.get().sex())) {
+                    check(false, role + " " + picked.get().id() + " was named " + name);
+                    return;
+                }
+            }
+        }
+        check(true, "two thousand people each named to fit their face");
+
+        var cop = Looks.pick(all, Npc.Role.CONSTABLE, "", A, 7);
+        check(cop.isPresent() && cop.get().id().equals("constable_male"), "a role with one skin always gets it");
+        check(Looks.pick(all, Npc.Role.CONSTABLE, "", F, 7).isEmpty(),
+                "no woman's look for a role that has none");
+        check(Looks.forName(all, Npc.Role.CONSTABLE, "", "Dessa", 7).isPresent(),
+                "an old constable called Dessa still gets the uniform rather than nothing");
+        for (long seed = 0; seed < 200; seed++) {
+            var r = Looks.forName(all, Npc.Role.RESIDENT, "", "Dessa", seed);
+            if (r.isEmpty() || r.get().sex() != F) { check(false, "Dessa, a resident, looks like a woman"); return; }
+        }
+        check(true, "a named resident always gets a look that fits the name when one exists");
+
+        boolean crewOnly = true;
+        for (long seed = 0; seed < 200; seed++)
+            crewOnly &= Looks.pick(all, Npc.Role.BRUISER, "ashfall", A, seed)
+                    .map(l -> l.id().equals("bruiser_male_ashfall")).orElse(false);
+        check(crewOnly, "a crew with its own look always wears it");
+        boolean both = false;
+        for (long seed = 0; seed < 200 && !both; seed++)
+            both = Looks.pick(all, Npc.Role.BRUISER, "", A, seed)
+                    .map(l -> l.id().equals("bruiser_male")).orElse(false);
+        check(both, "without a crew the ordinary look turns up");
+
+        var hand = Looks.pick(all, Npc.Role.HAND, "", A, 3);
+        check(hand.isPresent() && hand.get().role().equals("resident"), "a hand wears a resident's look");
+        check(Looks.pick(all, Npc.Role.TRADER, "", A, 3).isEmpty(),
+                "no look at all for a role without skins");
+        check(Looks.pick(all, Npc.Role.RESIDENT, "", A, 99)
+                .equals(Looks.pick(all, Npc.Role.RESIDENT, "", A, 99)),
+                "the same seed gives the same look");
+        var seen = new java.util.HashSet<String>();
+        for (long seed = 0; seed < 300; seed++)
+            Looks.pick(all, Npc.Role.RESIDENT, "", A, seed).ifPresent(l -> seen.add(l.id()));
+        check(seen.size() == 3, "every resident look turns up in a town's worth of residents");
+        check(Looks.sexOf("Somebody Else") == A, "a name from outside the lists fits anyone");
+
+        // Seeds arrive from the world's random, so spread has to hold for random seeds too.
+        var customers = List.of(look.apply("customer_male_1"), look.apply("customer_male_2"), look.apply("customer_male_3"));
+        var random = new java.util.Random(11);
+        var counts = new java.util.HashMap<String, Integer>();
+        for (int i = 0; i < 30000; i++)
+            counts.merge(Looks.pick(customers, Npc.Role.CUSTOMER, "", A, random.nextLong()).orElseThrow().id(), 1, Integer::sum);
+        for (var c : customers)
+            check(Math.abs(counts.getOrDefault(c.id(), 0) - 10000) < 600,
+                    c.id() + " is worn by a third of customers, not " + counts.getOrDefault(c.id(), 0) + " in 30000");
     }
 
     // ---------------------------------------------------------------- town sites

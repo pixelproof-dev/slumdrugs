@@ -1,5 +1,6 @@
 package dev.lucas.slumdrugs.mod;
 
+import dev.lucas.slumdrugs.sim.npc.Looks;
 import dev.lucas.slumdrugs.sim.npc.Npc;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -10,19 +11,16 @@ import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.npc.villager.Villager;
 import net.minecraft.world.entity.npc.villager.VillagerProfession;
 
-import java.util.List;
+import java.util.Optional;
 
 /**
  * The quarter's people are ordinary villagers carrying our data, not a custom entity type.
- * That is a deliberate choice: they stay negotiable and poachable, they need no model, no
- * renderer and no client code at all, and a crew is visibly made of the same people who live
- * here. See docs/MOD-GDD.md §5.9.
+ * That is a deliberate choice: they stay negotiable and poachable, they keep the villager's
+ * trading and its AI, and a crew is visibly made of the same people who live here. See
+ * docs/MOD-GDD.md §5.9. Only the drawing is ours: the client shows them as people in a skin
+ * ({@code client.NpcRenderer}), chosen here together with their name ({@link Looks}).
  */
 public final class Npcs {
-
-    private static final List<String> FIRST_NAMES = List.of(
-            "Marlo", "Dessa", "Kip", "Rusty", "Nen", "Odd Tam", "Vera", "Salt", "Pim", "Gret",
-            "Hollow Jen", "Bramble", "Cass", "Wick", "Trudy", "Ovid");
 
     private Npcs() {}
 
@@ -78,15 +76,42 @@ public final class Npcs {
         if (!villager.getVillagerData().profession().is(profession(role))) dress(level, villager, role);
     }
 
-    public static String randomName(ServerLevel level) {
-        return FIRST_NAMES.get(level.getRandom().nextInt(FIRST_NAMES.size()));
+    /**
+     * Gives somebody placed before skins existed a look that fits their name, and where the role
+     * has no look that does — a policewoman called Dessa, from a force with one uniform — a name
+     * that fits the look. Called from the ticker; returns the data as it now stands.
+     */
+    public static NpcData keepLook(ServerLevel level, Villager villager, NpcData data) {
+        if (!data.look().isBlank()) return data;
+        String name = villager.getCustomName() == null ? "" : villager.getCustomName().getString();
+        long seed = villager.getUUID().getLeastSignificantBits();
+        Optional<Looks.Look> look = Looks.forName(NpcLooks.all(level.getServer()), data.role(), data.crew(), name, seed);
+        if (look.isEmpty()) return data;
+        Looks.Sex named = Looks.sexOf(name), worn = look.get().sex();
+        if (named != Looks.Sex.ANY && worn != Looks.Sex.ANY && named != worn)
+            villager.setCustomName(Component.literal(Looks.name(worn, seed)));
+        NpcData dressed = data.withLook(look.get().id());
+        villager.setData(ModAttachments.NPC.get(), dressed);
+        return dressed;
     }
 
-    /** Spawns one, or null if the game refused to create the entity. */
+    /**
+     * Spawns one, or null if the game refused to create the entity.
+     *
+     * @param name what to call them, or null to name them after the look they are given
+     */
     public static Villager spawn(ServerLevel level, BlockPos pos, Npc.Role role, String crew, String name) {
         // 26.3 moved the entity type constants out of EntityType and into EntityTypes.
         Villager villager = EntityTypes.VILLAGER.create(level, EntitySpawnReason.COMMAND);
         if (villager == null) return null;
+
+        // The face first and the name after it, so the two agree; see Looks.
+        long seed = level.getRandom().nextLong();
+        var looks = NpcLooks.all(level.getServer());
+        Optional<Looks.Look> look = name == null
+                ? Looks.pick(looks, role, crew, Looks.Sex.ANY, seed)
+                : Looks.forName(looks, role, crew, name, seed);
+        if (name == null) name = Looks.name(look.map(Looks.Look::sex).orElse(Looks.Sex.ANY), seed ^ 0x5DEECE66DL);
 
         villager.snapTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, 0, 0);
         villager.setVillagerData(villager.getVillagerData()
@@ -98,7 +123,8 @@ public final class Npcs {
         keepThisTrade(villager);
 
         double resting = Npc.restingAggression(role, 0, 0);
-        villager.setData(ModAttachments.NPC.get(), new NpcData(role, crew, resting));
+        villager.setData(ModAttachments.NPC.get(),
+                new NpcData(role, crew, resting).withLook(look.map(Looks.Look::id).orElse("")));
 
         NpcTrades.fill(villager, role);
         level.addFreshEntity(villager);

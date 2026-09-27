@@ -245,15 +245,13 @@ public final class SlumCommands {
         }
         ServerLevel level = ctx.getSource().getLevel();
         BlockPos pos = BlockPos.containing(ctx.getSource().getPosition());
-        String chosen = name != null ? name : Npcs.randomName(level);
-
-        Villager villager = Npcs.spawn(level, pos, role, crew, chosen);
+        Villager villager = Npcs.spawn(level, pos, role, crew, name);
         if (villager == null) {
             ctx.getSource().sendFailure(Component.literal("Could not spawn"));
             return 0;
         }
-        reply(ctx, "Spawned " + chosen + " (" + role.name().toLowerCase(java.util.Locale.ROOT)
-                + (crew.isEmpty() ? "" : ", " + crew) + ")");
+        reply(ctx, "Spawned " + villager.getName().getString() + " (" + role.name().toLowerCase(java.util.Locale.ROOT)
+                + (crew.isEmpty() ? "" : ", " + crew) + ", " + Npcs.data(villager).look() + ")");
         return 1;
     }
 

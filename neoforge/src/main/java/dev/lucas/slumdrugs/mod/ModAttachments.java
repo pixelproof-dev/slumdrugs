@@ -137,10 +137,16 @@ public final class ModAttachments {
                     .serialize(TurfMap.CODEC.fieldOf("cells"))
                     .build());
 
-    /** Not copied on death: a villager that dies is gone, and their replacement is a new person. */
+    /**
+     * Not copied on death: a villager that dies is gone, and their replacement is a new person.
+     *
+     * <p>Synced to everybody who can see the villager, role and crew only, so the client can
+     * draw one of ours as a person rather than a villager ({@code client.NpcRenderer}).
+     */
     public static final DeferredHolder<AttachmentType<?>, AttachmentType<NpcData>> NPC =
             TYPES.register("npc", () -> AttachmentType.builder(() -> NpcData.NONE)
                     .serialize(NpcData.CODEC)
+                    .sync(NpcData.LOOKS)
                     .build());
 
     private ModAttachments() {}

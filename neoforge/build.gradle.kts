@@ -11,7 +11,12 @@ val neoforgeVersion = "26.3.0.8-beta"
 neoForge {
     version = neoforgeVersion
     runs {
-        register("client") { client() }
+        register("client") {
+            client()
+            // ./gradlew runClient -Pworld=<save name> goes straight into that world, which is how
+            // a change to what the game draws gets looked at without clicking through menus.
+            providers.gradleProperty("world").orNull?.let { programArguments.addAll("--quickPlaySingleplayer", it) }
+        }
         register("server") { server() }
     }
     mods {
@@ -54,3 +59,19 @@ tasks.withType<ProcessResources>().configureEach {
     inputs.properties(props)
     filesMatching("META-INF/neoforge.mods.toml") { expand(props) }
 }
+
+// The server gives each person a name that fits their face (sim Looks), so it has to know which
+// faces there are — and a server never loads assets. The skin folder is listed at build time
+// into a data file the server can read. Dropping a skin into the folder is all it takes.
+val npcLooks = tasks.register("npcLooks") {
+    val skins = layout.projectDirectory.dir("src/main/resources/assets/slumdrugs/textures/entity/npc")
+    val out = layout.buildDirectory.file("generated/npc-looks/data/slumdrugs/npc_looks.txt")
+    inputs.dir(skins)
+    outputs.file(out)
+    doLast {
+        val names = skins.asFile.listFiles { f -> f.name.endsWith(".png") }.orEmpty()
+            .map { it.name.removeSuffix(".png") }.sorted()
+        out.get().asFile.apply { parentFile.mkdirs() }.writeText(names.joinToString("\n", postfix = "\n"))
+    }
+}
+sourceSets.main { resources.srcDir(npcLooks.map { layout.buildDirectory.dir("generated/npc-looks").get() }) }
