@@ -23,6 +23,13 @@ dependencies {
     implementation(project(":sim"))
 }
 
+// The subproject is called neoforge, so its jar was neoforge-0.1.0-SNAPSHOT.jar: a name that says
+// which loader it is for and nothing about what it is, sitting in a mods folder beside a dozen
+// others. It goes out under the mod's own name.
+base {
+    archivesName = "slumdrugs"
+}
+
 // sim is an internal library, not a mod of its own, so its classes have to travel inside this
 // jar. A development run does not need that — the module is on the classpath there — which is
 // why the mod ran for months and then failed on the first server it was installed on with

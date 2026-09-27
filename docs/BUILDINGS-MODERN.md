@@ -87,10 +87,17 @@ the person who works the place as a `resident` and let the player hire them.
 
 ## What to do with them once they exist
 
-Drop the `.nbt` into `neoforge/src/main/resources/data/slumdrugs/structure/`, add the id and its
-ground offset to `StructurePlacer.PIECES`, and it generates beside settlements on its own — the
-plot search, the levelling and the people all already work. `tools/cut_structure.py` cuts from a
-world save or converts a WorldEdit `.schem`, including ones WorldEdit itself refuses to open.
+Drop the `.nbt` into `neoforge/src/main/resources/data/slumdrugs/structure/`, add the id, its
+ground offset and the way its entrance faces to `StructurePlacer.PIECES`, and every town built from
+then on includes it — the layout, the levelling, the turning to face the street and the people all
+already work. Towns are rare and far from villages (MOD-GDD.md §1); nothing is placed beside a
+vanilla village any more. `tools/cut_structure.py` cuts from a world save or converts a WorldEdit
+`.schem`, including ones WorldEdit itself refuses to open, and `tools/add_markers.py` puts the
+people in.
+
+The entrance direction matters: a town turns each building by the difference between the way its
+file faces and the way its plot fronts the street, so a wrong value stands the building with its
+back to the road. The converted buildings face north; the generated pawn shop faces south.
 
 Cut from an **untouched** copy of a downloaded map. A newer game rewrites level.dat the moment it
 opens a world but upgrades chunks only when somebody flies near them, so a map you have looked at
