@@ -52,6 +52,7 @@ public final class SimChecks {
         plotSearch();
         cityPlan();
         townSites();
+        localCrews();
         growbox();
         recovery();
         condition();
@@ -170,6 +171,25 @@ public final class SimChecks {
         check(hamlet.lots().size() == 1, "one building is a town too");
         check(hamlet.spanX() == 9 + 3 * 2 && hamlet.spanZ() == 9 + 3 * 2,
                 "a lone building is a street's width from each edge");
+    }
+
+    // ---------------------------------------------------------------- local crews
+
+    private static void localCrews() {
+        check(Standing.Crew.holding(120, -340) == Standing.Crew.holding(120, -340),
+                "one spot, one crew: everybody in a building agrees");
+        var seen = new java.util.EnumMap<Standing.Crew, Integer>(Standing.Crew.class);
+        for (int x = -4000; x <= 4000; x += 137)
+            for (int z = -4000; z <= 4000; z += 151)
+                seen.merge(Standing.Crew.holding(x, z), 1, Integer::sum);
+        check(seen.size() == Standing.Crew.values().length, "across a world all four crews hold somewhere");
+        int total = seen.values().stream().mapToInt(Integer::intValue).sum();
+        for (var e : seen.entrySet())
+            check(e.getValue() > total / 8, e.getKey() + " holds a fair share, not a sliver");
+        int differ = 0;
+        for (int i = 0; i < 200; i++)
+            if (Standing.Crew.holding(i * 1024L, 0) != Standing.Crew.holding((i + 1) * 1024L, 0)) differ++;
+        check(differ > 100, "neighbouring towns are usually held by different crews");
     }
 
     // ---------------------------------------------------------------- town sites

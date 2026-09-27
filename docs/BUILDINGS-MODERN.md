@@ -50,7 +50,11 @@ A marker is a **jigsaw block** with its target set to `slumdrugs:npc/<role>` and
 | `lieutenant` | crew leadership; their mood spreads |
 
 
-Crew roles may name their crew: `slumdrugs:npc/bruiser/<crew>`.
+Crew roles may name their crew: `slumdrugs:npc/bruiser/<crew>`, or `slumdrugs:npc/bruiser/local`
+for the building's own crew. `local` is decided by where the building stands
+(`Standing.Crew.holding`), so everybody marked `local` in one building is in the same crew and
+two warehouses in different places can belong to rivals. With `tools/add_markers.py`:
+`lieutenant/local@2 bruiser/local@2`.
 
 **Never mark a building with `hand`.** A hand is not somebody who stands anywhere: `Hands.java`
 only hires a resident, and a hand nobody has paid quits and turns back into one. A `hand` marker
@@ -64,7 +68,7 @@ the person who works the place as a `resident` and let the player hire them.
 | --- | --- | --- | --- |
 | `lockup` | 11 × 11 × 6 | nobody | A rented garage with a roller door. Empty by design: this is where the player starts and where the first stations go. The only building that must have floor space rather than furniture. |
 | `corner_shop` | 13 × 13 × 8 | `trader` | Counter, shelves, a chiller. Sells seed, fertiliser, filler, seal film. The first place a player has to find. |
-| `apartment_block` | 16 × 20 × 16 | `resident` ×2, `customer` ×2 | Four flats, a stairwell, post boxes. Your customer base lives here; the residents are what makes the street notice you. |
+| `apartment_block` | 16 × 20 × 16 | `resident` ×2, `customer` ×2 (`apartment_two`: ×2, ×3) | Four flats, a stairwell, post boxes. Your customer base lives here; the residents are what makes the street notice you. |
 | `precinct` | 24 × 20 × 10 | `constable` ×3 | Front desk, back office, **two holding cells with doors that shut**. Where a taken player ends up (§5, the gaol), so the cells are load-bearing, not decoration. |
 
 ## Tier 2 — the economy
@@ -72,17 +76,17 @@ the person who works the place as a `resident` and let the player hire them.
 | id | footprint | who is inside | what happens there |
 | --- | --- | --- | --- |
 | `pawn_shop` | 17 × 15 × 11 | `broker` | Built: barred storefront, lit sign, glass counter with service hatch, stocked displays and staff office. See `PAWN-SHOP.md`. Uses existing broker trades; lockpick/forged-ID offers remain separate gameplay work. |
-| `clinic` | 16 × 16 × 8 | `healer` | Waiting room, one treatment room. Dependence has a visible way out and this is it (§10.2). |
+| `clinic` | 16 × 16 × 8 | `healer` | Waiting room, one treatment room. Dependence has a visible way out and this is it (§10.2). Until it exists the healer works from the strip mall. |
 | `laundrette` | 13 × 13 × 7 | `resident` | Rows of machines, a back room with a desk. The front: loose cash goes in, banded cash comes out. The `cash_counter` station belongs in the back. |
-| `warehouse` | 24 × 24 × 12 | `resident` ×2 | Roller shutter, pallet racking, an office up a metal stair. Bulk storage and the obvious place for a handover. |
+| `warehouse` | 24 × 24 × 12 | `lieutenant`, `bruiser` ×2, all `local` | Roller shutter, pallet racking, an office up a metal stair. Bulk storage and the obvious place for a handover. |
 
 ## Tier 3 — the city reads as a city
 
 | id | footprint | who is inside | what happens there |
 | --- | --- | --- | --- |
 | `tower_block` | 16 × 16 × 56 | `resident` ×4, `customer` ×2 | The skyline piece. Tall rather than wide on purpose: height is cheap, footprint is not, and a 16-wide tower finds ground almost anywhere. |
-| `garage` | 16 × 16 × 8 | `lieutenant`, `bruiser` ×2 | Two bays, a pit, a sofa that should not be there. The crew's own place — walking in uninvited should feel like a mistake. |
-| `strip_mall` | 32 × 14 × 10 | `trader`, `broker` | Three shop fronts in a row, one shuttered. The widest thing in the set and already at the edge of what finds a plot. |
+| `garage` | 16 × 16 × 8 | `lieutenant`, `bruiser` ×2 | Two bays, a pit, a sofa that should not be there. The crew's own place — walking in uninvited should feel like a mistake. Until it exists the crew holds the warehouse. |
+| `strip_mall` | 32 × 14 × 10 | `broker`, `healer`, `resident`, `customer` | Three shop fronts in a row, one shuttered. The widest thing in the set and already at the edge of what finds a plot. |
 | `car_park` | 24 × 24 × 14 | nobody | Two decks, a ramp, lights that flicker. No NPC: it exists so meetings have somewhere to happen that is not a shop. |
 
 ## What to do with them once they exist

@@ -143,7 +143,10 @@ public final class CityBuilder {
             for (int cx = corner.getX() >> 4; cx <= (corner.getX() + plan.spanX() - 1) >> 4; cx++)
                 for (int cz = corner.getZ() >> 4; cz <= (corner.getZ() + plan.spanZ() - 1) >> 4; cz++)
                     chunks.add(new long[] {cx, cz});
-            if (!forceChunks) phase = Phase.MEASURE;
+            // Both paths go through LOAD. The command used to skip it on the grounds that a player
+            // stands there, but getHeight on a chunk that is not loaded does not load it -- it
+            // answers with the bottom of the world. A town laid right after its chunks were
+            // requested measured its ground at -64 and refused eight buildings of nine.
         }
 
         public boolean done() {
@@ -195,6 +198,13 @@ public final class CityBuilder {
         private boolean stepTimed(int budget) {
             switch (phase) {
                 case LOAD -> {
+                    if (budget == Integer.MAX_VALUE) {
+                        // The command, in one go: load each chunk on the spot. It holds the server
+                        // while it does, which a command may and world generation may not.
+                        for (long[] c : chunks) level.getChunk((int) c[0], (int) c[1]);
+                        advance(Phase.MEASURE);
+                        break;
+                    }
                     // Ask for every chunk at once and then only wait. Loading them here, one per
                     // step, still generated each new one on the server thread -- 664 ms for one,
                     // measured. A ticket hands the work to the chunk system's own threads.
@@ -263,10 +273,22 @@ public final class CityBuilder {
          */
         private int medianGround() {
             List<Integer> heights = new ArrayList<>();
+            int unloaded = 0;
             for (int dx = 0; dx < plan.spanX(); dx += 8)
-                for (int dz = 0; dz < plan.spanZ(); dz += 8)
-                    heights.add(level.getHeight(Heightmap.Types.WORLD_SURFACE,
-                            corner.getX() + dx, corner.getZ() + dz));
+                for (int dz = 0; dz < plan.spanZ(); dz += 8) {
+                    int x = corner.getX() + dx, z = corner.getZ() + dz;
+                    // A column in a chunk that is not loaded reads as the bottom of the world;
+                    // counted rather than trusted, so a town never stands on a false floor.
+                    if (level.getChunkSource().getChunkNow(x >> 4, z >> 4) == null) {
+                        unloaded++;
+                        continue;
+                    }
+                    heights.add(level.getHeight(Heightmap.Types.WORLD_SURFACE, x, z));
+                }
+            if (unloaded > 0)
+                LOG.warn("town at {}: {} ground samples fell in unloaded chunks and were skipped",
+                        corner.toShortString(), unloaded);
+            if (heights.isEmpty()) return level.getSeaLevel();
             int[] sorted = heights.stream().mapToInt(Integer::intValue).toArray();
             Arrays.sort(sorted);
             return sorted[sorted.length / 2];

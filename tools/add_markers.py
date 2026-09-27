@@ -40,6 +40,9 @@ ROLES = ('trader', 'customer', 'resident', 'healer', 'broker',
 # produces a resident a second later, which looks like a bug and is not one.
 NOT_FROM_A_MARKER = {'hand': 'a hand is hired from a resident, and quits back to one if unpaid'}
 
+# The crews of Standing.Crew, and "local": the building's own crew, chosen where it stands.
+CREWS = {'ashfall', 'tidewater', 'choir', 'quarry', 'local'}
+
 
 def ints(v):
     return [int(x) for x in (v.values if hasattr(v, 'values') else v)]
@@ -170,11 +173,18 @@ if __name__ == '__main__':
 
     wanted = []
     for arg in rest:
-        role, _, storey = arg.partition('@')
+        who, _, storey = arg.partition('@')
+        # A crew role may name its crew -- bruiser/choir -- or take the building's own with
+        # bruiser/local, which the placer resolves from where the building stands.
+        role, _, crew = who.partition('/')
+        if crew and crew not in CREWS:
+            raise SystemExit(f'unknown crew {crew!r}; one of {", ".join(sorted(CREWS))}')
+        if crew and role not in ('bruiser', 'lieutenant'):
+            raise SystemExit(f'only crew roles carry a crew, not {role}')
         if role in NOT_FROM_A_MARKER:
             raise SystemExit(f'{role}: {NOT_FROM_A_MARKER[role]}. Use resident instead.')
         if role not in ROLES:
             raise SystemExit(f'unknown role {role!r}; one of {", ".join(ROLES)}')
-        wanted.append((role, int(storey) if storey else None))
+        wanted.append((who, int(storey) if storey else None))
     for spot, (role, _) in zip(mark(piece, wanted, replace), wanted):
         print(f'  {role:11} at {spot}')

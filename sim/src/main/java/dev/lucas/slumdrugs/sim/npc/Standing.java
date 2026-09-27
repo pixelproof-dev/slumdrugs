@@ -33,6 +33,23 @@ public final class Standing {
             };
         }
 
+        /**
+         * The crew that holds a building standing at this spot.
+         *
+         * <p>A structure file names its people's crew in their markers, so a fixed name would put
+         * the same crew in the same building in every town in the world. A marker that says
+         * {@code local} is given the crew of its building instead, chosen here from where the
+         * building stands: everybody in one building agrees, neighbouring towns mostly differ,
+         * and across a world all four turn up.
+         */
+        public static Crew holding(long x, long z) {
+            long h = x * 0x9E3779B97F4A7C15L ^ z * 0xC2B2AE3D27D4EB4FL;
+            h ^= h >>> 29;
+            h *= 0xBF58476D1CE4E5B9L;
+            h ^= h >>> 32;
+            return values()[(int) Math.floorMod(h, (long) values().length)];
+        }
+
         /** The crew with this id, or null for a crew the design does not know. */
         public static Crew byId(String id) {
             if (id == null) return null;

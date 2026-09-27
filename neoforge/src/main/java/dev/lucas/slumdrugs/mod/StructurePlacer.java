@@ -2,6 +2,7 @@ package dev.lucas.slumdrugs.mod;
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import dev.lucas.slumdrugs.sim.npc.Npc;
+import dev.lucas.slumdrugs.sim.npc.Standing;
 import dev.lucas.slumdrugs.sim.world.CityPlan;
 import dev.lucas.slumdrugs.sim.world.StructureFit;
 import net.minecraft.commands.arguments.blocks.BlockStateParser;
@@ -205,6 +206,8 @@ public final class StructurePlacer {
                 continue;
             }
             String crew = parts.length > 1 ? parts[1] : "";
+            // "local" is the building's own crew, the same for everybody in it; see Crew.holding.
+            if (crew.equals("local")) crew = Standing.Crew.holding(box.minX(), box.minZ()).id;
             BlockState after = finalState(level, jigsaw.getFinalState());
             BlockPos here = pos.immutable();
             level.setBlock(here, after, Block.UPDATE_CLIENTS);
