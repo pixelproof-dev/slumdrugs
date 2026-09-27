@@ -48,9 +48,15 @@ A marker is a **jigsaw block** with its target set to `slumdrugs:npc/<role>` and
 | `constable` | the law |
 | `bruiser` | crew muscle |
 | `lieutenant` | crew leadership; their mood spreads |
-| `hand` | hired labour — works a station for whoever pays |
+
 
 Crew roles may name their crew: `slumdrugs:npc/bruiser/<crew>`.
+
+**Never mark a building with `hand`.** A hand is not somebody who stands anywhere: `Hands.java`
+only hires a resident, and a hand nobody has paid quits and turns back into one. A `hand` marker
+therefore produces a resident a second after the building lands, which looks like a bug. Mark
+the person who works the place as a `resident` and let the player hire them.
+`tools/add_markers.py` refuses the role outright.
 
 ## Tier 1 — without these the loop does not close
 
@@ -67,8 +73,8 @@ Crew roles may name their crew: `slumdrugs:npc/bruiser/<crew>`.
 | --- | --- | --- | --- |
 | `pawn_shop` | 13 × 13 × 8 | `broker` | Grilles on the window, everything behind glass. Buys what the shops will not; sells lockpicks and a forged ID. |
 | `clinic` | 16 × 16 × 8 | `healer` | Waiting room, one treatment room. Dependence has a visible way out and this is it (§10.2). |
-| `laundrette` | 13 × 13 × 7 | `hand` | Rows of machines, a back room with a desk. The front: loose cash goes in, banded cash comes out. The `cash_counter` station belongs in the back. |
-| `warehouse` | 24 × 24 × 12 | `hand` ×2 | Roller shutter, pallet racking, an office up a metal stair. Bulk storage and the obvious place for a handover. |
+| `laundrette` | 13 × 13 × 7 | `resident` | Rows of machines, a back room with a desk. The front: loose cash goes in, banded cash comes out. The `cash_counter` station belongs in the back. |
+| `warehouse` | 24 × 24 × 12 | `resident` ×2 | Roller shutter, pallet racking, an office up a metal stair. Bulk storage and the obvious place for a handover. |
 
 ## Tier 3 — the city reads as a city
 

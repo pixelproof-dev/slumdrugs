@@ -58,38 +58,30 @@ public final class StructurePlacer {
     }
 
     /**
-     * The trader's house: timber frame over a stone footing, brick chimney, nine blocks from
-     * the cellar floor up to and including the ground floor. Hand-built, no markers yet.
+     * The buildings of the quarter, all converted from downloaded WorldEdit files with
+     * {@code tools/cut_structure.py} and given their people with {@code tools/add_markers.py}.
+     *
+     * <p>The number is the ground offset: the layer of the piece that sits at ground level,
+     * read off the bottom of each file rather than guessed. Three of them were cut with earth
+     * underneath and three were not, which is why they differ.
      */
-    public static final Piece TRADER_HOUSE = piece("trader_house", 9);
-
-    /** A resident's house, generated: footing at 0, the floor layer at 1, a resident inside and a regular at the door. */
-    public static final Piece RESIDENT_HOUSE = piece("resident_house", 2);
-
-    /**
-     * Cut out of a downloaded world with {@code tools/cut_structure.py}, one layer of earth
-     * below the ground they stand on, so the offset is the generated pieces' 2. No markers yet.
-     */
-    public static final Piece TRADE_HALL = piece("trade_hall", 2);
-    public static final Piece STEAMPUNK_FARM = piece("steampunk_farm", 2);
-
-    /**
-     * Converted from a WorldEdit file. Its street is three layers of earth deep, so the level
-     * a person walks on is the fourth. WorldEdit's own reader cannot open this one — its data
-     * fixer fails on a block state from 2230 — but the game's fixer manages, which is why the
-     * converter carries the source version through rather than resolving anything itself.
-     */
-    public static final Piece POLICE_STATION = piece("police_station", 4);
+    public static final Piece PRECINCT = piece("precinct", 3);
+    public static final Piece CORNER_SHOP = piece("corner_shop", 2);
+    public static final Piece WAREHOUSE = piece("warehouse", 2);
+    public static final Piece APARTMENT_BLOCK = piece("apartment_block", 1);
+    public static final Piece APARTMENT_TWO = piece("apartment_two", 1);
+    public static final Piece STRIP_MALL = piece("strip_mall", 1);
 
     /** Every piece by its short name, in the order the command lists them. */
     public static final Map<String, Piece> PIECES = new LinkedHashMap<>();
 
     static {
-        PIECES.put("trader_house", TRADER_HOUSE);
-        PIECES.put("resident_house", RESIDENT_HOUSE);
-        PIECES.put("trade_hall", TRADE_HALL);
-        PIECES.put("steampunk_farm", STEAMPUNK_FARM);
-        PIECES.put("police_station", POLICE_STATION);
+        PIECES.put("corner_shop", CORNER_SHOP);
+        PIECES.put("apartment_block", APARTMENT_BLOCK);
+        PIECES.put("apartment_two", APARTMENT_TWO);
+        PIECES.put("warehouse", WAREHOUSE);
+        PIECES.put("strip_mall", STRIP_MALL);
+        PIECES.put("precinct", PRECINCT);
     }
 
     private StructurePlacer() {}

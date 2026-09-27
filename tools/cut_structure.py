@@ -280,7 +280,13 @@ def from_schem(path, name, keep_air=False):
 
     lo, hi = (0, 0, 0), (w - 1, h - 1, l - 1)
     skip = set() if keep_air else open_air(cells, lo, hi)
-    return write_piece(name, (w, h, l), cells, entities, skip, version, old_spelling=True)
+    # The palette spelling has to match the version the file declares, because that is what
+    # decides whether the game runs its fixer over it at all: 26.3 writes id/properties and
+    # reads a Name entry as air, while anything older is fixed up on load and must keep the
+    # old spelling. A schematic carries no chunks to read the spelling off, so it comes from
+    # the version. Getting this wrong is silent -- the piece places as a hole in the ground.
+    return write_piece(name, (w, h, l), cells, entities, skip, version,
+                       old_spelling=version < 5023)
 
 
 if __name__ == '__main__':
