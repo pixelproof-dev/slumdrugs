@@ -65,12 +65,15 @@ public final class StructurePlacer {
      * read off the bottom of each file rather than guessed. Three of them were cut with earth
      * underneath and three were not, which is why they differ.
      */
-    public static final Piece PRECINCT = piece("precinct", 3);
+    /** Eight rather than three: the precinct has a cellar, and three left it standing on it. */
+    public static final Piece PRECINCT = piece("precinct", 8);
     public static final Piece CORNER_SHOP = piece("corner_shop", 2);
     public static final Piece WAREHOUSE = piece("warehouse", 2);
-    public static final Piece APARTMENT_BLOCK = piece("apartment_block", 1);
+    /** Zero: its floor is the bottom layer, so one sank the whole ground storey by a block. */
+    public static final Piece APARTMENT_BLOCK = piece("apartment_block", 0);
     public static final Piece APARTMENT_TWO = piece("apartment_two", 1);
     public static final Piece STRIP_MALL = piece("strip_mall", 1);
+    public static final Piece PAWN_SHOP = piece("pawn_shop", 2);
 
     /** Every piece by its short name, in the order the command lists them. */
     public static final Map<String, Piece> PIECES = new LinkedHashMap<>();
@@ -82,6 +85,7 @@ public final class StructurePlacer {
         PIECES.put("warehouse", WAREHOUSE);
         PIECES.put("strip_mall", STRIP_MALL);
         PIECES.put("precinct", PRECINCT);
+        PIECES.put("pawn_shop", PAWN_SHOP);
     }
 
     private StructurePlacer() {}
