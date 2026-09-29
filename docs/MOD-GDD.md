@@ -59,8 +59,10 @@ What still does not exist, and these are deliberate:
   a modern setting invites real-world names far more strongly than a gaslight one did. Every
   product is invented, every processing verb stays abstract (dry, press, cut, seal), and a name
   that reads like something real does not ship — see the substance list below.
-- **No internet, no smartphones beyond a burner.** The phone makes calls, keeps a list of
-  contacts and points at the city. It is not a screen you play the game through.
+- **No internet, no smartphones beyond a burner.** The phone has a burner's screen and does a
+  burner's three things: the orders regulars ring in, the contacts that have the number, and
+  where the nearest city is — with a line on the HUD to walk to any of them. It is not a
+  screen you play the game through: no market, no map, no messages beyond the order.
 
 The test for any asset, name or mechanic: *would it look at home under a street lamp on a wet
 night, in a city Minecraft could plausibly contain?* If not, it does not ship.

@@ -38,7 +38,7 @@ public final class StreetSales {
     private StreetSales() {}
 
     /** The word for how a regular feels, for the action bar. */
-    static String loyaltyWord(double loyalty) {
+    public static String loyaltyWord(double loyalty) {
         if (loyalty >= Loyalty.STANDING_ORDER) return "loyalty.slumdrugs.devoted";
         if (loyalty >= 60) return "loyalty.slumdrugs.warm";
         if (loyalty > 35) return "loyalty.slumdrugs.indifferent";

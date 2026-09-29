@@ -60,6 +60,12 @@ public final class PhoneBook {
     public static final double STOOD_UP = -12;
 
     /**
+     * Loyalty lost for saying no straight away. A third of letting them wait it out: a regular
+     * would rather hear "not today" than stand in a doorway for ten minutes.
+     */
+    public static final double DECLINED = -4;
+
+    /**
      * A handover by arrangement is quieter than hawking: the suspicion a delivery draws, as a
      * share of what the same units sold on the street would.
      */
@@ -204,6 +210,30 @@ public final class PhoneBook {
         if (units < order.get().units()) return Delivery.SHORT;
         orders.remove(order.get());
         return Delivery.DELIVERED;
+    }
+
+    /** The player turns an order down. Costs {@link #DECLINED}, owed like a missed one. */
+    public boolean decline(String contactId) {
+        Optional<Order> order = orderFrom(contactId);
+        if (order.isEmpty()) return false;
+        orders.remove(order.get());
+        owed.merge(contactId, DECLINED, Double::sum);
+        for (int i = 0; i < contacts.size(); i++) {
+            Contact c = contacts.get(i);
+            if (c.id().equals(contactId))
+                contacts.set(i, new Contact(c.id(), c.name(), c.substance(), Loyalty.clamp(c.loyalty() + DECLINED),
+                        c.x(), c.y(), c.z()));
+        }
+        return true;
+    }
+
+    /**
+     * The player deletes a number. An order still open goes with it, as a refusal, and what the
+     * regular is owed stays owed: deleting somebody does not make them forget.
+     */
+    public boolean forget(String contactId) {
+        decline(contactId);
+        return contacts.removeIf(c -> c.id().equals(contactId));
     }
 
     /** Loyalty owed to a regular from orders missed while they were out of sight; cleared on reading. */

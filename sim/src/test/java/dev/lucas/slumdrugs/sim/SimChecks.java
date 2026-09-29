@@ -288,6 +288,19 @@ public final class SimChecks {
         check(direct.call("z", 100, 2).isEmpty(), "but not twice while waiting");
         check(direct.call("nobody", 100, 3).isEmpty(), "and nobody unsaved rings at all");
 
+        var no = new PhoneBook();
+        no.save(regular("n", 60, 0));
+        no.call("n", 0, 1);
+        check(no.decline("n") && no.orders().isEmpty(), "an order can be turned down");
+        check(!no.decline("n"), "but only once");
+        check(no.contacts().get(0).loyalty() == 60 + PhoneBook.DECLINED, "turning one down costs a little at once");
+        check(-PhoneBook.DECLINED < -PhoneBook.STOOD_UP, "saying no costs less than letting them wait");
+        check(no.settleOwed("n") == PhoneBook.DECLINED, "and is owed until they are met");
+        no.call("n", 10, 2);
+        check(no.forget("n") && no.contacts().isEmpty() && no.orders().isEmpty(), "deleting a number takes its order with it");
+        check(no.settleOwed("n") == PhoneBook.DECLINED, "and the refusal is still owed");
+        check(!no.forget("n"), "a deleted number cannot be deleted again");
+
         // A full phone where everybody is waiting keeps the numbers it has.
         var full = new PhoneBook();
         for (int i = 0; i < PhoneBook.MAX_CONTACTS; i++) full.save(regular("f" + i, 100, 0));

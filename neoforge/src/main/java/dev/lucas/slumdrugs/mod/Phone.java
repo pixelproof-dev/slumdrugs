@@ -110,7 +110,7 @@ public final class Phone {
     }
 
     /** A regular let down while loaded takes it out on their loyalty straight away. */
-    private static void settleIfNear(ServerLevel level, PhoneBook book, String contactId) {
+    static void settleIfNear(ServerLevel level, PhoneBook book, String contactId) {
         UUID id;
         try {
             id = UUID.fromString(contactId);

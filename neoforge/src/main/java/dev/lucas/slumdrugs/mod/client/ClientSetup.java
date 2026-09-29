@@ -16,7 +16,9 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import dev.lucas.slumdrugs.mod.PhoneNet;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
+import net.neoforged.neoforge.client.network.event.RegisterClientPayloadHandlersEvent;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
@@ -47,6 +49,14 @@ public final class ClientSetup {
     public static void registerHud(RegisterGuiLayersEvent event) {
         event.registerAbove(VanillaGuiLayers.EFFECTS,
                 Identifier.fromNamespaceAndPath(SlumDrugsMod.ID, "condition"), new ConditionHud());
+        event.registerAbove(VanillaGuiLayers.EFFECTS,
+                Identifier.fromNamespaceAndPath(SlumDrugsMod.ID, "phone_nav"), new PhoneNav());
+    }
+
+    /** The phone's screen opens when the server sends what it should show; see PhoneNet. */
+    @SubscribeEvent
+    public static void registerPayloads(RegisterClientPayloadHandlersEvent event) {
+        event.register(PhoneNet.State.TYPE, (state, context) -> PhoneScreen.receive(state));
     }
 
     /**
