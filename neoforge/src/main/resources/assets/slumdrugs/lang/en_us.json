@@ -448,5 +448,15 @@
   "phone.slumdrugs.key.select": "Select",
   "phone.slumdrugs.key.back": "Back",
   "phone.slumdrugs.key.close": "Close",
-  "phone.slumdrugs.nav.arrived": "Arrived: %s"
+  "phone.slumdrugs.nav.arrived": "Arrived: %s",
+  "block.slumdrugs.generator": "Generator",
+  "block.slumdrugs.battery_bank": "Battery Bank",
+  "block.slumdrugs.power_meter": "Power Meter",
+  "message.slumdrugs.generator_status": "Generator: %s / %s FE · fuel for %s min %s s",
+  "message.slumdrugs.generator_full": "The tank is full.",
+  "message.slumdrugs.battery_status": "Battery: %s / %s FE (%s%%)",
+  "message.slumdrugs.meter_status": "Meter credit: %s FE · one grow light for %s h %s min",
+  "message.slumdrugs.meter_topped_up": "Paid %s onto the meter. %s",
+  "message.slumdrugs.meter_no_grid": "No grid here. A meter only works inside a town.",
+  "message.slumdrugs.meter_noticed": "Your power bill is getting attention."
 }

@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "side": "slumdrugs:block/generator_side",
+    "top": "slumdrugs:block/generator_top",
+    "bottom": "slumdrugs:block/generator_bottom",
+    "particle": "slumdrugs:block/generator_side"
+  }
+}

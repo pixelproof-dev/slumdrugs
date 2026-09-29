@@ -46,6 +46,18 @@ public final class ModBlockEntities {
             TYPES.register("cloning_bench", () -> new BlockEntityType<>(
                     GraftingBenchBlockEntity::new, ModBlocks.GRAFTING_BENCH.get()));
 
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<GeneratorBlock.Entity>> GENERATOR =
+            TYPES.register("generator", () -> new BlockEntityType<>(
+                    GeneratorBlock.Entity::new, ModBlocks.GENERATOR.get()));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<BatteryBankBlock.Entity>> BATTERY_BANK =
+            TYPES.register("battery_bank", () -> new BlockEntityType<>(
+                    BatteryBankBlock.Entity::new, ModBlocks.BATTERY_BANK.get()));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<PowerMeterBlock.Entity>> POWER_METER =
+            TYPES.register("power_meter", () -> new BlockEntityType<>(
+                    PowerMeterBlock.Entity::new, ModBlocks.POWER_METER.get()));
+
     static {
         ModernNames.alias(TYPES, "forcing_frame");
         ModernNames.alias(TYPES, "drying_loft");

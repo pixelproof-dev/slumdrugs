@@ -119,6 +119,18 @@ The full id list is `docs/RENAME-MODERN.md`. Grouped:
   than its size suggests: it is how a player finds the city at all (MOD-GDD.md §1), so it should
   look like the most important thing in the hotbar.
 
+### Power blocks — placeholders to replace
+
+`generator`, `battery_bank` and `power_meter` ship with flat placeholder cubes from
+`tools/build_power_art.py`. Each has a `running` state (`<id>_on` model): the generator's vents
+glow and it smokes, the battery's charge bar lights, the meter's LED goes green. A Blockbench
+model per block, with an `_on` variant, replaces them without code changes.
+
+- **generator** — a portable petrol generator on a steel frame: fuel tank on top, exhaust,
+  pull-start, an orange frame (the one accent).
+- **battery_bank** — a grey cabinet of stacked blue battery modules with a charge bar.
+- **power_meter** — a wall-mounted utility meter box: glass dial, counter digits, a card slot.
+
 ### People — skins, not models
 
 The mod's villagers are drawn as players (`client/NpcRenderer`), so a person is an ordinary

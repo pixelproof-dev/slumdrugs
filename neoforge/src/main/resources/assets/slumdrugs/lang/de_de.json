@@ -448,5 +448,15 @@
   "phone.slumdrugs.key.select": "Wählen",
   "phone.slumdrugs.key.back": "Zurück",
   "phone.slumdrugs.key.close": "Ende",
-  "phone.slumdrugs.nav.arrived": "Angekommen: %s"
+  "phone.slumdrugs.nav.arrived": "Angekommen: %s",
+  "block.slumdrugs.generator": "Stromgenerator",
+  "block.slumdrugs.battery_bank": "Akkubank",
+  "block.slumdrugs.power_meter": "Stromzähler",
+  "message.slumdrugs.generator_status": "Generator: %s / %s FE · Treibstoff für %s Min. %s s",
+  "message.slumdrugs.generator_full": "Der Tank ist voll.",
+  "message.slumdrugs.battery_status": "Akku: %s / %s FE (%s %%)",
+  "message.slumdrugs.meter_status": "Guthaben: %s FE · eine Pflanzenlampe für %s Std. %s Min.",
+  "message.slumdrugs.meter_topped_up": "%s auf den Zähler eingezahlt. %s",
+  "message.slumdrugs.meter_no_grid": "Kein Netz hier. Ein Zähler funktioniert nur in einer Stadt.",
+  "message.slumdrugs.meter_noticed": "Deine Stromrechnung fällt auf."
 }

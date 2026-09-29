@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "side": "slumdrugs:block/battery_bank_side_on",
+    "top": "slumdrugs:block/battery_bank_top_on",
+    "bottom": "slumdrugs:block/battery_bank_bottom",
+    "particle": "slumdrugs:block/battery_bank_side_on"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "running=false": {
+      "model": "slumdrugs:block/power_meter"
+    },
+    "running=true": {
+      "model": "slumdrugs:block/power_meter_on"
+    }
+  }
+}

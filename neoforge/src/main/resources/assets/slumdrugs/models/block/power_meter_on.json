@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "side": "slumdrugs:block/power_meter_side_on",
+    "top": "slumdrugs:block/power_meter_top_on",
+    "bottom": "slumdrugs:block/power_meter_bottom",
+    "particle": "slumdrugs:block/power_meter_side_on"
+  }
+}

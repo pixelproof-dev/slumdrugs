@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "running=false": {
+      "model": "slumdrugs:block/battery_bank"
+    },
+    "running=true": {
+      "model": "slumdrugs:block/battery_bank_on"
+    }
+  }
+}

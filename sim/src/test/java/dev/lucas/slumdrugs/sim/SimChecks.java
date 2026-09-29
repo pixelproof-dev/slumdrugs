@@ -22,6 +22,7 @@ import dev.lucas.slumdrugs.sim.player.Progression;
 import dev.lucas.slumdrugs.sim.player.Recovery;
 import dev.lucas.slumdrugs.sim.player.Suspicion;
 import dev.lucas.slumdrugs.sim.station.GrowboxState;
+import dev.lucas.slumdrugs.sim.station.Power;
 import dev.lucas.slumdrugs.sim.world.RoomFlood;
 import dev.lucas.slumdrugs.sim.world.CityPlan;
 import dev.lucas.slumdrugs.sim.world.PlotSearch;
@@ -57,6 +58,7 @@ public final class SimChecks {
         localCrews();
         looks();
         phoneBook();
+        power();
         growbox();
         recovery();
         condition();
@@ -194,6 +196,79 @@ public final class SimChecks {
         for (int i = 0; i < 200; i++)
             if (Standing.Crew.holding(i * 1024L, 0) != Standing.Crew.holding((i + 1) * 1024L, 0)) differ++;
         check(differ > 100, "neighbouring towns are usually held by different crews");
+    }
+
+    // ---------------------------------------------------------------- power
+
+    private static void power() {
+        var SRC = Power.Role.SOURCE; var STORE = Power.Role.STORE; var ST = Power.Role.STATION;
+        check(Power.gives(SRC, STORE) && Power.gives(SRC, ST) && Power.gives(STORE, ST), "power runs from sources through stores to stations");
+        check(!Power.gives(ST, STORE) && !Power.gives(ST, SRC) && !Power.gives(STORE, SRC), "and never back up the line");
+        check(Power.gives(ST, ST), "stations pass it along a row");
+
+        // Every pairing, many fill levels: power is never made or lost by moving, never more
+        // than the contact rate, never into a full block or out of an empty one.
+        boolean conserved = true, bounded = true, rated = true, direction = true;
+        long[] caps = {Power.STATION_BUFFER, Power.GENERATOR_BUFFER, Power.BATTERY_BUFFER, Power.METER_BUFFER};
+        var random = new java.util.Random(5);
+        for (int i = 0; i < 20000; i++) {
+            Power.Role a = Power.Role.values()[random.nextInt(3)], b = Power.Role.values()[random.nextInt(3)];
+            long capA = caps[random.nextInt(caps.length)], capB = caps[random.nextInt(caps.length)];
+            long amtA = (long) (random.nextDouble() * capA), amtB = (long) (random.nextDouble() * capB);
+            long move = Power.flow(a, amtA, capA, b, amtB, capB);
+            long newA = amtA - move, newB = amtB + move;
+            conserved &= newA + newB == amtA + amtB;
+            bounded &= newA >= 0 && newA <= capA && newB >= 0 && newB <= capB;
+            rated &= Math.abs(move) <= Power.CONTACT_RATE;
+            if (move > 0) direction &= Power.gives(a, b);
+            if (move < 0) direction &= Power.gives(b, a);
+        }
+        check(conserved, "moving power never makes or loses any");
+        check(bounded, "no block goes below empty or above full");
+        check(rated, "no contact carries more than its rate");
+        check(direction, "power only ever moves the way the roles allow");
+
+        check(Power.flow(ST, 0, Power.STATION_BUFFER, STORE, 400_000, Power.BATTERY_BUFFER) == -Power.CONTACT_RATE,
+                "a battery fills an empty station at the contact rate");
+        check(Power.flow(ST, 3_000, Power.STATION_BUFFER, STORE, 100, Power.BATTERY_BUFFER) == -100,
+                "and hands over what it has when that is less");
+        check(Power.flow(STORE, 100_000, Power.BATTERY_BUFFER, ST, 2_000, Power.STATION_BUFFER) > 0,
+                "a battery feeds a station even when the station is fuller in proportion");
+        long level = Power.flow(ST, 4_000, 4_000, ST, 0, 4_000);
+        check(level == 2_000, "two stations side by side even out");
+        check(Power.flow(ST, 2_000, 4_000, ST, 2_000, 4_000) == 0, "and stop when they are even");
+
+        // A row of stations fed from one end fills up along the row.
+        long[] row = new long[5];
+        for (int second = 0; second < 200; second++) {
+            row[0] += Power.flow(SRC, Power.GENERATOR_BUFFER, Power.GENERATOR_BUFFER, ST, row[0], Power.STATION_BUFFER);
+            for (int i = 0; i + 1 < row.length; i++) {
+                long m = Power.flow(ST, row[i], Power.STATION_BUFFER, ST, row[i + 1], Power.STATION_BUFFER);
+                row[i] -= m; row[i + 1] += m;
+            }
+        }
+        check(row[row.length - 1] >= Power.STATION_DRAW, "the far end of a row of five gets enough to run");
+
+        // Generators.
+        long[] g = Power.generate(0, Power.GENERATOR_BUFFER, 100_000);
+        check(g[0] == Power.GENERATOR_OUTPUT && g[1] == 100_000 - Power.GENERATOR_OUTPUT, "a fuelled generator makes its output and burns as much");
+        g = Power.generate(Power.GENERATOR_BUFFER, Power.GENERATOR_BUFFER, 100_000);
+        check(g[0] == 0 && g[1] == 100_000, "a generator with a full buffer burns nothing");
+        g = Power.generate(0, Power.GENERATOR_BUFFER, 300);
+        check(g[0] == 300 && g[1] == 0, "the last of the fuel makes the last of the power");
+        check(Power.GENERATOR_OUTPUT >= 2 * Power.STATION_DRAW, "one generator runs two stations");
+        check(Power.fuelValue("slumdrugs:generator_fuel") > Power.fuelValue("minecraft:coal"), "a fuel can beats a lump of coal");
+        check(Power.fuelValue("minecraft:dirt") == 0, "dirt is not fuel");
+        check(Power.fuelFits(Power.GENERATOR_TANK - Power.FE_PER_COAL, Power.FE_PER_COAL, 64) == 1, "a nearly full tank takes one more lump");
+        check(Power.fuelFits(0, 0, 64) == 0, "nothing that is not fuel goes in");
+
+        check(Power.powered(Power.STATION_DRAW, true) && !Power.powered(Power.STATION_DRAW - 1, true), "a station runs powered only with a second's draw in hand");
+        check(!Power.powered(Power.STATION_BUFFER, false), "an idle station draws nothing");
+        long crop = (long) (Power.STATION_DRAW * 600 / Power.POWERED_SPEED);
+        check(crop / Power.FE_PER_PENNY <= 20, "a crop's worth of grid power costs under twenty dollars");
+        double perMinute = 60.0 * Power.STATION_DRAW / Power.FE_PER_SUSPICION;
+        check(perMinute < Suspicion.DECAY_PER_MINUTE, "one grow light on the grid is forgotten faster than it is noticed");
+        check(6 * perMinute > Suspicion.DECAY_PER_MINUTE, "a room of six is not");
     }
 
     // ---------------------------------------------------------------- phone book

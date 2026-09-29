@@ -766,6 +766,13 @@ A small, honest power system whose main design job is to **be replaceable**.
   faster, and that is all it is allowed to do.
 - **Storage** is a battery bank in brass and glass, FE-exposed, so a Create or AE2 grid can
   charge it and draw from it later.
+- **Built (2026-09-29).** Three blocks: a *generator* (coal, charcoal, coal blocks or generator
+  fuel; 800 FE/s), a *battery bank* (500k FE) and a prepaid *power meter* that draws on the
+  town's grid — cash in, 1,600 FE/s out, inside a built town only, and every 200k FE drawn is
+  a point of suspicion on whoever paid. No cables: blocks that touch share power, stations
+  first, and stations pass it along a row. Powered grow tents and drying racks work 1.5× as
+  fast for 400 FE/s. Everything is exposed through NeoForge's energy capability. Rules in
+  sim `station.Power`.
 
 ### 5.17 The Hollow
 

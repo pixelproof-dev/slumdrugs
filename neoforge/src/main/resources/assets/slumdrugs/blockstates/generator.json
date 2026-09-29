@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "running=false": {
+      "model": "slumdrugs:block/generator"
+    },
+    "running=true": {
+      "model": "slumdrugs:block/generator_on"
+    }
+  }
+}

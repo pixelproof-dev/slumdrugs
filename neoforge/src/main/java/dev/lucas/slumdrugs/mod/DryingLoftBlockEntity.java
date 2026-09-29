@@ -1,6 +1,7 @@
 package dev.lucas.slumdrugs.mod;
 
 import dev.lucas.slumdrugs.sim.drug.Drying;
+import dev.lucas.slumdrugs.sim.station.Power;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.ContainerHelper;
@@ -18,7 +19,7 @@ import net.minecraft.world.level.storage.ValueOutput;
  * when someone takes it down. The block state mirrors how many rails are taken, so a player
  * reads the loft from across the room.
  */
-public final class DryingLoftBlockEntity extends BlockEntity {
+public final class DryingLoftBlockEntity extends BlockEntity implements PowerNet.Node {
 
     public static final int RAILS = 3;
 
@@ -27,9 +28,38 @@ public final class DryingLoftBlockEntity extends BlockEntity {
 
     private NonNullList<ItemStack> bundles = NonNullList.withSize(RAILS, ItemStack.EMPTY);
     private final long[] hungAt = new long[RAILS];
+    /** A fan and a heater's worth of power. */
+    private final PowerNet.Buffer energy = new PowerNet.Buffer(Power.STATION_BUFFER, Power.Role.STATION, this::setChanged);
+    private boolean powered;
 
     public DryingLoftBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.DRYING_LOFT.get(), pos, state);
+    }
+
+    @Override
+    public Power.Role powerRole() { return Power.Role.STATION; }
+
+    @Override
+    public PowerNet.Buffer energy() { return energy; }
+
+    public boolean powered() { return powered; }
+
+    /**
+     * A second with the fan on, if there is power and something still drying: every rail that is
+     * not done gains half a second more, which is what drying half again as fast comes to.
+     */
+    void powerSecond(Level level) {
+        boolean drying = false;
+        for (int rail = 0; rail < RAILS; rail++) drying |= !bundles.get(rail).isEmpty() && !ready(level, rail);
+        powered = Power.powered(energy.amount(), drying);
+        if (powered) {
+            energy.add(-Power.STATION_DRAW);
+            long extra = Math.round((Power.POWERED_SPEED - 1) * 20);
+            for (int rail = 0; rail < RAILS; rail++)
+                if (!bundles.get(rail).isEmpty() && !ready(level, rail)) hungAt[rail] -= extra;
+            setChanged();
+        }
+        PowerNet.exchange(level, worldPosition, this);
     }
 
     /** Rails in use. */
@@ -126,6 +156,7 @@ public final class DryingLoftBlockEntity extends BlockEntity {
         super.saveAdditional(output);
         ContainerHelper.saveAllItems(output, bundles);
         for (int rail = 0; rail < RAILS; rail++) output.putLong("hung_" + rail, hungAt[rail]);
+        energy.save(output);
     }
 
     @Override
@@ -134,5 +165,6 @@ public final class DryingLoftBlockEntity extends BlockEntity {
         bundles = NonNullList.withSize(RAILS, ItemStack.EMPTY);
         ContainerHelper.loadAllItems(input, bundles);
         for (int rail = 0; rail < RAILS; rail++) hungAt[rail] = input.getLongOr("hung_" + rail, 0);
+        energy.load(input);
     }
 }

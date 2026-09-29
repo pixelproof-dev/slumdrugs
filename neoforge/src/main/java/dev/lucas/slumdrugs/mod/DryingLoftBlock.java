@@ -54,7 +54,9 @@ public final class DryingLoftBlock extends BaseEntityBlock {
         if (level.isClientSide() || type != ModBlockEntities.DRYING_LOFT.get()) return null;
         return (lvl, pos, st, be) -> {
             // Once a second: drying is measured in minutes, and this only turns the bundles brown.
-            if (lvl.getGameTime() % 20 == 0 && be instanceof DryingLoftBlockEntity loft) show(lvl, pos, st, loft);
+            if (lvl.getGameTime() % 20 != 0 || !(be instanceof DryingLoftBlockEntity loft)) return;
+            loft.powerSecond(lvl);
+            show(lvl, pos, st, loft);
         };
     }
 

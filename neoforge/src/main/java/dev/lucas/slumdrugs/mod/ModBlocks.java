@@ -70,6 +70,22 @@ public final class ModBlocks {
                     .noOcclusion()
                     .lightLevel(state -> state.getValue(RefineryBlock.WORKING) ? 8 : 0));
 
+    /** Steel boxes: power is machinery, and machinery is heavier than furniture. */
+    private static BlockBehaviour.Properties metal() {
+        return BlockBehaviour.Properties.of()
+                .mapColor(MapColor.METAL)
+                .strength(3.5f)
+                .sound(SoundType.METAL);
+    }
+
+    public static final DeferredBlock<GeneratorBlock> GENERATOR =
+            BLOCKS.registerBlock("generator", GeneratorBlock::new, () -> metal()
+                    .lightLevel(state -> state.getValue(PowerBlock.RUNNING) ? 5 : 0));
+    public static final DeferredBlock<BatteryBankBlock> BATTERY_BANK =
+            BLOCKS.registerBlock("battery_bank", BatteryBankBlock::new, ModBlocks::metal);
+    public static final DeferredBlock<PowerMeterBlock> POWER_METER =
+            BLOCKS.registerBlock("power_meter", PowerMeterBlock::new, ModBlocks::metal);
+
     static {
         ModernNames.alias(BLOCKS, "forcing_frame");
         ModernNames.alias(BLOCKS, "drying_loft");
@@ -95,6 +111,10 @@ public final class ModBlocks {
         ModItems.blockItem("counting_house", COUNTING_HOUSE, Progression.Tier.BACKROOM);
         // Grafting is Apothecary work in the design; the Workshop has it until that tier opens.
         ModItems.blockItem("grafting_bench", GRAFTING_BENCH, Progression.Tier.WORKSHOP);
+        // Power only makes the chain faster (MOD-GDD.md §5.16), so nothing holds it back.
+        ModItems.blockItem("generator", GENERATOR, Progression.Tier.HAND_TO_MOUTH);
+        ModItems.blockItem("battery_bank", BATTERY_BANK, Progression.Tier.HAND_TO_MOUTH);
+        ModItems.blockItem("power_meter", POWER_METER, Progression.Tier.HAND_TO_MOUTH);
     }
 
     private ModBlocks() {}

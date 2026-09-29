@@ -3,6 +3,7 @@ package dev.lucas.slumdrugs.mod;
 import dev.lucas.slumdrugs.sim.drug.Cultivation;
 import dev.lucas.slumdrugs.sim.drug.Strain;
 import dev.lucas.slumdrugs.sim.station.GrowboxState;
+import dev.lucas.slumdrugs.sim.station.Power;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -18,7 +19,7 @@ import net.minecraft.world.level.storage.ValueOutput;
  * the stage boundaries all live in the sim module, where they are verified without a game.
  * This class is the adapter — world clock in, block state out, NBT both ways.
  */
-public final class ForcingFrameBlockEntity extends BlockEntity {
+public final class ForcingFrameBlockEntity extends BlockEntity implements PowerNet.Node {
 
     /** Seconds of growth for a full crop, before fertiliser. */
     public static final double GROWTH_SECONDS = 600;
@@ -34,12 +35,24 @@ public final class ForcingFrameBlockEntity extends BlockEntity {
     private Strain strain = Strain.AVERAGE;
     private int fertiliserCharges;
     private int fertiliserQuality;
+    /** A grow light's worth of power, from a generator, a battery or the frame next door. */
+    private final PowerNet.Buffer energy = new PowerNet.Buffer(Power.STATION_BUFFER, Power.Role.STATION, this::setChanged);
+    private boolean powered;
 
     public ForcingFrameBlockEntity(BlockPos pos, BlockState blockState) {
         super(ModBlockEntities.FORCING_FRAME.get(), pos, blockState);
     }
 
     public GrowboxState state() { return state; }
+
+    @Override
+    public Power.Role powerRole() { return Power.Role.STATION; }
+
+    @Override
+    public PowerNet.Buffer energy() { return energy; }
+
+    /** Whether the grow light ran this second. */
+    public boolean powered() { return powered; }
 
     /**
      * World time in milliseconds. Game time is monotonic, survives a restart and advances when
@@ -167,12 +180,19 @@ public final class ForcingFrameBlockEntity extends BlockEntity {
 
     /** Advances growth and keeps the visible stage and lantern in step. Server side, once a second. */
     public void serverTick(Level level, BlockPos pos, BlockState blockState) {
+        // A grow light, when there is power for it, makes it all go half again as fast.
+        boolean growing = state.drug != null && state.progress < 1 && state.waterSeconds > 0;
+        powered = Power.powered(energy.amount(), growing);
+        if (powered) energy.add(-Power.STATION_DRAW);
         // A vigorous line grows faster: the same progress over fewer seconds.
-        state.advance(clock(level), Tuning.GROWTH_SECONDS.get() / strain.vigourFactor());
+        double seconds = Tuning.GROWTH_SECONDS.get() / strain.vigourFactor() / (powered ? Power.POWERED_SPEED : 1);
+        state.advance(clock(level), seconds);
         setChanged();
         BlockState next = blockState.setValue(ForcingFrameBlock.STAGE, state.stage())
-                .setValue(ForcingFrameBlock.LIT, warm(level, pos));
+                .setValue(ForcingFrameBlock.LIT, powered || warm(level, pos));
         if (next != blockState) level.setBlock(pos, next, Block_UPDATE_FLAGS);
+        // Frames side by side pass power along the row.
+        PowerNet.exchange(level, pos, this);
     }
 
     /** Send to clients, do not trigger neighbour updates for a cosmetic change. */
@@ -195,6 +215,7 @@ public final class ForcingFrameBlockEntity extends BlockEntity {
         output.putInt("subtlety", strain.subtlety());
         output.putInt("fertiliser_charges", fertiliserCharges);
         output.putInt("fertiliser_quality", fertiliserQuality);
+        energy.save(output);
     }
 
     @Override
@@ -213,5 +234,6 @@ public final class ForcingFrameBlockEntity extends BlockEntity {
         fertiliserCharges = input.getIntOr("fertiliser_charges", 0);
         fertiliserQuality = input.getIntOr("fertiliser_quality", 0);
         state.fertilizer = fertiliserCharges;
+        energy.load(input);
     }
 }

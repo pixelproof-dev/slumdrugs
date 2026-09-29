@@ -213,6 +213,21 @@ public final class Towns {
         return Optional.empty();
     }
 
+    /** How far from its site a town's streets reach, with a margin: the plan is about 120 across. */
+    public static final int TOWN_RADIUS = 96;
+
+    /**
+     * Whether a spot is inside a town that has been built or is being built. The town meter
+     * asks this: the grid is the town's, and a meter in a field is connected to nothing.
+     */
+    public static boolean inTown(ServerLevel level, net.minecraft.core.BlockPos pos) {
+        if (level.dimension() != Level.OVERWORLD) return false;
+        TownSites.Site site = TownSites.site(TownSites.regionOf(pos.getX()), TownSites.regionOf(pos.getZ()), level.getSeed());
+        TownRecords.Verdict verdict = records(level).verdict(site.regionX(), site.regionZ());
+        if (verdict != TownRecords.Verdict.BUILT && verdict != TownRecords.Verdict.STARTED) return false;
+        return site.distanceSquared(pos.getX(), pos.getZ()) <= (long) TOWN_RADIUS * TOWN_RADIUS;
+    }
+
     static TownRecords records(ServerLevel level) {
         return level.getDataStorage().computeIfAbsent(TownRecords.TYPE);
     }
