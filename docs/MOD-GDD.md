@@ -769,8 +769,10 @@ A small, honest power system whose main design job is to **be replaceable**.
 - **Built (2026-09-29).** Three blocks: a *generator* (coal, charcoal, coal blocks or generator
   fuel; 800 FE/s), a *battery bank* (500k FE) and a prepaid *power meter* that draws on the
   town's grid — cash in, 1,600 FE/s out, inside a built town only, and every 200k FE drawn is
-  a point of suspicion on whoever paid. No cables: blocks that touch share power, stations
-  first, and stations pass it along a row. Powered grow tents and drying racks work 1.5× as
+  a point of suspicion on whoever paid. Blocks that touch share power, stations first, and
+  stations pass it along a row; a *power cable* joins blocks at a distance — everything on one
+  run is one network, stations first and the surplus into batteries, up to 20k FE/s. The cable
+  only connects: no loss, no tiers, nothing to set, so it stays clear of a cabling puzzle. Powered grow tents and drying racks work 1.5× as
   fast for 400 FE/s. Everything is exposed through NeoForge's energy capability. Rules in
   sim `station.Power`.
 

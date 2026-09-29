@@ -102,7 +102,9 @@ public final class PowerNet {
                     continue;
                 }
                 // Something of another mod's. Stations keep what they have; the rest hand it over.
+                // A cable is not handed anything: its network routes this block directly.
                 if (pass != 2 || self.powerRole() == Power.Role.STATION) continue;
+                if (level.getBlockState(next).getBlock() instanceof CableBlock) continue;
                 EnergyHandler foreign = level.getCapability(Capabilities.Energy.BLOCK, next, side.getOpposite());
                 if (foreign != null) EnergyHandlerUtil.move(mine, foreign, Power.CONTACT_RATE, null);
             }
@@ -116,5 +118,6 @@ public final class PowerNet {
         event.registerBlockEntity(Capabilities.Energy.BLOCK, ModBlockEntities.POWER_METER.get(), (be, side) -> be.energy());
         event.registerBlockEntity(Capabilities.Energy.BLOCK, ModBlockEntities.FORCING_FRAME.get(), (be, side) -> be.energy());
         event.registerBlockEntity(Capabilities.Energy.BLOCK, ModBlockEntities.DRYING_LOFT.get(), (be, side) -> be.energy());
+        event.registerBlockEntity(Capabilities.Energy.BLOCK, ModBlockEntities.CABLE.get(), (be, side) -> be.input());
     }
 }

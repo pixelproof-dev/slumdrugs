@@ -458,5 +458,6 @@
   "message.slumdrugs.meter_status": "Meter credit: %s FE · one grow light for %s h %s min",
   "message.slumdrugs.meter_topped_up": "Paid %s onto the meter. %s",
   "message.slumdrugs.meter_no_grid": "No grid here. A meter only works inside a town.",
-  "message.slumdrugs.meter_noticed": "Your power bill is getting attention."
+  "message.slumdrugs.meter_noticed": "Your power bill is getting attention.",
+  "block.slumdrugs.power_cable": "Power Cable"
 }

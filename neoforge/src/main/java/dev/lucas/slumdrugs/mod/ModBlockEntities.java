@@ -58,6 +58,10 @@ public final class ModBlockEntities {
             TYPES.register("power_meter", () -> new BlockEntityType<>(
                     PowerMeterBlock.Entity::new, ModBlocks.POWER_METER.get()));
 
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<CableBlock.Entity>> CABLE =
+            TYPES.register("power_cable", () -> new BlockEntityType<>(
+                    CableBlock.Entity::new, ModBlocks.CABLE.get()));
+
     static {
         ModernNames.alias(TYPES, "forcing_frame");
         ModernNames.alias(TYPES, "drying_loft");

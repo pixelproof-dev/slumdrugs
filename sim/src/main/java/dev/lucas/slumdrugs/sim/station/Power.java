@@ -130,6 +130,66 @@ public final class Power {
         return (int) Math.min(offered, room / perLump);
     }
 
+    /** What one cable network carries in a second, all of it together. */
+    public static final int NETWORK_RATE = 20_000;
+
+    /** What a cable holds: enough for another mod's generator to push into. */
+    public static final int CABLE_BUFFER = 2_000;
+
+    /**
+     * One second of a cable network: every block on it by role, and what each gains or loses.
+     *
+     * <p>Stations are served first, the emptiest first, from sources and then from stores.
+     * Stores are filled from sources with what is left. Stores never feed stores — that would
+     * only shuffle charge round the network — stations never give and sources never take, and
+     * no more than {@link #NETWORK_RATE} moves in all. A cable is the plain version of touching:
+     * the same roles, over a distance.
+     *
+     * @return the change for each block, summing to zero
+     */
+    public static long[] route(Role[] roles, long[] amounts, long[] capacities) {
+        int n = roles.length;
+        long[] delta = new long[n];
+        long[] budget = {NETWORK_RATE};
+        java.util.List<Integer> sources = new java.util.ArrayList<>(), stores = new java.util.ArrayList<>(),
+                stations = new java.util.ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            if (capacities[i] <= 0) continue;
+            switch (roles[i]) {
+                case SOURCE -> sources.add(i);
+                case STORE -> stores.add(i);
+                case STATION -> stations.add(i);
+            }
+        }
+        java.util.Comparator<Integer> emptiest = java.util.Comparator.comparingDouble(i -> (double) amounts[i] / capacities[i]);
+        stations.sort(emptiest);
+        stores.sort(emptiest);
+        for (int s : stations) {
+            long need = capacities[s] - amounts[s];
+            need -= take(sources, s, need, amounts, delta, budget);
+            take(stores, s, need, amounts, delta, budget);
+        }
+        for (int s : stores) take(sources, s, capacities[s] - amounts[s] - delta[s], amounts, delta, budget);
+        return delta;
+    }
+
+    /** Moves up to {@code need} into {@code to} from the givers in order. Returns what moved. */
+    private static long take(java.util.List<Integer> givers, int to, long need, long[] amounts, long[] delta, long[] budget) {
+        long moved = 0;
+        for (int g : givers) {
+            if (need <= 0 || budget[0] <= 0) break;
+            if (g == to) continue;
+            long x = Math.min(Math.min(need, budget[0]), amounts[g] + delta[g]);
+            if (x <= 0) continue;
+            delta[g] -= x;
+            delta[to] += x;
+            need -= x;
+            budget[0] -= x;
+            moved += x;
+        }
+        return moved;
+    }
+
     /** A second of a station's work: whether it runs powered, and what it draws for it. */
     public static boolean powered(long stored, boolean working) {
         return working && stored >= STATION_DRAW;

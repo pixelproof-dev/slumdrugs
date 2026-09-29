@@ -458,5 +458,6 @@
   "message.slumdrugs.meter_status": "Guthaben: %s FE · eine Pflanzenlampe für %s Std. %s Min.",
   "message.slumdrugs.meter_topped_up": "%s auf den Zähler eingezahlt. %s",
   "message.slumdrugs.meter_no_grid": "Kein Netz hier. Ein Zähler funktioniert nur in einer Stadt.",
-  "message.slumdrugs.meter_noticed": "Deine Stromrechnung fällt auf."
+  "message.slumdrugs.meter_noticed": "Deine Stromrechnung fällt auf.",
+  "block.slumdrugs.power_cable": "Stromkabel"
 }

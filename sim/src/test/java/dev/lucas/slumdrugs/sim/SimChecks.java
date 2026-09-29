@@ -262,6 +262,48 @@ public final class SimChecks {
         check(Power.fuelFits(Power.GENERATOR_TANK - Power.FE_PER_COAL, Power.FE_PER_COAL, 64) == 1, "a nearly full tank takes one more lump");
         check(Power.fuelFits(0, 0, 64) == 0, "nothing that is not fuel goes in");
 
+        // Cable networks.
+        boolean netConserved = true, netBounded = true, netRated = true, netRoles = true;
+        var rnd = new java.util.Random(9);
+        for (int i = 0; i < 5000; i++) {
+            int size = 1 + rnd.nextInt(8);
+            Power.Role[] roles = new Power.Role[size];
+            long[] amounts = new long[size], capacities = new long[size];
+            for (int k = 0; k < size; k++) {
+                roles[k] = Power.Role.values()[rnd.nextInt(3)];
+                capacities[k] = caps[rnd.nextInt(caps.length)];
+                amounts[k] = (long) (rnd.nextDouble() * capacities[k]);
+            }
+            long[] d = Power.route(roles, amounts, capacities);
+            long sum = 0, moved = 0;
+            for (int k = 0; k < size; k++) {
+                sum += d[k];
+                if (d[k] > 0) moved += d[k];
+                netBounded &= amounts[k] + d[k] >= 0 && amounts[k] + d[k] <= capacities[k];
+                if (roles[k] == SRC) netRoles &= d[k] <= 0;
+                if (roles[k] == ST) netRoles &= d[k] >= 0;
+            }
+            netConserved &= sum == 0;
+            netRated &= moved <= Power.NETWORK_RATE;
+        }
+        check(netConserved, "a cable network never makes or loses power");
+        check(netBounded, "nothing on a network goes below empty or above full");
+        check(netRated, "a network carries no more than its rate");
+        check(netRoles, "on a network sources only give and stations only take");
+
+        long[] d = Power.route(new Power.Role[]{SRC, ST, STORE}, new long[]{800, 0, 0},
+                new long[]{Power.GENERATOR_BUFFER, 400, Power.BATTERY_BUFFER});
+        check(d[1] == 400 && d[2] == 400 && d[0] == -800, "a network runs the station first and banks the rest");
+        d = Power.route(new Power.Role[]{STORE, STORE}, new long[]{Power.BATTERY_BUFFER, 0},
+                new long[]{Power.BATTERY_BUFFER, Power.BATTERY_BUFFER});
+        check(d[0] == 0 && d[1] == 0, "batteries on a network do not feed each other");
+        d = Power.route(new Power.Role[]{STORE, ST, SRC}, new long[]{10_000, 0, 0},
+                new long[]{Power.BATTERY_BUFFER, Power.STATION_BUFFER, Power.GENERATOR_BUFFER});
+        check(d[1] == Power.STATION_BUFFER && d[0] == -Power.STATION_BUFFER, "with the generator out, the battery runs the station");
+        d = Power.route(new Power.Role[]{SRC, ST, ST}, new long[]{1_000, 3_000, 0},
+                new long[]{Power.GENERATOR_BUFFER, Power.STATION_BUFFER, Power.STATION_BUFFER});
+        check(d[2] == 1_000 && d[1] == 0, "short of power, the emptiest station is served first");
+
         check(Power.powered(Power.STATION_DRAW, true) && !Power.powered(Power.STATION_DRAW - 1, true), "a station runs powered only with a second's draw in hand");
         check(!Power.powered(Power.STATION_BUFFER, false), "an idle station draws nothing");
         long crop = (long) (Power.STATION_DRAW * 600 / Power.POWERED_SPEED);

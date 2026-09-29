@@ -156,9 +156,60 @@ def block(name, side, top, bottom_fill, edge):
         {'model': {'type': 'minecraft:model', 'model': f'slumdrugs:item/{name}'}}, indent=2) + '\n')
 
 
+def cable():
+    """The power cable: a thin core and one arm per connected side, as the chorus plant does."""
+    im, px = canvas(ORANGE)
+    for y in range(16):
+        for x in range(16):
+            if (x + y) % 6 == 0:
+                px[x, y] = ORANGE_D  # a spiral wrap, so it reads as a lead and not a bar
+            elif (x + y) % 6 == 1:
+                px[x, y] = rgb('#f6c27a')
+    save(im, 'power_cable')
+
+    tex = {'cable': 'slumdrugs:block/power_cable', 'particle': 'slumdrugs:block/power_cable'}
+    lo, hi = 5.5, 10.5
+    face = {'uv': [lo, lo, hi, hi], 'texture': '#cable'}
+    core = {'parent': 'minecraft:block/block', 'textures': tex, 'elements': [{
+        'from': [lo, lo, lo], 'to': [hi, hi, hi],
+        'faces': {d: dict(face) for d in ('north', 'south', 'east', 'west', 'up', 'down')}}]}
+    arm_face = {'uv': [0, lo, lo, hi], 'texture': '#cable'}
+    side = {'parent': 'minecraft:block/block', 'textures': tex, 'elements': [{
+        'from': [lo, lo, 0], 'to': [hi, hi, lo],
+        'faces': {'north': dict(face, cullface='north'), 'east': dict(arm_face), 'west': dict(arm_face),
+                  'up': dict(arm_face), 'down': dict(arm_face)}}]}
+    (AS / 'models/block/power_cable_core.json').write_text(json.dumps(core, indent=2) + '\n')
+    (AS / 'models/block/power_cable_side.json').write_text(json.dumps(side, indent=2) + '\n')
+
+    arm = 'slumdrugs:block/power_cable_side'
+    parts = [{'apply': {'model': 'slumdrugs:block/power_cable_core'}}]
+    for when, rot in (('north', {}), ('east', {'y': 90}), ('south', {'y': 180}), ('west', {'y': 270}),
+                      ('up', {'x': 270}), ('down', {'x': 90})):
+        parts.append({'when': {when: 'true'}, 'apply': dict({'model': arm}, **rot)})
+    (AS / 'blockstates/power_cable.json').write_text(json.dumps({'multipart': parts}, indent=2) + '\n')
+
+    # In the hand it is a coil of lead with a plug, not a tiny cube.
+    icon, ipx = canvas((0, 0, 0, 0))
+    for y in range(16):
+        for x in range(16):
+            r2 = (x - 7.5) ** 2 + (y - 8.5) ** 2
+            if 16 <= r2 <= 42:
+                ipx[x, y] = ORANGE if (x + y) % 3 else ORANGE_D
+            elif 9 <= r2 < 16 or 42 < r2 <= 52:
+                ipx[x, y] = INK
+    for (x, y) in ((12, 2), (13, 2), (12, 3), (13, 3), (14, 1), (14, 4)):
+        ipx[x, y] = GREY_L if (x, y) not in ((14, 1), (14, 4)) else GREY_D
+    icon.save(AS / 'textures/item/power_cable.png')
+    (AS / 'models/item/power_cable.json').write_text(json.dumps(
+        {'parent': 'minecraft:item/generated', 'textures': {'layer0': 'slumdrugs:item/power_cable'}}, indent=2) + '\n')
+    (AS / 'items/power_cable.json').write_text(json.dumps(
+        {'model': {'type': 'minecraft:model', 'model': 'slumdrugs:item/power_cable'}}, indent=2) + '\n')
+
+
 if __name__ == '__main__':
     (AS / 'textures/block').mkdir(parents=True, exist_ok=True)
     block('generator', generator_side, generator_top, STEEL_D, INK)
     block('battery_bank', battery_side, battery_top, STEEL_D, INK)
     block('power_meter', meter_side, lambda on: plain(GREY, GREY_D), GREY_D, STEEL)
+    cable()
     print('power art written')

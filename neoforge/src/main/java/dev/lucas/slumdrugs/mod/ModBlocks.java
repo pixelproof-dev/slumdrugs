@@ -86,6 +86,14 @@ public final class ModBlocks {
     public static final DeferredBlock<PowerMeterBlock> POWER_METER =
             BLOCKS.registerBlock("power_meter", PowerMeterBlock::new, ModBlocks::metal);
 
+    /** An orange extension lead: soft, quick to pull up, and it lets the light through. */
+    public static final DeferredBlock<CableBlock> CABLE =
+            BLOCKS.registerBlock("power_cable", CableBlock::new, () -> BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_ORANGE)
+                    .strength(0.3f)
+                    .sound(SoundType.WOOL)
+                    .noOcclusion());
+
     static {
         ModernNames.alias(BLOCKS, "forcing_frame");
         ModernNames.alias(BLOCKS, "drying_loft");
@@ -115,6 +123,7 @@ public final class ModBlocks {
         ModItems.blockItem("generator", GENERATOR, Progression.Tier.HAND_TO_MOUTH);
         ModItems.blockItem("battery_bank", BATTERY_BANK, Progression.Tier.HAND_TO_MOUTH);
         ModItems.blockItem("power_meter", POWER_METER, Progression.Tier.HAND_TO_MOUTH);
+        ModItems.blockItem("power_cable", CABLE, Progression.Tier.HAND_TO_MOUTH);
     }
 
     private ModBlocks() {}

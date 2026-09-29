@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "S": "minecraft:string",
+    "C": "minecraft:copper_ingot"
+  },
+  "pattern": [
+    "SSS",
+    "CCC",
+    "SSS"
+  ],
+  "result": {
+    "id": "slumdrugs:power_cable",
+    "count": 16
+  }
+}
